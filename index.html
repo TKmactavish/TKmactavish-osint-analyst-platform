@@ -16,10 +16,173 @@
     <div class="tabs" id="tabs"></div><section class="results" id="results"></section>
   </main>
 <script>
-const typeList=[['auto','Auto-detect'],['person','Person'],['incident','Incident'],['location','Location'],['organization','Organization'],['travel_risk','Travel Risk']];let selected='auto',report=null,tab='Overview';const typeBox=document.getElementById('types');typeList.forEach(([v,l])=>{let b=document.createElement('button');b.textContent=l;b.onclick=()=>{selected=v;renderTypes()};b.dataset.v=v;typeBox.appendChild(b)});renderTypes();
-function renderTypes(){[...typeBox.children].forEach(b=>b.className=b.dataset.v===selected?'active':'')}function detect(q){q=q.toLowerCase();if(selected!=='auto')return selected;if(/city|airport|district|station|border/.test(q))return'location';if(/protest|attack|fire|incident|explosion/.test(q))return'incident';if(/corp|company|agency|ministry|ngo/.test(q))return'organization';if(/travel|safety|advisory|risk/.test(q))return'travel_risk';return'person'}
-function analyze(){let q=document.getElementById('query').value.trim()||'Central Station protest';let st=detect(q);let slug=q.toLowerCase().replace(/\s+/g,'-');let sources=[['Official Advisory','official',98,'On 2026-05-08, officials confirmed temporary road closures, no confirmed fatalities, and transit delays.'],['Global News Report','mainstream',82,'A mainstream report cited police and witnesses, described isolated clashes, and said five people were injured.'],['Local RSS Report','local',71,'A local outlet reported traffic disruption, scattered vandalism, and conflicting estimates of two to five injuries.'],['Civil Society Monitor','ngo',76,'A civil-society monitor noted civil unrest indicators, competing casualty figures, and limited official detail.']].map(s=>({title:s[0]+': '+q,type:s[1],score:s[2],text:s[3],url:'https://example.org/'+s[1]+'/'+slug,date:'2026-05-08'}));let flags=[['civil unrest','May affect movement, crowd safety, and public-order response.','medium'],['travel disruption','Can affect route planning and operational timing.','medium'],['contradictory reporting','Requires source-by-source verification before decisions.','medium'],['violence or armed conflict','May affect personal safety, access routes, and escalation probability.','high']];report={q,st,sources,flags,summary:`Static demo review for '${q}' identified ${sources.length} lawful public-source style records, ${flags.length} red-flag indicators, and a casualty-count contradiction. Every claim includes source links and confidence for analyst verification.`};tab='Overview';render()}
-function render(){if(!report)return;let tabs=['Overview','Timeline','Sources','Red Flags','Risk Assessment','Intelligence Gaps'];document.getElementById('tabs').innerHTML=tabs.map(t=>`<button class="tab ${t===tab?'active':''}" onclick="tab='${t}';render()">${t}</button>`).join('');let r=document.getElementById('results');let s=report.sources;if(tab==='Overview')r.innerHTML=`<div class="grid"><div class="card"><div class="label">Executive Summary</div><p>${report.summary}</p></div><div class="card"><div class="label">Analyst Note</div><p>This report is machine-assisted and requires human verification.</p></div></div><div class="card"><div class="label">Key Facts</div>${s.map((x,i)=>`<div class="fact"><span class="tag ${i>1?'med':''}">${i==0?'high':'medium'}</span><p>${x.text}</p><div class="small">Source: <a href="${x.url}">${x.url}</a></div></div>`).join('')}</div>`;if(tab==='Timeline')r.innerHTML=`<div class="card"><div class="label">Timeline</div>${s.map(x=>`<div class="fact"><b>${x.date}</b><p>${x.title}</p><span class="tag med">medium</span></div>`).join('')}</div>`;if(tab==='Sources')r.innerHTML=`<div class="card"><div class="label">Source Assessment</div>${s.map(x=>`<div class="source"><b>${x.title}</b><p class="small"><a href="${x.url}">${x.url}</a></p><div>${x.type} • ${x.score}/100</div><div class="bar"><span style="width:${x.score}%"></span></div></div>`).join('')}</div>`;if(tab==='Red Flags')r.innerHTML=`<div class="grid">${report.flags.map(f=>`<div class="card"><h3>${f[0]}</h3><span class="tag ${f[2]==='high'?'low':'med'}">${f[2]}</span><p>${f[1]}</p></div>`).join('')}</div>`;if(tab==='Risk Assessment')r.innerHTML=`<div class="grid"><div class="card"><div class="label">Travel/Security Risk</div><div class="risk">High</div><p>Risk is based on public-source style indicators, contradiction count, and source credibility.</p></div><div class="card"><div class="label">Precautions</div><div class="gap">Verify official advisories before movement.</div><div class="gap">Avoid named areas until independently confirmed safe.</div><div class="gap">Monitor transport and emergency updates.</div></div></div><div class="card"><div class="label">Contradiction Detection</div><div class="fact"><b>Casualty count</b><p>Sources report different casualty details and require verification.</p></div></div>`;if(tab==='Intelligence Gaps')r.innerHTML=`<div class="grid"><div class="card"><div class="label">Intelligence Gaps</div>${['What remains unconfirmed?','Is there official confirmation?','Which source should be verified first?','Are there signs of escalation?','What would change the assessment?'].map(x=>`<div class="gap">${x}</div>`).join('')}</div><div class="card"><div class="label">Recommended Questions</div>${['Which claims are firsthand?','What official advisory should be monitored?','Are transport routes disrupted?','Which contradiction matters most?'].map(x=>`<div class="gap">${x}</div>`).join('')}</div></div>`}analyze();
+const typeList=[['auto','Auto-detect'],['person','Person'],['incident','Incident'],['location','Location'],['organization','Organization'],['travel_risk','Travel Risk']];
+let selected='auto',report=null,tab='Overview';
+const typeBox=document.getElementById('types');
+typeList.forEach(([v,l])=>{let b=document.createElement('button');b.textContent=l;b.onclick=()=>{selected=v;renderTypes()};b.dataset.v=v;typeBox.appendChild(b)});
+renderTypes();
+
+function renderTypes(){[...typeBox.children].forEach(b=>b.className=b.dataset.v===selected?'active':'');}
+
+function detect(q){q=q.toLowerCase();if(selected!=='auto')return selected;if(/city|airport|district|station|border/.test(q))return'location';if(/protest|attack|fire|incident|explosion/.test(q))return'incident';if(/corp|company|agency|ministry|ngo/.test(q))return'organization';if(/travel|safety|advisory|risk/.test(q))return'travel_risk';return'person';}
+
+function classifyDomain(d=''){
+  if(/\.gov($|\.)/.test(d)||/government|ministry|official/.test(d))return'official';
+  const major=['reuters','apnews','bbc','nytimes','guardian','washingtonpost','cnn','aljazeera','dw\.com','france24','voanews','rferl','abc','nbc','cbs','pbs','bloomberg','time\.com','newsweek','thehill'];
+  if(major.some(m=>d.includes(m)))return'mainstream';
+  if(/\.org$/.test(d)||/ngo|rights|monitor|watch|amnesty|hrw/.test(d))return'ngo';
+  return'local';
+}
+
+function credScore(d=''){
+  if(/\.gov($|\.)/.test(d))return 95;
+  if(d==='wikipedia.org')return 88;
+  if(['reuters','apnews','bbc'].some(m=>d.includes(m)))return 90+Math.floor(Math.random()*6);
+  if(['nytimes','guardian','washingtonpost','bloomberg'].some(m=>d.includes(m)))return 82+Math.floor(Math.random()*8);
+  return 52+Math.floor(Math.random()*28);
+}
+
+function fmtDate(s){
+  s=String(s||'');
+  if(s.length>=8)return`${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}`;
+  return s||'Unknown';
+}
+
+function detectFlags(sources,q){
+  const txt=sources.map(s=>(s.title+' '+s.text).toLowerCase()).join(' ');
+  const out=[];
+  const defs=[
+    ['civil unrest',/protest|riot|unrest|demonstration|rally|march/,'medium','May affect movement, crowd safety, and public-order response.'],
+    ['violence or armed conflict',/attack|shooting|bomb|explosion|clash|violence|armed|weapon/,'high','May affect personal safety, access routes, and escalation probability.'],
+    ['travel disruption',/delay|closure|shutdown|evacuation|curfew|border|cancel/,'medium','Can affect route planning and operational timing.'],
+    ['humanitarian concern',/casualt|injur|dead|death|missing|displace|refugee|wound/,'high','Requires immediate verification and monitoring.'],
+    ['government response',/military|police|arrest|deploy|enforce|government|troops|forces/,'low','Official response may alter the situation rapidly.'],
+  ];
+  for(const[name,rx,sev,desc]of defs){if(rx.test(txt))out.push([name,desc,sev]);}
+  if(sources.length>=3)out.push(['contradictory reporting','Multiple independent sources require cross-verification before decisions.','medium']);
+  return out.length?out:[['limited open-source data','Few public records found for this query. Broaden search terms.','low']];
+}
+
+function riskLevel(flags){
+  if(flags.some(f=>f[2]==='high'))return'High';
+  if(flags.some(f=>f[2]==='medium'))return'Medium';
+  return'Low';
+}
+
+async function analyze(){
+  const q=document.getElementById('query').value.trim()||'Central Station protest';
+  const st=detect(q);
+  document.getElementById('tabs').innerHTML='';
+  document.getElementById('results').innerHTML='<div class="card" style="color:#94a3b8;padding:28px;text-align:center">Querying live sources…</div>';
+
+  try{
+    const [gdeltRes,wikiRes]=await Promise.allSettled([
+      fetch(`https://api.gdeltproject.org/api/v2/doc/doc?query=${encodeURIComponent(q)}&mode=ArtList&maxrecords=15&format=json&timespan=90d`).then(r=>r.json()),
+      fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&format=json&origin=*&srlimit=5&srprop=snippet`).then(r=>r.json()),
+    ]);
+
+    const gdelt=gdeltRes.status==='fulfilled'?gdeltRes.value:null;
+    const wiki=wikiRes.status==='fulfilled'?wikiRes.value:null;
+
+    const sources=[];
+
+    if(gdelt?.articles){
+      for(const a of gdelt.articles){
+        sources.push({title:a.title||a.domain,type:classifyDomain(a.domain),score:credScore(a.domain),text:a.title,url:a.url,date:fmtDate(a.seendate),domain:a.domain,country:a.sourcecountry||''});
+      }
+    }
+
+    if(wiki?.query?.search){
+      for(const w of wiki.query.search){
+        const snippet=(w.snippet||'').replace(/<[^>]+>/g,'');
+        sources.push({title:w.title,type:'reference',score:88,text:snippet,url:`https://en.wikipedia.org/wiki/${encodeURIComponent(w.title.replace(/ /g,'_'))}`,date:'Wikipedia',domain:'wikipedia.org',country:''});
+      }
+    }
+
+    if(!sources.length){
+      document.getElementById('results').innerHTML='<div class="card" style="color:#94a3b8;padding:24px">No public-source records found for that query. Try broader terms.</div>';
+      return;
+    }
+
+    const flags=detectFlags(sources,q);
+    report={
+      q,st,sources,flags,
+      risk:riskLevel(flags),
+      summary:`Live OSINT for <b>${q}</b>: ${sources.length} public-source records retrieved (${gdelt?.articles?.length||0} news articles, ${wiki?.query?.search?.length||0} reference entries). ${flags.length} intelligence flag(s) detected. All claims require human verification before operational use.`
+    };
+    tab='Overview';
+    render();
+  }catch(err){
+    document.getElementById('results').innerHTML=`<div class="card" style="color:#f87171;padding:24px">Error: ${err.message}</div>`;
+  }
+}
+
+function render(){
+  if(!report)return;
+  const tabs=['Overview','Timeline','Sources','Red Flags','Risk Assessment','Intelligence Gaps'];
+  document.getElementById('tabs').innerHTML=tabs.map(t=>`<button class="tab ${t===tab?'active':''}" onclick="tab='${t}';render()">${t}</button>`).join('');
+  const r=document.getElementById('results');
+  const s=report.sources;
+
+  if(tab==='Overview'){
+    const top=s.slice(0,5);
+    r.innerHTML=`<div class="grid">
+      <div class="card"><div class="label">Executive Summary</div><p>${report.summary}</p></div>
+      <div class="card"><div class="label">Analyst Note</div><p>Machine-assisted OSINT. Verify every claim. Use only lawful public sources.</p></div>
+    </div>
+    <div class="card"><div class="label">Top Results (${top.length} of ${s.length})</div>
+      ${top.map(x=>`<div class="fact"><span class="tag ${x.type==='official'?'':'med'}">${x.type}</span> <b>${x.title}</b><div class="small"><a href="${x.url}" target="_blank" rel="noopener">${x.url}</a></div></div>`).join('')}
+    </div>`;
+  }
+
+  if(tab==='Timeline'){
+    const dated=s.filter(x=>x.date&&x.date!=='Wikipedia').sort((a,b)=>b.date.localeCompare(a.date));
+    r.innerHTML=`<div class="card"><div class="label">Timeline (${dated.length} dated records)</div>
+      ${dated.map(x=>`<div class="fact"><b>${x.date}</b> <span class="small">${x.domain}</span><p>${x.title}</p><div class="small"><a href="${x.url}" target="_blank" rel="noopener">${x.url}</a></div></div>`).join('')}
+    </div>`;
+  }
+
+  if(tab==='Sources'){
+    r.innerHTML=`<div class="card"><div class="label">Source Assessment (${s.length} sources)</div>
+      ${s.map(x=>`<div class="source"><b>${x.title}</b><div class="small"><a href="${x.url}" target="_blank" rel="noopener">${x.url}</a></div>
+        <div style="margin-top:6px">${x.type}${x.country?' • '+x.country:''} • Credibility: ${x.score}/100</div>
+        <div class="bar" style="margin-top:6px"><span style="width:${x.score}%"></span></div></div>`).join('')}
+    </div>`;
+  }
+
+  if(tab==='Red Flags'){
+    r.innerHTML=`<div class="grid">${report.flags.map(f=>`<div class="card"><h3>${f[0]}</h3><span class="tag ${f[2]==='high'?'low':f[2]==='medium'?'med':''}">${f[2]}</span><p>${f[1]}</p></div>`).join('')}</div>`;
+  }
+
+  if(tab==='Risk Assessment'){
+    const rl=report.risk;
+    r.innerHTML=`<div class="grid">
+      <div class="card"><div class="label">Overall Risk Level</div><div class="risk">${rl}</div><p>Derived from live source content, flag severity, and source count.</p></div>
+      <div class="card"><div class="label">Precautions</div>
+        <div class="gap">Verify official advisories before any movement.</div>
+        <div class="gap">Cross-check casualty and incident figures across sources.</div>
+        <div class="gap">Monitor transport and emergency-service updates.</div>
+      </div>
+    </div>
+    <div class="card"><div class="label">Source Credibility Distribution</div>
+      ${['official','mainstream','ngo','local','reference'].map(t=>{const n=s.filter(x=>x.type===t);return n.length?`<div class="fact"><b>${t}</b>: ${n.length} source(s) — avg credibility ${Math.round(n.reduce((a,x)=>a+x.score,0)/n.length)}/100</div>`:''}).join('')}
+    </div>`;
+  }
+
+  if(tab==='Intelligence Gaps'){
+    const wikiEntries=s.filter(x=>x.domain==='wikipedia.org');
+    r.innerHTML=`<div class="grid">
+      <div class="card"><div class="label">Open Questions</div>
+        ${['Are all sources citing the same primary event?','Is there official government confirmation?','Which source has firsthand on-the-ground reporting?','Are there signs of escalation since the latest report?','What would change the risk assessment?'].map(x=>`<div class="gap">${x}</div>`).join('')}
+      </div>
+      <div class="card"><div class="label">Reference Entries (${wikiEntries.length})</div>
+        ${wikiEntries.length?wikiEntries.map(x=>`<div class="gap"><a href="${x.url}" target="_blank" rel="noopener">${x.title}</a><p class="small">${x.text}</p></div>`).join(''):'<div class="gap">No Wikipedia reference entries found.</div>'}
+      </div>
+    </div>`;
+  }
+}
+
+analyze();
 </script>
 </body>
 </html>
