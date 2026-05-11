@@ -562,6 +562,32 @@ function render(){
         <div class="section-label">Open Intelligence Questions</div>
         ${['Which source has direct firsthand access to the subject or event?','Is there confirmed official government or institutional statement?','Are there credible sources in other languages not yet consulted?','What would escalate or de-escalate the assessed risk level?','What single piece of information, if wrong, would change this entire assessment?','Have you checked for coordinated disinformation or narrative manipulation?'].map(q=>`<div class="question">${q}</div>`).join('')}
       </div>
+    </div>
+    <div class="card">
+      <div class="label">Analytical Assessment</div>
+      <div class="perspective-item"><b>Narrative breadth</b>: ${p.countries.length>=4?'Strong multi-country coverage provides good cross-perspective validation.':p.countries.length>=2?'Moderate geographic diversity. Seek additional regional perspectives.':'Narrow source geography. High risk of single-narrative bias — broaden search.'}</div>
+      <div class="perspective-item"><b>Source reliability</b>: ${p.types.includes('official')?'Official sources present — use as anchor but verify independently.':'No official sources found — treat all claims as unverified until confirmed.'}</div>
+      <div class="perspective-item"><b>Temporal freshness</b>: ${p.latestDate!=='Unknown'?`Most recent record dated ${p.latestDate}. ${new Date(p.latestDate)>new Date(Date.now()-86400000*2)?'Information is recent.':'Information may be outdated — check for newer reports.'}`:'No dated records — source currency is unknown.'}</div>
+      <div class="perspective-item"><b>Intelligence gaps</b>: ${p.themes.length?`Coverage focuses on ${p.themes.slice(0,2).join(' and ')}. Gaps may exist in ${['economic impact','local civilian perspective','opposition narrative','third-party assessments'].filter(g=>!p.themes.some(t=>t.toLowerCase().includes(g.split(' ')[0]))).slice(0,2).join(' and ')}.`:'Insufficient thematic signal — the subject may have limited open-source footprint.'}</div>
+    </div>`;
+  }
+
+  else if(tab==='Recommendations'){
+    el.innerHTML=`
+    <div class="card">
+      <div class="label">Analyst Recommendations</div>
+      ${report.recommendations.map((r,i)=>`<div class="rec-item"><b>${i+1}.</b> ${r}</div>`).join('')}
+    </div>
+    <div class="card" style="margin-top:0">
+      <div class="label">Open Intelligence Questions</div>
+      ${[
+        'Which source has direct firsthand access to the subject?',
+        'Is there official confirmation of the key claim?',
+        'Are there credible sources you have not yet consulted?',
+        'What would escalate or de-escalate the assessed risk?',
+        'What information, if wrong, would change the entire assessment?',
+        'Have you checked for deliberate disinformation or coordinated narratives?',
+      ].map(q=>`<div class="gap">${q}</div>`).join('')}
     </div>`;
   }
 }
