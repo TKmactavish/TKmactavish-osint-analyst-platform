@@ -144,8 +144,23 @@ async function analyze(){
   document.getElementById('tabs').innerHTML='';
   document.getElementById('results').innerHTML='<div class="card" style="color:#94a3b8;padding:28px;text-align:center">Querying live sources across '+lang.wiki.length+' language edition(s)…</div>';
 
-  const gdeltQuery=lang.gdelt?`${q} sourcelang:${lang.gdelt}`:q;
-  const gdeltEndpoint=`https://api.gdeltproject.org/api/v2/doc/doc?query=${encodeURIComponent(gdeltQuery)}&mode=ArtList&maxrecords=20&format=json&timespan=90d`;
+  try{
+    const gdeltEndpoint=`https://api.gdeltproject.org/api/v2/doc/doc?query=${encodeURIComponent(q)}&mode=ArtList&maxrecords=15&format=json&timespan=90d`;
+    async function fetchGdelt(){
+      // try allorigins first, fall back to corsproxy
+      const proxies=[
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(gdeltEndpoint)}`,
+        `https://corsproxy.io/?${encodeURIComponent(gdeltEndpoint)}`,
+      ];
+      for(const proxy of proxies){
+        try{const r=await fetch(proxy);if(r.ok)return r.json();}catch(_){}
+      }
+      return null;
+    }
+    const [gdeltRes,wikiRes]=await Promise.allSettled([
+      fetchGdelt(),
+      fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&format=json&origin=*&srlimit=5&srprop=snippet`).then(r=>r.json()),
+    ]);
 
   const isLocation=st==='location'||st==='travel_risk';
 
