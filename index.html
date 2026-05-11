@@ -76,8 +76,10 @@ async function analyze(){
   document.getElementById('results').innerHTML='<div class="card" style="color:#94a3b8;padding:28px;text-align:center">Querying live sources…</div>';
 
   try{
+    const gdeltEndpoint=`https://api.gdeltproject.org/api/v2/doc/doc?query=${encodeURIComponent(q)}&mode=ArtList&maxrecords=15&format=json&timespan=90d`;
+    const corsProxy=`https://corsproxy.io/?url=${encodeURIComponent(gdeltEndpoint)}`;
     const [gdeltRes,wikiRes]=await Promise.allSettled([
-      fetch(`https://api.gdeltproject.org/api/v2/doc/doc?query=${encodeURIComponent(q)}&mode=ArtList&maxrecords=15&format=json&timespan=90d`).then(r=>r.json()),
+      fetch(corsProxy).then(r=>r.json()),
       fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&format=json&origin=*&srlimit=5&srprop=snippet`).then(r=>r.json()),
     ]);
 
