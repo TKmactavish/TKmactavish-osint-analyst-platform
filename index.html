@@ -77,9 +77,19 @@ async function analyze(){
 
   try{
     const gdeltEndpoint=`https://api.gdeltproject.org/api/v2/doc/doc?query=${encodeURIComponent(q)}&mode=ArtList&maxrecords=15&format=json&timespan=90d`;
-    const corsProxy=`https://corsproxy.io/?url=${encodeURIComponent(gdeltEndpoint)}`;
+    async function fetchGdelt(){
+      // try allorigins first, fall back to corsproxy
+      const proxies=[
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(gdeltEndpoint)}`,
+        `https://corsproxy.io/?${encodeURIComponent(gdeltEndpoint)}`,
+      ];
+      for(const proxy of proxies){
+        try{const r=await fetch(proxy);if(r.ok)return r.json();}catch(_){}
+      }
+      return null;
+    }
     const [gdeltRes,wikiRes]=await Promise.allSettled([
-      fetch(corsProxy).then(r=>r.json()),
+      fetchGdelt(),
       fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&format=json&origin=*&srlimit=5&srprop=snippet`).then(r=>r.json()),
     ]);
 
