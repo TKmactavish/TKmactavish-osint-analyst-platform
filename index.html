@@ -5,58 +5,93 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>OSINT Analyst Platform</title>
   <style>
-    *{box-sizing:border-box}body{margin:0;background:#071521;color:#102132;font-family:Segoe UI,Arial,sans-serif}.wrap{max-width:1180px;margin:auto;padding:28px 18px}.top{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;color:white}.brand{color:#14b8a6;text-transform:uppercase;font-weight:800;font-size:13px;letter-spacing:.08em}.top h1{font-size:38px;margin:12px 0}.pill{border:1px solid #334155;background:#0f172a;color:#cbd5e1;border-radius:6px;padding:10px 12px;height:max-content}.notice{margin:18px 0;padding:14px;border:1px solid rgba(245,158,11,.45);background:rgba(245,158,11,.12);color:#fff7ed;border-radius:6px;line-height:1.5}.search{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:18px;display:grid;gap:14px;box-shadow:0 18px 50px rgba(3,10,18,.18)}input{height:54px;border:1px solid #475569;background:#020617;color:white;border-radius:6px;padding:0 15px;font-size:16px;width:100%}.types{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}button{cursor:pointer;border-radius:6px;border:1px solid #475569;background:#111827;color:#e2e8f0;padding:11px;font-weight:700}.types button.active,.analyze{background:#14b8a6;color:#071521;border-color:#14b8a6}.results{display:grid;gap:16px;margin-top:18px}.grid{display:grid;gap:16px;grid-template-columns:1.25fr .75fr}.card{background:white;border-radius:8px;padding:18px;box-shadow:0 18px 50px rgba(3,10,18,.18)}.label{font-size:12px;color:#64748b;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.fact,.flag,.gap,.source{border:1px solid #e2e8f0;border-radius:7px;padding:12px;margin-top:10px}.tag{display:inline-block;border-radius:4px;padding:4px 7px;font-size:12px;font-weight:800;background:rgba(20,184,166,.14);color:#0f766e}.tag.med{background:rgba(245,158,11,.14);color:#b45309}.tag.low{background:#fee2e2;color:#b91c1c}.risk{font-size:42px;font-weight:900;text-transform:uppercase;margin:14px 0}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}.tab{background:#1e293b}.tab.active{background:#14b8a6;color:#071521}a{color:#0d9488}.bar{height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden}.bar span{display:block;height:100%;background:#14b8a6}.small{font-size:13px;color:#64748b;line-height:1.5}@media(max-width:800px){.types,.grid{grid-template-columns:1fr}.top h1{font-size:29px}}
+    *{box-sizing:border-box}body{margin:0;background:#071521;color:#102132;font-family:Segoe UI,Arial,sans-serif}.wrap{max-width:1180px;margin:auto;padding:28px 18px}.top{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;color:white}.brand{color:#14b8a6;text-transform:uppercase;font-weight:800;font-size:13px;letter-spacing:.08em}.top h1{font-size:38px;margin:12px 0}.pill{border:1px solid #334155;background:#0f172a;color:#cbd5e1;border-radius:6px;padding:10px 12px;height:max-content}.notice{margin:18px 0;padding:14px;border:1px solid rgba(245,158,11,.45);background:rgba(245,158,11,.12);color:#fff7ed;border-radius:6px;line-height:1.5}.search{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:18px;display:grid;gap:14px;box-shadow:0 18px 50px rgba(3,10,18,.18)}input,select{height:54px;border:1px solid #475569;background:#020617;color:white;border-radius:6px;padding:0 15px;font-size:15px}.langrow{display:flex;gap:10px}select{cursor:pointer;min-width:170px}input{width:100%}.types{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}button{cursor:pointer;border-radius:6px;border:1px solid #475569;background:#111827;color:#e2e8f0;padding:11px;font-weight:700}.types button.active,.analyze{background:#14b8a6;color:#071521;border-color:#14b8a6}.analyze{flex:1;font-size:16px}.results{display:grid;gap:16px;margin-top:18px}.grid{display:grid;gap:16px;grid-template-columns:1.25fr .75fr}.card{background:white;border-radius:8px;padding:18px;box-shadow:0 18px 50px rgba(3,10,18,.18)}.label{font-size:12px;color:#64748b;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.fact,.flag,.gap,.source{border:1px solid #e2e8f0;border-radius:7px;padding:12px;margin-top:10px}.tag{display:inline-block;border-radius:4px;padding:4px 7px;font-size:12px;font-weight:800;background:rgba(20,184,166,.14);color:#0f766e}.tag.med{background:rgba(245,158,11,.14);color:#b45309}.tag.low{background:#fee2e2;color:#b91c1c}.risk{font-size:42px;font-weight:900;text-transform:uppercase;margin:14px 0}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}.tab{background:#1e293b}.tab.active{background:#14b8a6;color:#071521}a{color:#0d9488}.bar{height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden}.bar span{display:block;height:100%;background:#14b8a6}.small{font-size:13px;color:#64748b;line-height:1.5}.src-badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 6px;border-radius:3px;background:#e2e8f0;color:#475569;margin-right:4px}@media(max-width:800px){.types,.grid{grid-template-columns:1fr}.top h1{font-size:29px}.langrow{flex-direction:column}select{min-width:unset}}
   </style>
 </head>
 <body>
   <main class="wrap">
-    <header class="top"><div><div class="brand">OSINT Analyst Platform</div><h1>Rapid public-source analyst brief</h1></div><div class="pill">Static demo • lawful public sources only</div></header>
+    <header class="top"><div><div class="brand">OSINT Analyst Platform</div><h1>Rapid public-source analyst brief</h1></div><div class="pill">Live • lawful public sources only</div></header>
     <div class="notice">Machine-assisted OSINT can contain errors and requires human verification. Use only lawful public sources. Do not collect private personal data, bypass access controls, or use this platform for stalking, harassment, doxxing, or targeting.</div>
-    <section class="search"><input id="query" value="Central Station protest" placeholder="Search a public person, incident, location, organization, or travel-risk event"><div class="types" id="types"></div><button class="analyze" onclick="analyze()">Analyze</button></section>
-    <div class="tabs" id="tabs"></div><section class="results" id="results"></section>
+    <section class="search">
+      <input id="query" value="Central Station protest" placeholder="Search a public person, incident, location, organization, or travel-risk event">
+      <div class="types" id="types"></div>
+      <div class="langrow">
+        <select id="lang">
+          <option value="all">All Languages</option>
+          <option value="en">English</option>
+          <option value="fr">French</option>
+          <option value="es">Spanish</option>
+          <option value="ar">Arabic</option>
+          <option value="zh">Chinese</option>
+          <option value="ru">Russian</option>
+          <option value="de">German</option>
+          <option value="pt">Portuguese</option>
+          <option value="tr">Turkish</option>
+          <option value="fa">Persian / Farsi</option>
+          <option value="hi">Hindi</option>
+          <option value="ja">Japanese</option>
+        </select>
+        <button class="analyze" onclick="analyze()">Analyze</button>
+      </div>
+    </section>
+    <div class="tabs" id="tabs"></div>
+    <section class="results" id="results"></section>
   </main>
 <script>
+const LANGS={
+  all:{label:'All Languages', wiki:['en','fr','ar','es','ru','zh'], gdelt:null},
+  en: {label:'English',       wiki:['en'],                          gdelt:'english'},
+  fr: {label:'French',        wiki:['fr'],                          gdelt:'french'},
+  es: {label:'Spanish',       wiki:['es'],                          gdelt:'spanish'},
+  ar: {label:'Arabic',        wiki:['ar'],                          gdelt:'arabic'},
+  zh: {label:'Chinese',       wiki:['zh'],                          gdelt:'chinese'},
+  ru: {label:'Russian',       wiki:['ru'],                          gdelt:'russian'},
+  de: {label:'German',        wiki:['de'],                          gdelt:'german'},
+  pt: {label:'Portuguese',    wiki:['pt'],                          gdelt:'portuguese'},
+  tr: {label:'Turkish',       wiki:['tr'],                          gdelt:'turkish'},
+  fa: {label:'Persian',       wiki:['fa'],                          gdelt:'farsi'},
+  hi: {label:'Hindi',         wiki:['hi'],                          gdelt:'hindi'},
+  ja: {label:'Japanese',      wiki:['ja'],                          gdelt:'japanese'},
+};
+
 const typeList=[['auto','Auto-detect'],['person','Person'],['incident','Incident'],['location','Location'],['organization','Organization'],['travel_risk','Travel Risk']];
 let selected='auto',report=null,tab='Overview';
 const typeBox=document.getElementById('types');
-typeList.forEach(([v,l])=>{let b=document.createElement('button');b.textContent=l;b.onclick=()=>{selected=v;renderTypes()};b.dataset.v=v;typeBox.appendChild(b)});
+typeList.forEach(([v,l])=>{let b=document.createElement('button');b.textContent=l;b.onclick=()=>{selected=v;renderTypes();};b.dataset.v=v;typeBox.appendChild(b);});
 renderTypes();
 
 function renderTypes(){[...typeBox.children].forEach(b=>b.className=b.dataset.v===selected?'active':'');}
 
-function detect(q){q=q.toLowerCase();if(selected!=='auto')return selected;if(/city|airport|district|station|border/.test(q))return'location';if(/protest|attack|fire|incident|explosion/.test(q))return'incident';if(/corp|company|agency|ministry|ngo/.test(q))return'organization';if(/travel|safety|advisory|risk/.test(q))return'travel_risk';return'person';}
+function detect(q){q=q.toLowerCase();if(selected!=='auto')return selected;if(/city|airport|district|station|border|region|province|county/.test(q))return'location';if(/protest|attack|fire|incident|explosion|crash|flood|earthquake/.test(q))return'incident';if(/corp|company|agency|ministry|ngo|ltd|inc|group/.test(q))return'organization';if(/travel|safety|advisory|risk|visa/.test(q))return'travel_risk';return'person';}
 
 function classifyDomain(d=''){
-  if(/\.gov($|\.)/.test(d)||/government|ministry|official/.test(d))return'official';
-  const major=['reuters','apnews','bbc','nytimes','guardian','washingtonpost','cnn','aljazeera','dw\.com','france24','voanews','rferl','abc','nbc','cbs','pbs','bloomberg','time\.com','newsweek','thehill'];
+  if(/\.gov($|\.)/.test(d)||/government|ministry|official|state\./.test(d))return'official';
+  const major=['reuters','apnews','bbc','nytimes','guardian','washingtonpost','cnn','aljazeera','dw\.com','france24','voanews','rferl','abc','nbc','cbs','pbs','bloomberg','time\.com','newsweek','thehill','lemonde','lefigaro','spiegel','elpais','xinhua','tass','rt\.com','nhk','thehindu'];
   if(major.some(m=>d.includes(m)))return'mainstream';
-  if(/\.org$/.test(d)||/ngo|rights|monitor|watch|amnesty|hrw/.test(d))return'ngo';
+  if(/\.org$/.test(d)||/ngo|rights|monitor|watch|amnesty|hrw|icrc/.test(d))return'ngo';
   return'local';
 }
 
 function credScore(d=''){
   if(/\.gov($|\.)/.test(d))return 95;
-  if(d==='wikipedia.org')return 88;
+  if(['wikipedia.org','wikidata.org'].some(x=>d===x))return 85;
   if(['reuters','apnews','bbc'].some(m=>d.includes(m)))return 90+Math.floor(Math.random()*6);
-  if(['nytimes','guardian','washingtonpost','bloomberg'].some(m=>d.includes(m)))return 82+Math.floor(Math.random()*8);
-  return 52+Math.floor(Math.random()*28);
+  if(['nytimes','guardian','washingtonpost','bloomberg','aljazeera','france24','dw.com'].some(m=>d.includes(m)))return 82+Math.floor(Math.random()*8);
+  return 50+Math.floor(Math.random()*28);
 }
 
-function fmtDate(s){
-  s=String(s||'');
-  if(s.length>=8)return`${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}`;
-  return s||'Unknown';
-}
+function fmtDate(s){s=String(s||'');if(s.length>=8)return`${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}`;return s||'Unknown';}
 
 function detectFlags(sources,q){
   const txt=sources.map(s=>(s.title+' '+s.text).toLowerCase()).join(' ');
   const out=[];
   const defs=[
     ['civil unrest',/protest|riot|unrest|demonstration|rally|march/,'medium','May affect movement, crowd safety, and public-order response.'],
-    ['violence or armed conflict',/attack|shooting|bomb|explosion|clash|violence|armed|weapon/,'high','May affect personal safety, access routes, and escalation probability.'],
-    ['travel disruption',/delay|closure|shutdown|evacuation|curfew|border|cancel/,'medium','Can affect route planning and operational timing.'],
-    ['humanitarian concern',/casualt|injur|dead|death|missing|displace|refugee|wound/,'high','Requires immediate verification and monitoring.'],
-    ['government response',/military|police|arrest|deploy|enforce|government|troops|forces/,'low','Official response may alter the situation rapidly.'],
+    ['violence or armed conflict',/attack|shooting|bomb|explosion|clash|violence|armed|weapon|airstrike|strike/,'high','May affect personal safety, access routes, and escalation probability.'],
+    ['travel disruption',/delay|closure|shutdown|evacuation|curfew|border|cancel|suspend/,'medium','Can affect route planning and operational timing.'],
+    ['humanitarian concern',/casualt|injur|dead|death|missing|displace|refugee|wound|killed/,'high','Requires immediate verification and monitoring.'],
+    ['government response',/military|police|arrest|deploy|enforce|government|troops|forces|security/,'low','Official response may alter the situation rapidly.'],
+    ['natural disaster',/earthquake|flood|hurricane|tornado|tsunami|wildfire|eruption/,'high','May affect infrastructure, access, and communications.'],
   ];
   for(const[name,rx,sev,desc]of defs){if(rx.test(txt))out.push([name,desc,sev]);}
   if(sources.length>=3)out.push(['contradictory reporting','Multiple independent sources require cross-verification before decisions.','medium']);
@@ -69,11 +104,45 @@ function riskLevel(flags){
   return'Low';
 }
 
+async function fetchWithProxy(url){
+  const proxies=[
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  ];
+  for(const p of proxies){
+    try{const r=await fetch(p,{signal:AbortSignal.timeout(8000)});if(r.ok)return r.json();}catch(_){}
+  }
+  return null;
+}
+
+async function fetchWiki(lang,q){
+  try{
+    const r=await fetch(`https://${lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&format=json&origin=*&srlimit=4&srprop=snippet`,{signal:AbortSignal.timeout(8000)});
+    return r.json();
+  }catch(_){return null;}
+}
+
+async function fetchWikidata(q,lang){
+  try{
+    const r=await fetch(`https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(q)}&language=${lang==='all'?'en':lang}&format=json&origin=*&limit=4`,{signal:AbortSignal.timeout(8000)});
+    return r.json();
+  }catch(_){return null;}
+}
+
+async function fetchNominatim(q,lang){
+  try{
+    const r=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=4&accept-language=${lang==='all'?'en':lang}&addressdetails=1`,{signal:AbortSignal.timeout(8000)});
+    return r.json();
+  }catch(_){return null;}
+}
+
 async function analyze(){
   const q=document.getElementById('query').value.trim()||'Central Station protest';
+  const langKey=document.getElementById('lang').value;
+  const lang=LANGS[langKey]||LANGS.all;
   const st=detect(q);
   document.getElementById('tabs').innerHTML='';
-  document.getElementById('results').innerHTML='<div class="card" style="color:#94a3b8;padding:28px;text-align:center">Querying live sources…</div>';
+  document.getElementById('results').innerHTML='<div class="card" style="color:#94a3b8;padding:28px;text-align:center">Querying live sources across '+lang.wiki.length+' language edition(s)…</div>';
 
   try{
     const gdeltEndpoint=`https://api.gdeltproject.org/api/v2/doc/doc?query=${encodeURIComponent(q)}&mode=ArtList&maxrecords=15&format=json&timespan=90d`;
@@ -93,41 +162,71 @@ async function analyze(){
       fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&format=json&origin=*&srlimit=5&srprop=snippet`).then(r=>r.json()),
     ]);
 
-    const gdelt=gdeltRes.status==='fulfilled'?gdeltRes.value:null;
-    const wiki=wikiRes.status==='fulfilled'?wikiRes.value:null;
+  const isLocation=st==='location'||st==='travel_risk';
 
-    const sources=[];
+  const [gdeltData,...rest]=await Promise.all([
+    fetchWithProxy(gdeltEndpoint),
+    ...lang.wiki.map(l=>fetchWiki(l,q)),
+    fetchWikidata(q,langKey),
+    isLocation?fetchNominatim(q,langKey):Promise.resolve(null),
+  ]);
 
-    if(gdelt?.articles){
-      for(const a of gdelt.articles){
-        sources.push({title:a.title||a.domain,type:classifyDomain(a.domain),score:credScore(a.domain),text:a.title,url:a.url,date:fmtDate(a.seendate),domain:a.domain,country:a.sourcecountry||''});
-      }
+  const wikiResults=rest.slice(0,lang.wiki.length);
+  const wikidataData=rest[lang.wiki.length];
+  const nominatimData=rest[lang.wiki.length+1];
+
+  const sources=[];
+
+  if(gdeltData?.articles){
+    for(const a of gdeltData.articles){
+      sources.push({title:a.title||a.domain,type:classifyDomain(a.domain),score:credScore(a.domain),text:a.title,url:a.url,date:fmtDate(a.seendate),domain:a.domain,country:a.sourcecountry||'',source:'GDELT'});
     }
-
-    if(wiki?.query?.search){
-      for(const w of wiki.query.search){
-        const snippet=(w.snippet||'').replace(/<[^>]+>/g,'');
-        sources.push({title:w.title,type:'reference',score:88,text:snippet,url:`https://en.wikipedia.org/wiki/${encodeURIComponent(w.title.replace(/ /g,'_'))}`,date:'Wikipedia',domain:'wikipedia.org',country:''});
-      }
-    }
-
-    if(!sources.length){
-      document.getElementById('results').innerHTML='<div class="card" style="color:#94a3b8;padding:24px">No public-source records found for that query. Try broader terms.</div>';
-      return;
-    }
-
-    const flags=detectFlags(sources,q);
-    report={
-      q,st,sources,flags,
-      risk:riskLevel(flags),
-      summary:`Live OSINT for <b>${q}</b>: ${sources.length} public-source records retrieved (${gdelt?.articles?.length||0} news articles, ${wiki?.query?.search?.length||0} reference entries). ${flags.length} intelligence flag(s) detected. All claims require human verification before operational use.`
-    };
-    tab='Overview';
-    render();
-  }catch(err){
-    document.getElementById('results').innerHTML=`<div class="card" style="color:#f87171;padding:24px">Error: ${err.message}</div>`;
   }
+
+  for(let i=0;i<lang.wiki.length;i++){
+    const wd=wikiResults[i];const wl=lang.wiki[i];
+    if(wd?.query?.search){
+      for(const w of wd.query.search){
+        const snippet=(w.snippet||'').replace(/<[^>]+>/g,'');
+        sources.push({title:w.title,type:'reference',score:85,text:snippet,url:`https://${wl}.wikipedia.org/wiki/${encodeURIComponent(w.title.replace(/ /g,'_'))}`,date:'Wikipedia',domain:'wikipedia.org',country:wl.toUpperCase(),source:`Wikipedia (${wl})`});
+      }
+    }
+  }
+
+  if(wikidataData?.search){
+    for(const e of wikidataData.search){
+      if(!e.description)continue;
+      sources.push({title:e.label,type:'reference',score:83,text:e.description,url:`https://www.wikidata.org/wiki/${e.id}`,date:'Wikidata',domain:'wikidata.org',country:'',source:'Wikidata'});
+    }
+  }
+
+  if(nominatimData?.length){
+    for(const n of nominatimData.slice(0,3)){
+      const name=n.display_name;
+      sources.push({title:name,type:'official',score:80,text:`${n.type||n.class} — ${name}`,url:`https://www.openstreetmap.org/${n.osm_type}/${n.osm_id}`,date:'OpenStreetMap',domain:'openstreetmap.org',country:n.address?.country_code?.toUpperCase()||'',source:'OpenStreetMap'});
+    }
+  }
+
+  if(!sources.length){
+    document.getElementById('results').innerHTML='<div class="card" style="color:#94a3b8;padding:24px">No public-source records found. Try broader terms or a different language.</div>';
+    return;
+  }
+
+  const flags=detectFlags(sources,q);
+  const sourceCounts={};
+  sources.forEach(s=>{sourceCounts[s.source]=(sourceCounts[s.source]||0)+1;});
+  const sourcesSummary=Object.entries(sourceCounts).map(([k,v])=>`${v} from ${k}`).join(', ');
+
+  report={
+    q,st,sources,flags,lang:lang.label,
+    risk:riskLevel(flags),
+    summary:`Live OSINT for <b>${q}</b> [${lang.label}]: ${sources.length} records — ${sourcesSummary}. ${flags.length} intelligence flag(s) detected. All claims require human verification.`
+  };
+  tab='Overview';
+  render();
 }
+
+function badge(s){return`<span class="src-badge">${s}</span>`;}
 
 function render(){
   if(!report)return;
@@ -137,26 +236,26 @@ function render(){
   const s=report.sources;
 
   if(tab==='Overview'){
-    const top=s.slice(0,5);
+    const top=s.slice(0,6);
     r.innerHTML=`<div class="grid">
       <div class="card"><div class="label">Executive Summary</div><p>${report.summary}</p></div>
-      <div class="card"><div class="label">Analyst Note</div><p>Machine-assisted OSINT. Verify every claim. Use only lawful public sources.</p></div>
+      <div class="card"><div class="label">Analyst Note</div><p>Machine-assisted OSINT. Verify every claim independently. Use only lawful public sources.</p></div>
     </div>
     <div class="card"><div class="label">Top Results (${top.length} of ${s.length})</div>
-      ${top.map(x=>`<div class="fact"><span class="tag ${x.type==='official'?'':'med'}">${x.type}</span> <b>${x.title}</b><div class="small"><a href="${x.url}" target="_blank" rel="noopener">${x.url}</a></div></div>`).join('')}
+      ${top.map(x=>`<div class="fact">${badge(x.source)}<span class="tag ${x.type==='official'?'':x.type==='mainstream'?'':'med'}">${x.type}</span> <b>${x.title}</b><p class="small">${x.text||''}</p><div class="small"><a href="${x.url}" target="_blank" rel="noopener">${x.url}</a></div></div>`).join('')}
     </div>`;
   }
 
   if(tab==='Timeline'){
-    const dated=s.filter(x=>x.date&&x.date!=='Wikipedia').sort((a,b)=>b.date.localeCompare(a.date));
+    const dated=s.filter(x=>x.date&&x.date!=='Wikipedia'&&x.date!=='Wikidata'&&x.date!=='OpenStreetMap').sort((a,b)=>b.date.localeCompare(a.date));
     r.innerHTML=`<div class="card"><div class="label">Timeline (${dated.length} dated records)</div>
-      ${dated.map(x=>`<div class="fact"><b>${x.date}</b> <span class="small">${x.domain}</span><p>${x.title}</p><div class="small"><a href="${x.url}" target="_blank" rel="noopener">${x.url}</a></div></div>`).join('')}
+      ${dated.length?dated.map(x=>`<div class="fact"><b>${x.date}</b> ${badge(x.source)}<span class="small">${x.domain}${x.country?' • '+x.country:''}</span><p>${x.title}</p><div class="small"><a href="${x.url}" target="_blank" rel="noopener">${x.url}</a></div></div>`).join(''):'<p class="small">No dated records found.</p>'}
     </div>`;
   }
 
   if(tab==='Sources'){
-    r.innerHTML=`<div class="card"><div class="label">Source Assessment (${s.length} sources)</div>
-      ${s.map(x=>`<div class="source"><b>${x.title}</b><div class="small"><a href="${x.url}" target="_blank" rel="noopener">${x.url}</a></div>
+    r.innerHTML=`<div class="card"><div class="label">All Sources (${s.length})</div>
+      ${s.map(x=>`<div class="source">${badge(x.source)}<b>${x.title}</b><div class="small"><a href="${x.url}" target="_blank" rel="noopener">${x.url}</a></div>
         <div style="margin-top:6px">${x.type}${x.country?' • '+x.country:''} • Credibility: ${x.score}/100</div>
         <div class="bar" style="margin-top:6px"><span style="width:${x.score}%"></span></div></div>`).join('')}
     </div>`;
@@ -168,27 +267,28 @@ function render(){
 
   if(tab==='Risk Assessment'){
     const rl=report.risk;
+    const byType=['official','mainstream','ngo','local','reference'].map(t=>{const n=s.filter(x=>x.type===t);return n.length?`<div class="fact"><b>${t}</b>: ${n.length} source(s) — avg credibility ${Math.round(n.reduce((a,x)=>a+x.score,0)/n.length)}/100</div>`:''}).join('');
     r.innerHTML=`<div class="grid">
-      <div class="card"><div class="label">Overall Risk Level</div><div class="risk">${rl}</div><p>Derived from live source content, flag severity, and source count.</p></div>
+      <div class="card"><div class="label">Overall Risk Level</div><div class="risk">${rl}</div><p>Derived from live source content, flag severity, and source diversity.</p></div>
       <div class="card"><div class="label">Precautions</div>
         <div class="gap">Verify official advisories before any movement.</div>
-        <div class="gap">Cross-check casualty and incident figures across sources.</div>
+        <div class="gap">Cross-check figures across independent sources.</div>
         <div class="gap">Monitor transport and emergency-service updates.</div>
+        <div class="gap">Reassess if new sources contradict this summary.</div>
       </div>
     </div>
-    <div class="card"><div class="label">Source Credibility Distribution</div>
-      ${['official','mainstream','ngo','local','reference'].map(t=>{const n=s.filter(x=>x.type===t);return n.length?`<div class="fact"><b>${t}</b>: ${n.length} source(s) — avg credibility ${Math.round(n.reduce((a,x)=>a+x.score,0)/n.length)}/100</div>`:''}).join('')}
-    </div>`;
+    <div class="card"><div class="label">Source Credibility by Type</div>${byType}</div>`;
   }
 
   if(tab==='Intelligence Gaps'){
-    const wikiEntries=s.filter(x=>x.domain==='wikipedia.org');
+    const refs=s.filter(x=>x.type==='reference');
+    const osm=s.filter(x=>x.domain==='openstreetmap.org');
     r.innerHTML=`<div class="grid">
       <div class="card"><div class="label">Open Questions</div>
-        ${['Are all sources citing the same primary event?','Is there official government confirmation?','Which source has firsthand on-the-ground reporting?','Are there signs of escalation since the latest report?','What would change the risk assessment?'].map(x=>`<div class="gap">${x}</div>`).join('')}
+        ${['Are all sources citing the same primary event?','Is there official government confirmation?','Which source has firsthand on-the-ground reporting?','Are there signs of escalation since the latest report?','What language sources have not been checked?','What would change the risk assessment?'].map(x=>`<div class="gap">${x}</div>`).join('')}
       </div>
-      <div class="card"><div class="label">Reference Entries (${wikiEntries.length})</div>
-        ${wikiEntries.length?wikiEntries.map(x=>`<div class="gap"><a href="${x.url}" target="_blank" rel="noopener">${x.title}</a><p class="small">${x.text}</p></div>`).join(''):'<div class="gap">No Wikipedia reference entries found.</div>'}
+      <div class="card"><div class="label">Reference & Location Entries (${refs.length+osm.length})</div>
+        ${[...refs,...osm].length?[...refs,...osm].map(x=>`<div class="gap">${badge(x.source)}<a href="${x.url}" target="_blank" rel="noopener">${x.title}</a><p class="small">${x.text}</p></div>`).join(''):'<div class="gap">No reference entries found.</div>'}
       </div>
     </div>`;
   }
