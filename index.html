@@ -300,6 +300,38 @@ function updateStep(id,ok){
   if(dot){dot.className='dot '+(ok?'ok':'fail');}
 }
 
+async function fetchWithProxy(url){
+  const proxies=[
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  ];
+  for(const p of proxies){
+    try{const r=await fetch(p,{signal:AbortSignal.timeout(8000)});if(r.ok)return r.json();}catch(_){}
+  }
+  return null;
+}
+
+async function fetchWiki(lang,q){
+  try{
+    const r=await fetch(`https://${lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&format=json&origin=*&srlimit=4&srprop=snippet`,{signal:AbortSignal.timeout(8000)});
+    return r.json();
+  }catch(_){return null;}
+}
+
+async function fetchWikidata(q,lang){
+  try{
+    const r=await fetch(`https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(q)}&language=${lang==='all'?'en':lang}&format=json&origin=*&limit=4`,{signal:AbortSignal.timeout(8000)});
+    return r.json();
+  }catch(_){return null;}
+}
+
+async function fetchNominatim(q,lang){
+  try{
+    const r=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=4&accept-language=${lang==='all'?'en':lang}&addressdetails=1`,{signal:AbortSignal.timeout(8000)});
+    return r.json();
+  }catch(_){return null;}
+}
+
 async function analyze(){
   const q=(document.getElementById('query').value||'').trim()||'Central Station protest';
   const langKey=document.getElementById('lang').value;
@@ -350,6 +382,8 @@ async function analyze(){
   tab='Overview';
   render();
 }
+
+function badge(s){return`<span class="src-badge">${s}</span>`;}
 
 function render(){
   if(!report)return;
