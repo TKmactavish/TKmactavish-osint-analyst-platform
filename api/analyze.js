@@ -1,15 +1,14 @@
 /**
- * Athena Intel – Vercel Serverless Function (Node.js / CommonJS)
+ * Athena Intel – Vercel Serverless Function (Node.js, no dependencies)
  * Set ANTHROPIC_API_KEY in Vercel → Project → Settings → Environment Variables.
  */
 
 'use strict';
 
-const Anthropic = require('@anthropic-ai/sdk');
-
 // ─── Constants ────────────────────────────────────────────────────────────────
-const CLAUDE_MODEL = 'claude-haiku-4-5-20251001';
-const MAX_TOKENS   = 8096;
+const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
+const CLAUDE_MODEL  = 'claude-haiku-4-5-20251001';
+const MAX_TOKENS    = 8096;
 
 // ─── Geographic security knowledge base ──────────────────────────────────────
 const GEO_CONTEXT = `
@@ -23,16 +22,16 @@ SOUTHEAST ASIA
   shootings, arson of schools. 7,000+ deaths. ALWAYS flag HIGH RISK.
   Key sources: Bangkok Post, Khaosod English, Benar News, ICG, HRW.
 • Myanmar: Civil war since Feb 2021 coup. Active kinetic conflict in Sagaing,
-  Chin, Kachin, Shan, Karen, Kayah. Junta airstrikes on civilian areas. HIGH–EXTREME.
-• Mindanao, Philippines: BIFF, Abu Sayyaf remnants, NPA active. MEDIUM–HIGH.
+  Chin, Kachin, Shan, Karen, Kayah. Junta airstrikes on civilian areas. HIGH-EXTREME.
+• Mindanao, Philippines: BIFF, Abu Sayyaf remnants, NPA active. MEDIUM-HIGH.
 • West Papua, Indonesia: TPNPB insurgency in highland areas. MEDIUM.
 
 MIDDLE EAST & NORTH AFRICA
 • Gaza / West Bank: Active armed conflict. EXTREME risk.
 • Yemen: Houthi control, active conflict. HIGH.
 • Syria: Ongoing conflict, multiple armed actors. HIGH outside major cities.
-• Iraq: Residual ISIS, militia clashes. MEDIUM–HIGH.
-• Lebanon: Volatile, Hezbollah presence. MEDIUM–HIGH.
+• Iraq: Residual ISIS, militia clashes. MEDIUM-HIGH.
+• Lebanon: Volatile, Hezbollah presence. MEDIUM-HIGH.
 • Sudan: Civil war since April 2023 (SAF vs RSF). HIGH in Khartoum, Darfur.
 
 SOUTH ASIA
@@ -43,15 +42,15 @@ SOUTH ASIA
 AFRICA
 • Sahel (Mali, Burkina Faso, Niger): JNIM and ISWAP. HIGH outside capitals.
 • Cabo Delgado, Mozambique: ISIS-affiliated insurgency. HIGH.
-• Eastern DRC: M23, ADF, dozens of armed groups. HIGH–EXTREME.
+• Eastern DRC: M23, ADF, dozens of armed groups. HIGH-EXTREME.
 • Somalia: Al-Shabaab active across rural south-central. HIGH.
-• Sudan: Active civil war. HIGH–EXTREME in Khartoum, Darfur.
+• Sudan: Active civil war. HIGH-EXTREME in Khartoum, Darfur.
 
 LATIN AMERICA
 • Haiti: Gang control of major territory. EXTREME.
 • Ecuador: Declared internal armed conflict Jan 2024. HIGH.
 • Mexico (Guerrero, Sinaloa, Michoacán, Tamaulipas): Cartel territory. HIGH.
-• Colombia (rural Cauca, Nariño, Norte de Santander, Arauca): FARC-EP, ELN. HIGH.
+• Colombia (rural Cauca, Narino, Norte de Santander, Arauca): FARC-EP, ELN. HIGH.
 `;
 
 // ─── System prompt ────────────────────────────────────────────────────────────
@@ -67,16 +66,12 @@ Wikipedia entries, Wikidata entities). Produce a structured intelligence brief.
 ${GEO_CONTEXT}
 
 RULES
-1. For location queries, ALWAYS apply geographic security context above — even
-   if no recent news mentions a known conflict.
-2. analytical_perspective: REQUIRED, minimum 5 sentences covering (a) situation
-   assessment, (b) patterns and trends, (c) source contradictions or gaps,
-   (d) what an experienced analyst flags beyond the headlines, (e) geopolitical
-   or social context.
-3. recommendations: REQUIRED with non-empty arrays (minimum 4 items each) for
-   ALL THREE user types: law_enforcement, private_sector, traveler.
+1. For location queries, ALWAYS apply geographic security context above.
+2. analytical_perspective: REQUIRED, minimum 5 sentences covering situation
+   assessment, patterns and trends, source gaps, analyst-level flags, geopolitical context.
+3. recommendations: REQUIRED arrays (minimum 4 items each) for ALL THREE user types.
 4. Every flag must cite specific evidence from sources or the geo knowledge base.
-5. Return ONLY valid JSON — no markdown, no code fences, no preamble.
+5. Return ONLY valid JSON with no markdown fences, no preamble, no trailing text.
 
 JSON SCHEMA:
 {
@@ -84,32 +79,15 @@ JSON SCHEMA:
   "type": "person|incident|location|organization|travel_risk",
   "summary": "2-3 sentence executive summary",
   "risk": "HIGH|MEDIUM|LOW",
-  "sources": [{
-    "title": "string", "url": "string", "domain": "string",
-    "date": "YYYY-MM-DD or null",
-    "type": "official|mainstream|ngo|local|reference",
-    "confidence": "high|medium|low"
-  }],
-  "timeline": [{
-    "date": "YYYY-MM-DD", "event": "string",
-    "source_title": "string", "source_url": "string",
-    "confidence": "high|medium|low"
-  }],
-  "flags": [{
-    "name": "string", "description": "string",
-    "severity": "high|medium|low",
-    "evidence": "string", "source_url": "string or null"
-  }],
-  "risk_assessment": {
-    "level": "HIGH|MEDIUM|LOW",
-    "rationale": "string",
-    "factors": ["string"]
-  },
+  "sources": [{"title":"string","url":"string","domain":"string","date":"YYYY-MM-DD or null","type":"official|mainstream|ngo|local|reference","confidence":"high|medium|low"}],
+  "timeline": [{"date":"YYYY-MM-DD","event":"string","source_title":"string","source_url":"string","confidence":"high|medium|low"}],
+  "flags": [{"name":"string","description":"string","severity":"high|medium|low","evidence":"string","source_url":"string or null"}],
+  "risk_assessment": {"level":"HIGH|MEDIUM|LOW","rationale":"string","factors":["string"]},
   "analytical_perspective": "REQUIRED 5+ sentence string",
   "recommendations": {
-    "law_enforcement": ["min 4 specific items"],
-    "private_sector":  ["min 4 specific items"],
-    "traveler":        ["min 4 specific items"]
+    "law_enforcement": ["min 4 items"],
+    "private_sector": ["min 4 items"],
+    "traveler": ["min 4 items"]
   }
 }`;
 
@@ -164,7 +142,7 @@ async function fetchWikipedia(q) {
     const d = await r.json();
     return (d?.query?.search||[]).map(w => ({
       title: w.title,
-      snippet: w.snippet.replace(/<[^>]+>/g,''),
+      snippet: w.snippet.replace(/<[^>]+>/g, ''),
       url: `https://en.wikipedia.org/wiki/${encodeURIComponent(w.title.replace(/ /g,'_'))}`,
       domain: 'wikipedia.org',
     }));
@@ -203,16 +181,32 @@ function buildContext(news, wiki, wd) {
 }
 
 async function analyzeWithClaude(q, context, apiKey) {
-  const client = new Anthropic({ apiKey });
-  const msg = await client.messages.create({
+  const body = JSON.stringify({
     model:      CLAUDE_MODEL,
     max_tokens: MAX_TOKENS,
     system:     SYSTEM_PROMPT,
     messages:   [{ role: 'user', content:
-      `Query: "${q}"\n\nGATHERED INTELLIGENCE:\n${context}\n\nReturn the complete JSON brief. All fields including analytical_perspective and all three recommendation arrays are mandatory.`
+      `Query: "${q}"\n\nGATHERED INTELLIGENCE:\n${context}\n\nReturn the complete JSON brief. All fields are mandatory.`
     }],
   });
-  const text = (msg.content?.[0]?.text || '').replace(/^```(?:json)?\s*/m, '').replace(/```\s*$/m, '').trim();
+
+  const r = await fetch(ANTHROPIC_API, {
+    method:  'POST',
+    headers: {
+      'x-api-key':         apiKey,
+      'anthropic-version': '2023-06-01',
+      'content-type':      'application/json',
+    },
+    body,
+  });
+
+  if (!r.ok) {
+    const errText = await r.text();
+    throw new Error(`Anthropic API ${r.status}: ${errText.slice(0, 300)}`);
+  }
+
+  const data = await r.json();
+  const text = (data.content?.[0]?.text || '').replace(/^```(?:json)?\s*/m, '').replace(/```\s*$/m, '').trim();
   try { return JSON.parse(text); }
   catch (_) {
     const m = text.match(/\{[\s\S]*\}/);
@@ -243,7 +237,7 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return jsonRes({ error: 'Only POST requests are supported' }, 405, res);
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return jsonRes({ error: 'ANTHROPIC_API_KEY is not set — add it in Vercel → Project → Settings → Environment Variables' }, 500, res);
+  if (!apiKey) return jsonRes({ error: 'ANTHROPIC_API_KEY is not set' }, 500, res);
 
   let q;
   try {
@@ -259,6 +253,6 @@ module.exports = async function handler(req, res) {
     return jsonRes(result, 200, res);
   } catch (err) {
     console.error('Athena Intel error:', err);
-    return jsonRes({ error: err.message || 'Analysis failed — please try again' }, 500, res);
+    return jsonRes({ error: err.message || 'Analysis failed' }, 500, res);
   }
 };
