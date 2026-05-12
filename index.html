@@ -320,14 +320,15 @@
     use this platform for stalking, harassment, doxxing, or targeting of individuals.
   </div>
 
-  <!-- Setup banner (shown when Worker URL is not configured) -->
+  <!-- Setup banner (shown on GitHub Pages) -->
   <div id="setup-banner" class="setup-banner" style="display:none">
-    <h3>⚙ One-time setup required</h3>
+    <h3>⚙ Deploy to Vercel to enable AI analysis</h3>
     <p>
-      Athena Intel uses a Cloudflare Worker to call the Claude AI API securely (your API key
-      is never exposed in the browser). Deploy the included <code>worker.js</code> and then click
-      <strong>Configure</strong> in the header to enter your Worker URL.
-      See <strong>README.md</strong> for full deployment instructions.
+      This site is running on GitHub Pages, which does not support the backend API.
+      <strong>Deploy the repo to Vercel</strong> (free, sign in with GitHub — no new password needed)
+      and add your <code>ANTHROPIC_API_KEY</code> as an environment variable.
+      Full instructions are in <strong>README.md</strong>.
+      Already have a Cloudflare Worker URL? Click <strong>Configure</strong> above.
     </p>
   </div>
 
@@ -383,11 +384,14 @@
 </div>
 
 <script>
-// ── Worker URL (persisted in localStorage) ───────────────────────────────────
-let WORKER_URL = localStorage.getItem('athena_worker_url') || '';
+// ── API endpoint ──────────────────────────────────────────────────────────────
+// Defaults to /api/analyze (works automatically on Vercel).
+// Override with a custom Cloudflare Worker URL via the Configure button.
+let WORKER_URL = localStorage.getItem('athena_worker_url') || '/api/analyze';
 
 function openSettings() {
-  document.getElementById('workerUrlInput').value = WORKER_URL;
+  document.getElementById('workerUrlInput').value =
+    WORKER_URL === '/api/analyze' ? '' : WORKER_URL;
   document.getElementById('modal').style.display = 'flex';
 }
 function closeSettings() {
@@ -398,15 +402,15 @@ function closeOnOverlay(e) {
 }
 function saveSettings() {
   const v = document.getElementById('workerUrlInput').value.trim();
-  WORKER_URL = v;
-  localStorage.setItem('athena_worker_url', v);
+  WORKER_URL = v || '/api/analyze';
+  if (v) localStorage.setItem('athena_worker_url', v);
+  else   localStorage.removeItem('athena_worker_url');
   closeSettings();
-  checkSetup();
+  document.getElementById('setup-banner').style.display = 'none';
 }
-function checkSetup() {
-  document.getElementById('setup-banner').style.display = WORKER_URL ? 'none' : 'block';
-}
-checkSetup();
+// Show setup banner only if this looks like GitHub Pages (not Vercel)
+const onGitHubPages = location.hostname.endsWith('.github.io');
+document.getElementById('setup-banner').style.display = onGitHubPages ? 'block' : 'none';
 
 // ── State ────────────────────────────────────────────────────────────────────
 let report = null;

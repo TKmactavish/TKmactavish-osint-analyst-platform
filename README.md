@@ -1,128 +1,114 @@
 # Athena Intel
 
-Open-source intelligence (OSINT) platform that gathers live public-source
-information, analyzes it with Claude AI, and produces structured analyst briefs.
-
-**Live site:** https://tkmactavish.github.io/TKmactavish-osint-analyst-platform/
-
----
-
-## Architecture
-
-```
-Browser (GitHub Pages)
-  └─► POST {query, lang}
-        └─► Cloudflare Worker (holds API key securely)
-              ├─► Google News RSS  (live news articles)
-              ├─► Wikipedia API    (background context)
-              ├─► Wikidata API     (structured entities)
-              └─► Claude API       (analysis + structured JSON brief)
-```
-
-The API key is **never** exposed in the frontend. It lives only as a
-Cloudflare Worker secret.
+Open-source intelligence (OSINT) platform powered by Claude AI.
+Enter any person, incident, location, or organization and get a structured
+analyst brief with sources, timeline, red flags, risk assessment, and
+tailored recommendations.
 
 ---
 
-## Setup & Deployment
+## Quickstart — deploy in ~10 minutes, no command line needed
 
-### Prerequisites
+You need two things: a **free Anthropic API key** and a **free Vercel account**.
 
-- [Node.js](https://nodejs.org/) 18+
-- [Cloudflare account](https://dash.cloudflare.com/sign-up) (free tier is fine)
-- [Anthropic API key](https://console.anthropic.com/)
+---
 
-### 1 — Install Wrangler
+### Step 1 — Get an Anthropic API key (3 minutes)
+
+1. Go to **https://console.anthropic.com**
+2. Click **Sign up** and create a free account
+3. Go to **API Keys** in the left sidebar
+4. Click **Create Key**, give it a name (e.g. "Athena Intel"), copy the key
+
+> Keep this key private — do not paste it anywhere public.
+
+---
+
+### Step 2 — Deploy to Vercel (5 minutes, no command line)
+
+Vercel hosts both the static frontend and the backend API in one click.
+
+1. Go to **https://vercel.com** and click **Sign Up**
+2. Choose **Continue with GitHub** — no new password needed
+3. Click **Add New… → Project**
+4. Find **TKmactavish-osint-analyst-platform** in the list and click **Import**
+5. On the configuration screen, open **Environment Variables** and add:
+   - **Name:** `ANTHROPIC_API_KEY`
+   - **Value:** paste your key from Step 1
+6. Click **Deploy**
+
+Vercel will build and deploy the site. In about 30 seconds you'll get a live URL
+like `https://tkmactavish-osint-analyst-platform.vercel.app`.
+
+That's it — the site is live and fully functional. No other configuration needed.
+
+---
+
+### (Optional) Use a custom domain
+
+In Vercel → Project → Settings → Domains, add any domain you own.
+
+---
+
+### (Optional) Use a Cloudflare Worker instead of Vercel
+
+If you prefer Cloudflare Workers:
 
 ```bash
 npm install -g wrangler
 wrangler login
-```
-
-### 2 — Deploy the Worker
-
-From the repository root:
-
-```bash
 wrangler deploy
-```
-
-This uploads `worker.js` to Cloudflare. Your Worker URL will be printed:
-
-```
-https://athena-intel.<your-subdomain>.workers.dev
-```
-
-### 3 — Set the Anthropic API key as a secret
-
-```bash
 wrangler secret put ANTHROPIC_API_KEY
-# Paste your key when prompted — it is stored encrypted, never in code
 ```
 
-### 4 — Configure the frontend
-
-Open the live site, click **⚙ Configure** in the top-right corner, and paste
-your Worker URL. The URL is saved in your browser's `localStorage` — it never
-leaves your machine.
-
-### 5 — (Optional) Upgrade the Claude model
-
-In `worker.js`, change `CLAUDE_MODEL` to `claude-opus-4-7` for the highest
-analytical quality. Sonnet (`claude-sonnet-4-6`, the default) is faster and
-cheaper; Opus is more thorough.
+Then open the live site, click **⚙ Configure**, and enter your Worker URL
+(`https://athena-intel.YOUR-SUBDOMAIN.workers.dev`).
 
 ---
 
-## What each tab shows
+## How it works
+
+```
+Browser  →  POST /api/analyze  →  Vercel Edge Function
+                                       ├── Google News RSS  (live news)
+                                       ├── Wikipedia API    (background context)
+                                       ├── Wikidata API     (structured entities)
+                                       └── Claude AI        (analysis + JSON brief)
+```
+
+The Anthropic API key lives only as an encrypted Vercel environment variable.
+It is never sent to or stored in the browser.
+
+---
+
+## Output tabs
 
 | Tab | Content |
 |-----|---------|
 | **Overview** | Executive summary, risk level, stat row, top sources |
-| **Timeline** | Chronological events with dates, sources, confidence badges |
-| **Sources** | All gathered sources with type, credibility score, and confidence |
-| **Red Flags** | Intelligence indicators with severity, description, and evidence |
-| **Risk Assessment** | HIGH / MEDIUM / LOW verdict with rationale and contributing factors |
-| **Analytical Perspective** | Claude's interpretation — patterns, contradictions, geopolitical context, analyst-level flags |
-| **Recommendations** | Tailored action items for three user types: Law Enforcement, Private Sector, Traveler |
+| **Timeline** | Chronological events with dates and confidence badges |
+| **Sources** | All sources with type, credibility bar, and confidence |
+| **Red Flags** | Intelligence indicators with severity and evidence |
+| **Risk Assessment** | HIGH / MEDIUM / LOW verdict with rationale |
+| **Analytical Perspective** | Claude's interpretation — patterns, contradictions, geopolitical context |
+| **Recommendations** | Action items for Law Enforcement, Private Sector, and Travelers |
 
 ---
 
 ## Geographic security context
 
-The system prompt includes a built-in knowledge base of active conflict zones
-and long-running security situations (Thai Deep South insurgency, Myanmar civil
-war, Sahel, DRC, Sudan, Haiti, and more). Claude always applies this context
-for location queries — even when recent news articles don't explicitly mention
-the conflict.
-
----
-
-## Target users
-
-1. **Intelligence analysts** in law enforcement and government agencies
-2. **Corporate security professionals** in private-sector organizations
-3. **Travelers** assessing destination risk
+The AI system prompt includes a built-in knowledge base of active conflict zones:
+Thai Deep South insurgency (Yala / Narathiwat / Pattani), Myanmar civil war,
+Sahel, Eastern DRC, Sudan, Haiti, and more. These are always flagged for
+matching location queries — even when recent news doesn't mention the conflict.
 
 ---
 
 ## Disclaimer
 
-Athena Intel is a research and analytical support tool. It uses **only lawful
-public sources** (news RSS feeds, Wikipedia, Wikidata) and does **not**:
+Athena Intel uses **only lawful public sources** (news RSS, Wikipedia, Wikidata).
+It does not scrape private data, bypass access controls, or store personal information.
 
-- Access private or restricted data
-- Scrape social media behind logins
-- Bypass access controls
-- Collect or store personal information
-
-**Do not** use this platform for stalking, harassment, doxxing, unlawful
-surveillance, or targeting of private individuals. All output requires human
-verification before operational use. Machine-assisted analysis can contain
-errors — treat every claim as unverified until independently confirmed.
-
----
-
-## License
-
-MIT
+**Do not** use this platform for stalking, harassment, doxxing, or targeting
+private individuals. All AI-generated output requires human verification before
+operational use.
