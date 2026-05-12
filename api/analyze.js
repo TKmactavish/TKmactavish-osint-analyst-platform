@@ -1,15 +1,13 @@
 /**
- * Athena Intel – Vercel Edge Function
+ * Athena Intel – Vercel Serverless Function (Node.js)
  * Deployed automatically when you push to a Vercel project.
  * Set ANTHROPIC_API_KEY in the Vercel dashboard → Project → Settings → Environment Variables.
  */
 
-export const config = { runtime: 'edge' };
-
 // ─── Constants ────────────────────────────────────────────────────────────────
 const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
-const CLAUDE_MODEL  = 'claude-haiku-4-5-20251001';
-const MAX_TOKENS    = 2000;
+const CLAUDE_MODEL  = 'claude-sonnet-4-6';
+const MAX_TOKENS    = 3000;
 
 // ─── Geographic security knowledge base ──────────────────────────────────────
 const GEO_CONTEXT = `
@@ -239,30 +237,40 @@ const CORS = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 };
-const json = (d, s=200) => new Response(JSON.stringify(d), {
-  status: s, headers: { 'Content-Type': 'application/json', ...CORS },
-});
+function jsonRes(data, status = 200, res) {
+  res.status(status).setHeader('Content-Type', 'application/json');
+  Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
+  res.end(JSON.stringify(data));
+}
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
-export default async function handler(request) {
-  if (request.method === 'OPTIONS') return new Response(null, { headers: CORS });
-  if (request.method !== 'POST')    return json({ error: 'Only POST requests are supported' }, 405);
+export default async function handler(req, res) {
+  if (req.method === 'OPTIONS') { Object.entries(CORS).forEach(([k,v]) => res.setHeader(k,v)); return res.status(204).end(); }
+  if (req.method !== 'POST') return jsonRes({ error: 'Only POST requests are supported' }, 405, res);
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return json({ error: 'ANTHROPIC_API_KEY is not set — add it in Vercel → Project → Settings → Environment Variables' }, 500);
+  if (!apiKey) return jsonRes({ error: 'ANTHROPIC_API_KEY is not set — add it in Vercel → Project → Settings → Environment Variables' }, 500, res);
 
   let q, lang;
-  try { ({ query: q = '', lang = 'en' } = await request.json()); q = q.trim(); }
-  catch(_) { return json({ error: 'Invalid JSON body' }, 400); }
+  try {
+    const body = await new Promise((resolve, reject) => {
+      let data = '';
+      req.on('data', chunk => { data += chunk; });
+      req.on('end', () => { try { resolve(JSON.parse(data)); } catch(e) { reject(e); } });
+      req.on('error', reject);
+    });
+    ({ query: q = '', lang = 'en' } = body);
+    q = q.trim();
+  } catch(_) { return jsonRes({ error: 'Invalid JSON body' }, 400, res); }
 
-  if (!q || q.length < 2) return json({ error: 'Query must be at least 2 characters' }, 400);
+  if (!q || q.length < 2) return jsonRes({ error: 'Query must be at least 2 characters' }, 400, res);
 
   try {
     const [news, wiki, wd] = await Promise.all([fetchGoogleNews(q), fetchWikipedia(q), fetchWikidata(q)]);
     const result = await analyzeWithClaude(q, buildContext(news, wiki, wd), apiKey);
-    return json(result);
+    return jsonRes(result, 200, res);
   } catch (err) {
     console.error('Athena Intel error:', err);
-    return json({ error: err.message || 'Analysis failed — please try again' }, 500);
+    return jsonRes({ error: err.message || 'Analysis failed — please try again' }, 500, res);
   }
 }
