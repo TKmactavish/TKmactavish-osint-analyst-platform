@@ -4,10 +4,11 @@
  * Set ANTHROPIC_API_KEY in the Vercel dashboard → Project → Settings → Environment Variables.
  */
 
+import Anthropic from '@anthropic-ai/sdk';
+
 // ─── Constants ────────────────────────────────────────────────────────────────
-const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
-const CLAUDE_MODEL  = 'claude-3-5-haiku-20241022';
-const MAX_TOKENS    = 4096;
+const CLAUDE_MODEL = 'claude-3-5-haiku-20241022';
+const MAX_TOKENS   = 4096;
 
 // ─── Geographic security knowledge base ──────────────────────────────────────
 const GEO_CONTEXT = `
@@ -201,30 +202,18 @@ function buildContext(news, wiki, wd) {
 }
 
 async function analyzeWithClaude(q, context, apiKey) {
-  const r = await tFetch(ANTHROPIC_API, {
-    method: 'POST',
-    headers: {
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: CLAUDE_MODEL, max_tokens: MAX_TOKENS,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content:
-        `Query: "${q}"\n\nGATHERED INTELLIGENCE:\n${context}\n\nReturn the complete JSON brief. All fields including analytical_perspective and all three recommendation arrays are mandatory.`
-      }],
-    }),
-  }, 50000);
-
-  if (!r.ok) {
-    const body = await r.text();
-    throw new Error(`Anthropic API ${r.status}: ${body.slice(0,200)}`);
-  }
-  const data = await r.json();
-  const text = (data.content?.[0]?.text||'').replace(/^```(?:json)?\s*/m,'').replace(/```\s*$/m,'').trim();
+  const client = new Anthropic({ apiKey });
+  const msg = await client.messages.create({
+    model:      CLAUDE_MODEL,
+    max_tokens: MAX_TOKENS,
+    system:     SYSTEM_PROMPT,
+    messages:   [{ role: 'user', content:
+      `Query: "${q}"\n\nGATHERED INTELLIGENCE:\n${context}\n\nReturn the complete JSON brief. All fields including analytical_perspective and all three recommendation arrays are mandatory.`
+    }],
+  });
+  const text = (msg.content?.[0]?.text || '').replace(/^```(?:json)?\s*/m, '').replace(/```\s*$/m, '').trim();
   try { return JSON.parse(text); }
-  catch(_) {
+  catch (_) {
     const m = text.match(/\{[\s\S]*\}/);
     if (m) return JSON.parse(m[0]);
     throw new Error('Claude returned malformed JSON');
