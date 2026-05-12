@@ -1,10 +1,11 @@
 /**
- * Athena Intel – Vercel Serverless Function (Node.js)
- * Deployed automatically when you push to a Vercel project.
- * Set ANTHROPIC_API_KEY in the Vercel dashboard → Project → Settings → Environment Variables.
+ * Athena Intel – Vercel Serverless Function (Node.js / CommonJS)
+ * Set ANTHROPIC_API_KEY in Vercel → Project → Settings → Environment Variables.
  */
 
-import Anthropic from '@anthropic-ai/sdk';
+'use strict';
+
+const Anthropic = require('@anthropic-ai/sdk');
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const CLAUDE_MODEL = 'claude-haiku-4-5-20251001';
@@ -126,7 +127,7 @@ async function tFetch(url, opts = {}, ms = 7000) {
 async function fetchGoogleNews(q) {
   const url = `https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=en&gl=US&ceid=US:en`;
   try {
-    const r = await tFetch(url, { headers: { 'User-Agent': 'AthenIntel/1.0' } }, 5000);
+    const r = await tFetch(url, { headers: { 'User-Agent': 'AthenaIntel/1.0' } }, 5000);
     if (!r.ok) return [];
     return parseRSS(await r.text());
   } catch (_) { return []; }
@@ -161,7 +162,7 @@ async function fetchWikipedia(q) {
       {}, 6000
     );
     const d = await r.json();
-    return (d?.query?.search||[]).map(w=>({
+    return (d?.query?.search||[]).map(w => ({
       title: w.title,
       snippet: w.snippet.replace(/<[^>]+>/g,''),
       url: `https://en.wikipedia.org/wiki/${encodeURIComponent(w.title.replace(/ /g,'_'))}`,
@@ -177,7 +178,7 @@ async function fetchWikidata(q) {
       {}, 5000
     );
     const d = await r.json();
-    return (d?.search||[]).filter(e=>e.description).map(e=>({
+    return (d?.search||[]).filter(e => e.description).map(e => ({
       title: e.label, snippet: e.description,
       url: `https://www.wikidata.org/wiki/${e.id}`, domain: 'wikidata.org',
     }));
@@ -222,10 +223,11 @@ async function analyzeWithClaude(q, context, apiKey) {
 
 // ─── CORS headers ─────────────────────────────────────────────────────────────
 const CORS = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin':  '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 };
+
 function jsonRes(data, status, res) {
   Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
   res.setHeader('Content-Type', 'application/json');
@@ -233,7 +235,7 @@ function jsonRes(data, status, res) {
 }
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
     return res.status(204).end();
@@ -245,7 +247,6 @@ export default async function handler(req, res) {
 
   let q;
   try {
-    // Vercel pre-parses JSON bodies into req.body automatically
     const body = req.body || {};
     q = (body.query || '').trim();
   } catch(_) { return jsonRes({ error: 'Invalid JSON body' }, 400, res); }
@@ -260,4 +261,4 @@ export default async function handler(req, res) {
     console.error('Athena Intel error:', err);
     return jsonRes({ error: err.message || 'Analysis failed — please try again' }, 500, res);
   }
-}
+};
