@@ -1,7 +1,7 @@
 export const config = { runtime: 'edge' };
 
 const CLAUDE_MODEL = 'claude-haiku-4-5-20251001';
-const MAX_TOKENS   = 4000;
+const MAX_TOKENS   = 2500;
 
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
@@ -17,46 +17,30 @@ function jsonRes(data, status) {
 }
 
 const SYSTEM_PROMPT = [
-  'You are a senior OSINT analyst for Athena Intel, a professional open-source intelligence platform used by:',
-  '  (A) Law enforcement and government intelligence analysts',
-  '  (B) Private-sector corporate security and risk professionals',
-  '  (C) Travelers and individuals assessing personal safety',
+  'You are a senior OSINT analyst for Athena Intel — used by law enforcement, corporate security, and travelers.',
+  'You receive a query plus gathered public-source material. Produce a structured intelligence brief.',
   '',
-  'You receive a query and gathered live public-source material. Produce a structured intelligence brief.',
-  '',
-  'MANDATORY GEOGRAPHIC SECURITY CONTEXT (apply whenever a location matches):',
-  '- Thai Deep South (Yala, Narathiwat, Pattani, Songkhla): active BRN separatist insurgency since 2004. 7,000+ deaths. ALWAYS HIGH RISK. Key sources: Bangkok Post, Khaosod English, Benar News, ICG, HRW.',
-  '- Myanmar: civil war since Feb 2021 coup. Kinetic conflict in Sagaing/Chin/Kachin/Shan/Karen/Kayah. HIGH-EXTREME.',
-  '- Mindanao Philippines (BIFF, Abu Sayyaf remnants, NPA): MEDIUM-HIGH.',
-  '- West Papua Indonesia (TPNPB highland insurgency): MEDIUM.',
-  '- Gaza / West Bank: active armed conflict. EXTREME.',
-  '- Yemen: Houthi control, active conflict. HIGH.',
-  '- Syria: ongoing conflict, multiple armed actors. HIGH outside major cities.',
-  '- Iraq: residual ISIS, militia clashes. MEDIUM-HIGH.',
-  '- Lebanon: volatile, Hezbollah presence. MEDIUM-HIGH.',
-  '- Sudan: civil war since April 2023 (SAF vs RSF). HIGH-EXTREME in Khartoum, Darfur.',
+  'GEOGRAPHIC SECURITY CONTEXT — apply when location matches (absence of recent news does NOT mean conflict ended):',
+  '- Thai Deep South (Yala, Narathiwat, Pattani, Songkhla): active BRN separatist insurgency. ALWAYS HIGH RISK.',
+  '- Myanmar (post-2021 coup): kinetic civil war in Sagaing/Chin/Kachin/Shan/Karen/Kayah. HIGH-EXTREME.',
+  '- Mindanao PH (BIFF, Abu Sayyaf, NPA): MEDIUM-HIGH.',
+  '- Gaza/West Bank: active armed conflict. EXTREME.',
+  '- Yemen, Syria (rural), Sudan (Khartoum/Darfur): HIGH.',
+  '- Sahel (Mali, Burkina Faso, Niger — JNIM/ISWAP): HIGH outside capitals.',
+  '- Eastern DRC (M23/ADF), Somalia (Al-Shabaab rural): HIGH-EXTREME.',
+  '- Haiti (gang control): EXTREME. Ecuador (internal armed conflict): HIGH.',
+  '- Mexico cartel zones (Guerrero, Sinaloa, Michoacan, Tamaulipas): HIGH.',
+  '- Colombia rural (Cauca, Narino, Norte de Santander, Arauca — FARC-EP/ELN): HIGH.',
   '- Kashmir, KPK/FATA Pakistan, Afghanistan: HIGH.',
-  '- Sahel (Mali, Burkina Faso, Niger): JNIM/ISWAP. HIGH outside capitals.',
-  '- Cabo Delgado Mozambique: ISIS-affiliated insurgency. HIGH.',
-  '- Eastern DRC: M23/ADF and dozens of armed groups. HIGH-EXTREME.',
-  '- Somalia: Al-Shabaab in rural south-central. HIGH.',
-  '- Haiti: gang control of major territory. EXTREME.',
-  '- Ecuador: declared internal armed conflict Jan 2024. HIGH.',
-  '- Mexico cartel areas (Guerrero, Sinaloa, Michoacan, Tamaulipas): HIGH.',
-  '- Colombia rural (Cauca, Narino, Norte de Santander, Arauca): FARC-EP/ELN. HIGH.',
-  '',
-  'Absence of recent news does NOT mean a conflict has ended. Failure to flag known conflicts is an analytical error.',
   '',
   'RULES:',
   '1. For locations, ALWAYS apply the geo context above.',
-  '2. analytical_perspective: minimum 5 sentences (situation, patterns, source gaps, analyst-level flags, geopolitics).',
-  '3. recommendations: minimum 4 items in EACH of law_enforcement, private_sector, traveler.',
-  '4. Every flag must cite specific evidence.',
-  '5. Return ONLY valid JSON, no markdown fences, no preamble.',
+  '2. analytical_perspective: minimum 5 sentences.',
+  '3. recommendations: minimum 4 items in each of law_enforcement, private_sector, traveler.',
+  '4. Return ONLY valid JSON, no markdown fences, no preamble.',
   '',
   'JSON SCHEMA:',
-  '{ "query": str, "type": "person|incident|location|organization|travel_risk", "summary": str,',
-  '  "risk": "HIGH|MEDIUM|LOW",',
+  '{ "query": str, "type": "person|incident|location|organization|travel_risk", "summary": str, "risk": "HIGH|MEDIUM|LOW",',
   '  "sources": [{"title":str,"url":str,"domain":str,"date":"YYYY-MM-DD|null","type":"official|mainstream|ngo|local|reference","confidence":"high|medium|low"}],',
   '  "timeline": [{"date":"YYYY-MM-DD","event":str,"source_title":str,"source_url":str,"confidence":"high|medium|low"}],',
   '  "flags": [{"name":str,"description":str,"severity":"high|medium|low","evidence":str,"source_url":"str|null"}],',
@@ -65,16 +49,15 @@ const SYSTEM_PROMPT = [
   '  "recommendations": {"law_enforcement":[str],"private_sector":[str],"traveler":[str]} }'
 ].join('\n');
 
-// --- Live data fetchers ------------------------------------------------------
 async function tFetch(url, opts, ms) {
-  return await fetch(url, { ...(opts || {}), signal: AbortSignal.timeout(ms || 6000) });
+  return await fetch(url, { ...(opts || {}), signal: AbortSignal.timeout(ms || 3500) });
 }
 
 async function fetchGoogleNews(q) {
   try {
     const r = await tFetch(
       'https://news.google.com/rss/search?q=' + encodeURIComponent(q) + '&hl=en&gl=US&ceid=US:en',
-      { headers: { 'User-Agent': 'AthenaIntel/1.0' } }, 5000
+      { headers: { 'User-Agent': 'AthenaIntel/1.0' } }, 3500
     );
     if (!r.ok) return [];
     return parseRSS(await r.text());
@@ -85,7 +68,7 @@ function parseRSS(xml) {
   const out = [];
   const re = /<item>([\s\S]*?)<\/item>/g;
   let m;
-  while ((m = re.exec(xml)) !== null && out.length < 8) {
+  while ((m = re.exec(xml)) !== null && out.length < 6) {
     const c = m[1];
     const title = (/<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>/.exec(c) || [])[1] || '';
     const link  = (/<link>(.*?)<\/link>/.exec(c) || [])[1] || '';
@@ -107,8 +90,8 @@ async function fetchWikipedia(q) {
   try {
     const r = await tFetch(
       'https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=' +
-      encodeURIComponent(q) + '&format=json&origin=*&srlimit=4&srprop=snippet',
-      {}, 5000
+      encodeURIComponent(q) + '&format=json&origin=*&srlimit=3&srprop=snippet',
+      {}, 3000
     );
     const d = await r.json();
     return ((d?.query?.search) || []).map(w => ({
@@ -124,8 +107,8 @@ async function fetchWikidata(q) {
   try {
     const r = await tFetch(
       'https://www.wikidata.org/w/api.php?action=wbsearchentities&search=' +
-      encodeURIComponent(q) + '&language=en&format=json&origin=*&limit=3',
-      {}, 4000
+      encodeURIComponent(q) + '&language=en&format=json&origin=*&limit=2',
+      {}, 3000
     );
     const d = await r.json();
     return ((d?.search) || []).filter(e => e.description).map(e => ({
@@ -138,27 +121,26 @@ async function fetchWikidata(q) {
 function buildContext(news, wiki, wd) {
   let ctx = '';
   if (news.length) {
-    ctx += '=== LIVE NEWS ARTICLES ===\n';
+    ctx += '=== LIVE NEWS ===\n';
     news.forEach((a, i) => {
-      ctx += `[N${i + 1}] "${a.title}"\n  Source: ${a.sourceName || a.domain}\n  URL: ${a.url}\n  Date: ${a.date || 'unknown'}\n\n`;
+      ctx += `[N${i + 1}] "${a.title}" — ${a.sourceName || a.domain} ${a.date || ''}\n  ${a.url}\n`;
     });
   }
   if (wiki.length) {
-    ctx += '=== WIKIPEDIA ===\n';
+    ctx += '\n=== WIKIPEDIA ===\n';
     wiki.forEach((w, i) => {
-      ctx += `[W${i + 1}] "${w.title}"\n  ${w.snippet}\n  URL: ${w.url}\n\n`;
+      ctx += `[W${i + 1}] "${w.title}" — ${w.snippet}\n  ${w.url}\n`;
     });
   }
   if (wd.length) {
-    ctx += '=== WIKIDATA ===\n';
+    ctx += '\n=== WIKIDATA ===\n';
     wd.forEach((e, i) => {
-      ctx += `[D${i + 1}] "${e.title}": ${e.snippet}\n  URL: ${e.url}\n\n`;
+      ctx += `[D${i + 1}] "${e.title}": ${e.snippet}\n  ${e.url}\n`;
     });
   }
-  return ctx.trim() || 'No external sources retrieved. Use geographic security context and training knowledge.';
+  return ctx.trim() || 'No external sources retrieved. Use geo context and training knowledge.';
 }
 
-// --- Anthropic API call ------------------------------------------------------
 async function analyzeWithClaude(q, context, apiKey) {
   const r = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -172,10 +154,10 @@ async function analyzeWithClaude(q, context, apiKey) {
       max_tokens: MAX_TOKENS,
       system:     SYSTEM_PROMPT,
       messages:   [{ role: 'user', content:
-        `Query: "${q}"\n\nGATHERED INTELLIGENCE:\n${context}\n\nReturn the complete JSON brief. All fields are mandatory.`
+        `Query: "${q}"\n\nGATHERED INTELLIGENCE:\n${context}\n\nReturn the complete JSON brief. All fields mandatory.`
       }],
     }),
-    signal: AbortSignal.timeout(22000),
+    signal: AbortSignal.timeout(26000),
   });
 
   if (!r.ok) {
@@ -195,7 +177,6 @@ async function analyzeWithClaude(q, context, apiKey) {
   }
 }
 
-// --- Handler -----------------------------------------------------------------
 export default async function handler(req) {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
   if (req.method !== 'POST') return jsonRes({ error: 'Only POST requests are supported' }, 405);
