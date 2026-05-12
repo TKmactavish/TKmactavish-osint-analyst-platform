@@ -8,7 +8,7 @@ import Anthropic from '@anthropic-ai/sdk';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const CLAUDE_MODEL = 'claude-haiku-4-5-20251001';
-const MAX_TOKENS   = 4096;
+const MAX_TOKENS   = 8096;
 
 // ─── Geographic security knowledge base ──────────────────────────────────────
 const GEO_CONTEXT = `
