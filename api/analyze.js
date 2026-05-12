@@ -1,12 +1,10 @@
 /**
  * Athena Intel – Vercel Serverless Function
- * Zero external dependencies. Uses Node.js built-in https module.
+ * Zero external dependencies. Uses global fetch (Node 18+ undici).
  * Set ANTHROPIC_API_KEY in Vercel → Project → Settings → Environment Variables.
  */
 
 'use strict';
-
-const https = require('https');
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const CLAUDE_MODEL = 'claude-haiku-4-5-20251001';
@@ -93,61 +91,49 @@ JSON SCHEMA:
   }
 }`;
 
-// ─── Anthropic API call via native https (no external dependencies) ───────────────
-function callAnthropicHTTPS(body, apiKey) {
-  return new Promise((resolve, reject) => {
-    const bodyStr = JSON.stringify(body);
-    const req = https.request({
-      hostname: 'api.anthropic.com',
-      port: 443,
-      path: '/v1/messages',
+// ─── Anthropic API call via global fetch (Node 18+ undici) ─────────────────
+async function analyzeWithClaude(q, context, apiKey) {
+  var ac  = new AbortController();
+  var tid = setTimeout(function() { ac.abort(); }, 55000);
+
+  var r;
+  try {
+    r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'x-api-key':         apiKey,
         'anthropic-version': '2023-06-01',
         'content-type':      'application/json',
-        'content-length':    Buffer.byteLength(bodyStr),
       },
-    }, (res) => {
-      const chunks = [];
-      res.on('data', chunk => chunks.push(chunk));
-      res.on('end', () => {
-        const text = Buffer.concat(chunks).toString();
-        if (res.statusCode >= 200 && res.statusCode < 300) {
-          resolve(text);
-        } else {
-          reject(new Error(`Anthropic API ${res.statusCode}: ${text.slice(0, 300)}`));
-        }
-      });
-      res.on('error', reject);
+      body: JSON.stringify({
+        model:      CLAUDE_MODEL,
+        max_tokens: MAX_TOKENS,
+        system:     SYSTEM_PROMPT,
+        messages:   [{ role: 'user', content:
+          'Query: "' + q + '"\n\nGATHERED INTELLIGENCE:\n' + context + '\n\nReturn the complete JSON brief. All fields are mandatory.'
+        }],
+      }),
+      signal: ac.signal,
     });
+  } catch (err) {
+    if (err.name === 'AbortError') throw new Error('Anthropic API timed out after 55s');
+    throw err;
+  } finally {
+    clearTimeout(tid);
+  }
 
-    req.setTimeout(55000, () => {
-      req.destroy(new Error('Anthropic API timed out after 55s'));
-    });
-    req.on('error', reject);
-    req.write(bodyStr);
-    req.end();
-  });
-}
+  if (!r.ok) {
+    var errText = await r.text();
+    throw new Error('Anthropic API ' + r.status + ': ' + errText.slice(0, 300));
+  }
 
-async function analyzeWithClaude(q, context, apiKey) {
-  const rawText = await callAnthropicHTTPS({
-    model:      CLAUDE_MODEL,
-    max_tokens: MAX_TOKENS,
-    system:     SYSTEM_PROMPT,
-    messages:   [{ role: 'user', content:
-      `Query: "${q}"\n\nGATHERED INTELLIGENCE:\n${context}\n\nReturn the complete JSON brief. All fields are mandatory.`
-    }],
-  }, apiKey);
-
-  const data = JSON.parse(rawText);
-  const text = (data.content?.[0]?.text || '')
+  var data = await r.json();
+  var text = (data.content && data.content[0] && data.content[0].text || '')
     .replace(/^```(?:json)?\s*/m, '').replace(/```\s*$/m, '').trim();
 
   try { return JSON.parse(text); }
   catch (_) {
-    const m = text.match(/\{[\s\S]*\}/);
+    var m = text.match(/\{[\s\S]*\}/);
     if (m) return JSON.parse(m[0]);
     throw new Error('Claude returned malformed JSON');
   }
@@ -155,8 +141,8 @@ async function analyzeWithClaude(q, context, apiKey) {
 
 // ─── Data fetchers (global fetch — available in Node 18+) ───────────────────────
 async function tFetch(url, opts, ms) {
-  const ac  = new AbortController();
-  const tid = setTimeout(() => ac.abort(), ms || 7000);
+  var ac  = new AbortController();
+  var tid = setTimeout(function() { ac.abort(); }, ms || 7000);
   try {
     return await fetch(url, Object.assign({}, opts, { signal: ac.signal }));
   } finally {
@@ -165,31 +151,31 @@ async function tFetch(url, opts, ms) {
 }
 
 async function fetchGoogleNews(q) {
-  const url = 'https://news.google.com/rss/search?q=' + encodeURIComponent(q) + '&hl=en&gl=US&ceid=US:en';
+  var url = 'https://news.google.com/rss/search?q=' + encodeURIComponent(q) + '&hl=en&gl=US&ceid=US:en';
   try {
-    const r = await tFetch(url, { headers: { 'User-Agent': 'AthenaIntel/1.0' } }, 5000);
+    var r = await tFetch(url, { headers: { 'User-Agent': 'AthenaIntel/1.0' } }, 5000);
     if (!r.ok) return [];
     return parseRSS(await r.text());
   } catch (_) { return []; }
 }
 
 function parseRSS(xml) {
-  const out = [];
-  const re  = /<item>([\s\S]*?)<\/item>/g;
-  let m;
+  var out = [];
+  var re  = /<item>([\s\S]*?)<\/item>/g;
+  var m;
   while ((m = re.exec(xml)) !== null && out.length < 10) {
-    const c     = m[1];
-    const title = (/<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>/.exec(c) || [])[1] || '';
-    const link  = (/<link>(.*?)<\/link>/.exec(c) || [])[1] || '';
-    const pub   = (/<pubDate>(.*?)<\/pubDate>/.exec(c) || [])[1] || '';
-    const src   = /<source[^>]*url="([^"]*)"[^>]*>(.*?)<\/source>/.exec(c) || [];
-    const clean = title.includes(' - ') ? title.split(' - ').slice(0, -1).join(' - ') : title;
+    var c     = m[1];
+    var title = (/<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>/.exec(c) || [])[1] || '';
+    var link  = (/<link>(.*?)<\/link>/.exec(c) || [])[1] || '';
+    var pub   = (/<pubDate>(.*?)<\/pubDate>/.exec(c) || [])[1] || '';
+    var src   = /<source[^>]*url="([^"]*)"[^>]*>(.*?)<\/source>/.exec(c) || [];
+    var clean = title.includes(' - ') ? title.split(' - ').slice(0, -1).join(' - ') : title;
     if (clean && link) {
-      let domain = '';
+      var domain = '';
       try { domain = new URL(src[1] || '').hostname.replace(/^www\./, ''); } catch (_) {}
-      let date = null;
+      var date = null;
       try { date = pub ? new Date(pub).toISOString().slice(0, 10) : null; } catch (_) {}
-      out.push({ title: clean.trim(), url: link.trim(), date, sourceName: (src[2] || '').trim() || domain, domain });
+      out.push({ title: clean.trim(), url: link.trim(), date: date, sourceName: (src[2] || '').trim() || domain, domain: domain });
     }
   }
   return out;
@@ -197,13 +183,13 @@ function parseRSS(xml) {
 
 async function fetchWikipedia(q) {
   try {
-    const r = await tFetch(
+    var r = await tFetch(
       'https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=' +
       encodeURIComponent(q) + '&format=json&origin=*&srlimit=5&srprop=snippet',
       {}, 6000
     );
-    const d = await r.json();
-    return (d && d.query && d.query.search || []).map(function(w) {
+    var d = await r.json();
+    return ((d && d.query && d.query.search) || []).map(function(w) {
       return {
         title: w.title,
         snippet: w.snippet.replace(/<[^>]+>/g, ''),
@@ -216,13 +202,13 @@ async function fetchWikipedia(q) {
 
 async function fetchWikidata(q) {
   try {
-    const r = await tFetch(
+    var r = await tFetch(
       'https://www.wikidata.org/w/api.php?action=wbsearchentities&search=' +
       encodeURIComponent(q) + '&language=en&format=json&origin=*&limit=3',
       {}, 5000
     );
-    const d = await r.json();
-    return (d && d.search || []).filter(function(e) { return e.description; }).map(function(e) {
+    var d = await r.json();
+    return ((d && d.search) || []).filter(function(e) { return e.description; }).map(function(e) {
       return { title: e.label, snippet: e.description, url: 'https://www.wikidata.org/wiki/' + e.id, domain: 'wikidata.org' };
     });
   } catch (_) { return []; }
@@ -272,7 +258,7 @@ module.exports = async function handler(req, res) {
   }
   if (req.method !== 'POST') return jsonRes({ error: 'Only POST requests are supported' }, 405, res);
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  var apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return jsonRes({ error: 'ANTHROPIC_API_KEY is not set' }, 500, res);
 
   var q;
@@ -284,8 +270,8 @@ module.exports = async function handler(req, res) {
   if (!q || q.length < 2) return jsonRes({ error: 'Query must be at least 2 characters' }, 400, res);
 
   try {
-    const results = await Promise.all([fetchGoogleNews(q), fetchWikipedia(q), fetchWikidata(q)]);
-    const result  = await analyzeWithClaude(q, buildContext(results[0], results[1], results[2]), apiKey);
+    var fetched = await Promise.all([fetchGoogleNews(q), fetchWikipedia(q), fetchWikidata(q)]);
+    var result  = await analyzeWithClaude(q, buildContext(fetched[0], fetched[1], fetched[2]), apiKey);
     return jsonRes(result, 200, res);
   } catch (err) {
     console.error('Athena Intel error:', err);
