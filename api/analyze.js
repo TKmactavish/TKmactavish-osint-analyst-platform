@@ -7,7 +7,7 @@
 // ─── Constants ────────────────────────────────────────────────────────────────
 const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
 const CLAUDE_MODEL  = 'claude-haiku-4-5-20251001';
-const MAX_TOKENS    = 2500;
+const MAX_TOKENS    = 4096;
 
 // ─── Geographic security knowledge base ──────────────────────────────────────
 const GEO_CONTEXT = `
