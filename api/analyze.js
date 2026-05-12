@@ -6,8 +6,8 @@
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
-const CLAUDE_MODEL  = 'claude-sonnet-4-6';
-const MAX_TOKENS    = 3000;
+const CLAUDE_MODEL  = 'claude-haiku-4-5-20251001';
+const MAX_TOKENS    = 2500;
 
 // ─── Geographic security knowledge base ──────────────────────────────────────
 const GEO_CONTEXT = `
@@ -215,7 +215,7 @@ async function analyzeWithClaude(q, context, apiKey) {
         `Query: "${q}"\n\nGATHERED INTELLIGENCE:\n${context}\n\nReturn the complete JSON brief. All fields including analytical_perspective and all three recommendation arrays are mandatory.`
       }],
     }),
-  }, 20000);
+  }, 50000);
 
   if (!r.ok) {
     const body = await r.text();
