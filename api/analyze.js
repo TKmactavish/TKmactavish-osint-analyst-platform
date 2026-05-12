@@ -237,30 +237,28 @@ const CORS = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 };
-function jsonRes(data, status = 200, res) {
-  res.status(status).setHeader('Content-Type', 'application/json');
+function jsonRes(data, status, res) {
   Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
-  res.end(JSON.stringify(data));
+  res.setHeader('Content-Type', 'application/json');
+  res.status(status).end(JSON.stringify(data));
 }
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
-  if (req.method === 'OPTIONS') { Object.entries(CORS).forEach(([k,v]) => res.setHeader(k,v)); return res.status(204).end(); }
+  if (req.method === 'OPTIONS') {
+    Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
+    return res.status(204).end();
+  }
   if (req.method !== 'POST') return jsonRes({ error: 'Only POST requests are supported' }, 405, res);
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return jsonRes({ error: 'ANTHROPIC_API_KEY is not set — add it in Vercel → Project → Settings → Environment Variables' }, 500, res);
 
-  let q, lang;
+  let q;
   try {
-    const body = await new Promise((resolve, reject) => {
-      let data = '';
-      req.on('data', chunk => { data += chunk; });
-      req.on('end', () => { try { resolve(JSON.parse(data)); } catch(e) { reject(e); } });
-      req.on('error', reject);
-    });
-    ({ query: q = '', lang = 'en' } = body);
-    q = q.trim();
+    // Vercel pre-parses JSON bodies into req.body automatically
+    const body = req.body || {};
+    q = (body.query || '').trim();
   } catch(_) { return jsonRes({ error: 'Invalid JSON body' }, 400, res); }
 
   if (!q || q.length < 2) return jsonRes({ error: 'Query must be at least 2 characters' }, 400, res);
