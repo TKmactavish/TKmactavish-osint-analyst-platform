@@ -8,8 +8,8 @@ export const config = { runtime: 'edge' };
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
-const CLAUDE_MODEL  = 'claude-sonnet-4-6';
-const MAX_TOKENS    = 3500;
+const CLAUDE_MODEL  = 'claude-haiku-4-5-20251001';
+const MAX_TOKENS    = 2000;
 
 // ─── Geographic security knowledge base ──────────────────────────────────────
 const GEO_CONTEXT = `
@@ -127,7 +127,7 @@ async function tFetch(url, opts = {}, ms = 7000) {
 async function fetchGoogleNews(q) {
   const url = `https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=en&gl=US&ceid=US:en`;
   try {
-    const r = await tFetch(url, { headers: { 'User-Agent': 'AthenIntel/1.0' } }, 8000);
+    const r = await tFetch(url, { headers: { 'User-Agent': 'AthenIntel/1.0' } }, 5000);
     if (!r.ok) return [];
     return parseRSS(await r.text());
   } catch (_) { return []; }
@@ -137,7 +137,7 @@ function parseRSS(xml) {
   const out = [];
   const re  = /<item>([\s\S]*?)<\/item>/g;
   let m;
-  while ((m = re.exec(xml)) !== null && out.length < 20) {
+  while ((m = re.exec(xml)) !== null && out.length < 10) {
     const c     = m[1];
     const title = (/<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>/.exec(c)||[])[1]||'';
     const link  = (/<link>(.*?)<\/link>/.exec(c)||[])[1]||'';
@@ -217,7 +217,7 @@ async function analyzeWithClaude(q, context, apiKey) {
         `Query: "${q}"\n\nGATHERED INTELLIGENCE:\n${context}\n\nReturn the complete JSON brief. All fields including analytical_perspective and all three recommendation arrays are mandatory.`
       }],
     }),
-  }, 45000);
+  }, 20000);
 
   if (!r.ok) {
     const body = await r.text();
