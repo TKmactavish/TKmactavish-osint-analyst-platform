@@ -1,130 +1,118 @@
 /**
- * Athena Intel – Vercel Serverless Function
- * Zero external dependencies. Uses global fetch (Node 18+ undici).
- * Set ANTHROPIC_API_KEY in Vercel → Project → Settings → Environment Variables.
+ * Athena Intel - Vercel Serverless Function
+ * Uses node-fetch@2 (proven to reach api.anthropic.com from Vercel).
+ * Set ANTHROPIC_API_KEY in Vercel -> Project -> Settings -> Environment Variables.
  */
 
 'use strict';
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+const nodeFetch = require('node-fetch');
+
+// --- Constants ---------------------------------------------------------------
 const CLAUDE_MODEL = 'claude-haiku-4-5-20251001';
 const MAX_TOKENS   = 8096;
 
-// ─── Geographic security knowledge base ──────────────────────────────────────
+// --- Geographic security knowledge base -------------------------------------
 const GEO_CONTEXT = `
 MANDATORY GEOGRAPHIC SECURITY CONTEXT
 Apply this whenever a location matches. Absence of recent news does NOT mean
 the conflict has ended. Failure to flag known conflicts is an analytical error.
 
 SOUTHEAST ASIA
-• Yala, Narathiwat, Pattani, Songkhla (Thai Deep South): Active Malay-Muslim
+- Yala, Narathiwat, Pattani, Songkhla (Thai Deep South): Active Malay-Muslim
   separatist insurgency since 2004. BRN conducts bombings, IEDs, drive-by
   shootings, arson of schools. 7,000+ deaths. ALWAYS flag HIGH RISK.
   Key sources: Bangkok Post, Khaosod English, Benar News, ICG, HRW.
-• Myanmar: Civil war since Feb 2021 coup. Active kinetic conflict in Sagaing,
+- Myanmar: Civil war since Feb 2021 coup. Active kinetic conflict in Sagaing,
   Chin, Kachin, Shan, Karen, Kayah. Junta airstrikes on civilian areas. HIGH-EXTREME.
-• Mindanao, Philippines: BIFF, Abu Sayyaf remnants, NPA active. MEDIUM-HIGH.
-• West Papua, Indonesia: TPNPB insurgency in highland areas. MEDIUM.
+- Mindanao, Philippines: BIFF, Abu Sayyaf remnants, NPA active. MEDIUM-HIGH.
+- West Papua, Indonesia: TPNPB insurgency in highland areas. MEDIUM.
 
 MIDDLE EAST & NORTH AFRICA
-• Gaza / West Bank: Active armed conflict. EXTREME risk.
-• Yemen: Houthi control, active conflict. HIGH.
-• Syria: Ongoing conflict, multiple armed actors. HIGH outside major cities.
-• Iraq: Residual ISIS, militia clashes. MEDIUM-HIGH.
-• Lebanon: Volatile, Hezbollah presence. MEDIUM-HIGH.
-• Sudan: Civil war since April 2023 (SAF vs RSF). HIGH in Khartoum, Darfur.
+- Gaza / West Bank: Active armed conflict. EXTREME risk.
+- Yemen: Houthi control, active conflict. HIGH.
+- Syria: Ongoing conflict, multiple armed actors. HIGH outside major cities.
+- Iraq: Residual ISIS, militia clashes. MEDIUM-HIGH.
+- Lebanon: Volatile, Hezbollah presence. MEDIUM-HIGH.
+- Sudan: Civil war since April 2023 (SAF vs RSF). HIGH in Khartoum, Darfur.
 
 SOUTH ASIA
-• Kashmir: Militant attacks, LoC incidents. HIGH.
-• KPK / FATA, Pakistan: TTP, ISIS-K activity. HIGH.
-• Afghanistan: Taliban control, ISIS-K attacks. HIGH.
+- Kashmir: Militant attacks, LoC incidents. HIGH.
+- KPK / FATA, Pakistan: TTP, ISIS-K activity. HIGH.
+- Afghanistan: Taliban control, ISIS-K attacks. HIGH.
 
 AFRICA
-• Sahel (Mali, Burkina Faso, Niger): JNIM and ISWAP. HIGH outside capitals.
-• Cabo Delgado, Mozambique: ISIS-affiliated insurgency. HIGH.
-• Eastern DRC: M23, ADF, dozens of armed groups. HIGH-EXTREME.
-• Somalia: Al-Shabaab active across rural south-central. HIGH.
-• Sudan: Active civil war. HIGH-EXTREME in Khartoum, Darfur.
+- Sahel (Mali, Burkina Faso, Niger): JNIM and ISWAP. HIGH outside capitals.
+- Cabo Delgado, Mozambique: ISIS-affiliated insurgency. HIGH.
+- Eastern DRC: M23, ADF, dozens of armed groups. HIGH-EXTREME.
+- Somalia: Al-Shabaab active across rural south-central. HIGH.
+- Sudan: Active civil war. HIGH-EXTREME in Khartoum, Darfur.
 
 LATIN AMERICA
-• Haiti: Gang control of major territory. EXTREME.
-• Ecuador: Declared internal armed conflict Jan 2024. HIGH.
-• Mexico (Guerrero, Sinaloa, Michoacán, Tamaulipas): Cartel territory. HIGH.
-• Colombia (rural Cauca, Narino, Norte de Santander, Arauca): FARC-EP, ELN. HIGH.
+- Haiti: Gang control of major territory. EXTREME.
+- Ecuador: Declared internal armed conflict Jan 2024. HIGH.
+- Mexico (Guerrero, Sinaloa, Michoacan, Tamaulipas): Cartel territory. HIGH.
+- Colombia (rural Cauca, Narino, Norte de Santander, Arauca): FARC-EP, ELN. HIGH.
 `;
 
-// ─── System prompt ────────────────────────────────────────────────────────────
-const SYSTEM_PROMPT = `You are a senior OSINT analyst for Athena Intel, a professional
-open-source intelligence platform used by:
-  (A) Law enforcement and government intelligence analysts
-  (B) Private-sector corporate security and risk professionals
-  (C) Travelers and individuals assessing personal safety
+// --- System prompt ----------------------------------------------------------
+const SYSTEM_PROMPT = 'You are a senior OSINT analyst for Athena Intel, a professional\n' +
+'open-source intelligence platform used by:\n' +
+'  (A) Law enforcement and government intelligence analysts\n' +
+'  (B) Private-sector corporate security and risk professionals\n' +
+'  (C) Travelers and individuals assessing personal safety\n\n' +
+'You receive a query and gathered live public-source material (news articles,\n' +
+'Wikipedia entries, Wikidata entities). Produce a structured intelligence brief.\n\n' +
+GEO_CONTEXT + '\n\n' +
+'RULES\n' +
+'1. For location queries, ALWAYS apply geographic security context above.\n' +
+'2. analytical_perspective: REQUIRED, minimum 5 sentences covering situation\n' +
+'   assessment, patterns and trends, source gaps, analyst-level flags, geopolitical context.\n' +
+'3. recommendations: REQUIRED arrays (minimum 4 items each) for ALL THREE user types.\n' +
+'4. Every flag must cite specific evidence from sources or the geo knowledge base.\n' +
+'5. Return ONLY valid JSON with no markdown fences, no preamble, no trailing text.\n\n' +
+'JSON SCHEMA:\n' +
+'{\n' +
+'  "query": "string",\n' +
+'  "type": "person|incident|location|organization|travel_risk",\n' +
+'  "summary": "2-3 sentence executive summary",\n' +
+'  "risk": "HIGH|MEDIUM|LOW",\n' +
+'  "sources": [{"title":"string","url":"string","domain":"string","date":"YYYY-MM-DD or null","type":"official|mainstream|ngo|local|reference","confidence":"high|medium|low"}],\n' +
+'  "timeline": [{"date":"YYYY-MM-DD","event":"string","source_title":"string","source_url":"string","confidence":"high|medium|low"}],\n' +
+'  "flags": [{"name":"string","description":"string","severity":"high|medium|low","evidence":"string","source_url":"string or null"}],\n' +
+'  "risk_assessment": {"level":"HIGH|MEDIUM|LOW","rationale":"string","factors":["string"]},\n' +
+'  "analytical_perspective": "REQUIRED 5+ sentence string",\n' +
+'  "recommendations": {\n' +
+'    "law_enforcement": ["min 4 items"],\n' +
+'    "private_sector": ["min 4 items"],\n' +
+'    "traveler": ["min 4 items"]\n' +
+'  }\n' +
+'}';
 
-You receive a query and gathered live public-source material (news articles,
-Wikipedia entries, Wikidata entities). Produce a structured intelligence brief.
-
-${GEO_CONTEXT}
-
-RULES
-1. For location queries, ALWAYS apply geographic security context above.
-2. analytical_perspective: REQUIRED, minimum 5 sentences covering situation
-   assessment, patterns and trends, source gaps, analyst-level flags, geopolitical context.
-3. recommendations: REQUIRED arrays (minimum 4 items each) for ALL THREE user types.
-4. Every flag must cite specific evidence from sources or the geo knowledge base.
-5. Return ONLY valid JSON with no markdown fences, no preamble, no trailing text.
-
-JSON SCHEMA:
-{
-  "query": "string",
-  "type": "person|incident|location|organization|travel_risk",
-  "summary": "2-3 sentence executive summary",
-  "risk": "HIGH|MEDIUM|LOW",
-  "sources": [{"title":"string","url":"string","domain":"string","date":"YYYY-MM-DD or null","type":"official|mainstream|ngo|local|reference","confidence":"high|medium|low"}],
-  "timeline": [{"date":"YYYY-MM-DD","event":"string","source_title":"string","source_url":"string","confidence":"high|medium|low"}],
-  "flags": [{"name":"string","description":"string","severity":"high|medium|low","evidence":"string","source_url":"string or null"}],
-  "risk_assessment": {"level":"HIGH|MEDIUM|LOW","rationale":"string","factors":["string"]},
-  "analytical_perspective": "REQUIRED 5+ sentence string",
-  "recommendations": {
-    "law_enforcement": ["min 4 items"],
-    "private_sector": ["min 4 items"],
-    "traveler": ["min 4 items"]
-  }
-}`;
-
-// ─── Anthropic API call via global fetch (Node 18+ undici) ─────────────────
+// --- Anthropic API call using node-fetch@2 ----------------------------------
 async function analyzeWithClaude(q, context, apiKey) {
-  var ac  = new AbortController();
-  var tid = setTimeout(function() { ac.abort(); }, 55000);
-
-  var r;
-  try {
-    r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key':         apiKey,
-        'anthropic-version': '2023-06-01',
-        'content-type':      'application/json',
-      },
-      body: JSON.stringify({
-        model:      CLAUDE_MODEL,
-        max_tokens: MAX_TOKENS,
-        system:     SYSTEM_PROMPT,
-        messages:   [{ role: 'user', content:
-          'Query: "' + q + '"\n\nGATHERED INTELLIGENCE:\n' + context + '\n\nReturn the complete JSON brief. All fields are mandatory.'
-        }],
-      }),
-      signal: ac.signal,
-    });
-  } catch (err) {
-    if (err.name === 'AbortError') throw new Error('Anthropic API timed out after 55s');
-    throw err;
-  } finally {
-    clearTimeout(tid);
-  }
+  var r = await nodeFetch('https://api.anthropic.com/v1/messages', {
+    method:  'POST',
+    headers: {
+      'x-api-key':         apiKey,
+      'anthropic-version': '2023-06-01',
+      'content-type':      'application/json',
+    },
+    body: JSON.stringify({
+      model:      CLAUDE_MODEL,
+      max_tokens: MAX_TOKENS,
+      system:     SYSTEM_PROMPT,
+      messages:   [{ role: 'user', content:
+        'Query: "' + q + '"\n\nGATHERED INTELLIGENCE:\n' + context +
+        '\n\nReturn the complete JSON brief. All fields are mandatory.'
+      }],
+    }),
+    timeout: 55000,
+  });
 
   if (!r.ok) {
-    var errText = await r.text();
-    throw new Error('Anthropic API ' + r.status + ': ' + errText.slice(0, 300));
+    var errBody = await r.text();
+    throw new Error('Anthropic API ' + r.status + ': ' + errBody.slice(0, 300));
   }
 
   var data = await r.json();
@@ -139,7 +127,7 @@ async function analyzeWithClaude(q, context, apiKey) {
   }
 }
 
-// ─── Data fetchers (global fetch — available in Node 18+) ───────────────────────
+// --- Data fetchers using global fetch (Node 18+) for public APIs ------------
 async function tFetch(url, opts, ms) {
   var ac  = new AbortController();
   var tid = setTimeout(function() { ac.abort(); }, ms || 7000);
@@ -191,10 +179,10 @@ async function fetchWikipedia(q) {
     var d = await r.json();
     return ((d && d.query && d.query.search) || []).map(function(w) {
       return {
-        title: w.title,
+        title:   w.title,
         snippet: w.snippet.replace(/<[^>]+>/g, ''),
-        url: 'https://en.wikipedia.org/wiki/' + encodeURIComponent(w.title.replace(/ /g, '_')),
-        domain: 'wikipedia.org',
+        url:     'https://en.wikipedia.org/wiki/' + encodeURIComponent(w.title.replace(/ /g, '_')),
+        domain:  'wikipedia.org',
       };
     });
   } catch (_) { return []; }
@@ -219,41 +207,41 @@ function buildContext(news, wiki, wd) {
   if (news.length) {
     ctx += '=== LIVE NEWS ARTICLES ===\n';
     news.forEach(function(a, i) {
-      ctx += '[N' + (i+1) + '] "' + a.title + '"\n  Source: ' + (a.sourceName || a.domain) + '\n  URL: ' + a.url + '\n  Date: ' + (a.date || 'unknown') + '\n\n';
+      ctx += '[N' + (i + 1) + '] "' + a.title + '"\n  Source: ' + (a.sourceName || a.domain) + '\n  URL: ' + a.url + '\n  Date: ' + (a.date || 'unknown') + '\n\n';
     });
   }
   if (wiki.length) {
     ctx += '=== WIKIPEDIA ===\n';
     wiki.forEach(function(w, i) {
-      ctx += '[W' + (i+1) + '] "' + w.title + '"\n  ' + w.snippet + '\n  URL: ' + w.url + '\n\n';
+      ctx += '[W' + (i + 1) + '] "' + w.title + '"\n  ' + w.snippet + '\n  URL: ' + w.url + '\n\n';
     });
   }
   if (wd.length) {
     ctx += '=== WIKIDATA ===\n';
     wd.forEach(function(e, i) {
-      ctx += '[D' + (i+1) + '] "' + e.title + '": ' + e.snippet + '\n  URL: ' + e.url + '\n\n';
+      ctx += '[D' + (i + 1) + '] "' + e.title + '": ' + e.snippet + '\n  URL: ' + e.url + '\n\n';
     });
   }
   return ctx.trim() || 'No external sources retrieved. Use geographic security context and training knowledge.';
 }
 
-// ─── CORS ───────────────────────────────────────────────────────────────────────────
-const CORS = {
+// --- CORS -------------------------------------------------------------------
+var CORS = {
   'Access-Control-Allow-Origin':  '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
 function jsonRes(data, status, res) {
-  Object.entries(CORS).forEach(function(e) { res.setHeader(e[0], e[1]); });
+  Object.keys(CORS).forEach(function(k) { res.setHeader(k, CORS[k]); });
   res.setHeader('Content-Type', 'application/json');
   res.status(status).end(JSON.stringify(data));
 }
 
-// ─── Handler ──────────────────────────────────────────────────────────────────
+// --- Handler ----------------------------------------------------------------
 module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') {
-    Object.entries(CORS).forEach(function(e) { res.setHeader(e[0], e[1]); });
+    Object.keys(CORS).forEach(function(k) { res.setHeader(k, CORS[k]); });
     return res.status(204).end();
   }
   if (req.method !== 'POST') return jsonRes({ error: 'Only POST requests are supported' }, 405, res);
