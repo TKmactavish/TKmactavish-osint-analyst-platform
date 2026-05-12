@@ -54,49 +54,49 @@ LATIN AMERICA
 `;
 
 // ─── System prompt ────────────────────────────────────────────────────────────
-const SYSTEM_PROMPT = `You are a senior OSINT analyst for Athena Intel, a professional
-open-source intelligence platform used by:
-  (A) Law enforcement and government intelligence analysts
-  (B) Private-sector corporate security and risk professionals
-  (C) Travelers and individuals assessing personal safety
-
-You receive a query and gathered live public-source material (news articles,
-Wikipedia entries, Wikidata entities). Produce a structured intelligence brief.
-
-${GEO_CONTEXT}
-
-RULES
-1. For location queries, ALWAYS apply geographic security context above.
-2. analytical_perspective: REQUIRED, minimum 5 sentences covering situation
-   assessment, patterns and trends, source gaps, analyst-level flags, geopolitical context.
-3. recommendations: REQUIRED arrays (minimum 4 items each) for ALL THREE user types.
-4. Every flag must cite specific evidence from sources or the geo knowledge base.
-5. Return ONLY valid JSON with no markdown fences, no preamble, no trailing text.
-
-JSON SCHEMA:
-{
-  "query": "string",
-  "type": "person|incident|location|organization|travel_risk",
-  "summary": "2-3 sentence executive summary",
-  "risk": "HIGH|MEDIUM|LOW",
-  "sources": [{"title":"string","url":"string","domain":"string","date":"YYYY-MM-DD or null","type":"official|mainstream|ngo|local|reference","confidence":"high|medium|low"}],
-  "timeline": [{"date":"YYYY-MM-DD","event":"string","source_title":"string","source_url":"string","confidence":"high|medium|low"}],
-  "flags": [{"name":"string","description":"string","severity":"high|medium|low","evidence":"string","source_url":"string or null"}],
-  "risk_assessment": {"level":"HIGH|MEDIUM|LOW","rationale":"string","factors":["string"]},
-  "analytical_perspective": "REQUIRED 5+ sentence string",
-  "recommendations": {
-    "law_enforcement": ["min 4 items"],
-    "private_sector": ["min 4 items"],
-    "traveler": ["min 4 items"]
-  }
-}`;
+const SYSTEM_PROMPT = 'You are a senior OSINT analyst for Athena Intel, a professional\n' +
+'open-source intelligence platform used by:\n' +
+'  (A) Law enforcement and government intelligence analysts\n' +
+'  (B) Private-sector corporate security and risk professionals\n' +
+'  (C) Travelers and individuals assessing personal safety\n' +
+'\n' +
+'You receive a query and gathered live public-source material (news articles,\n' +
+'Wikipedia entries, Wikidata entities). Produce a structured intelligence brief.\n' +
+'\n' +
+GEO_CONTEXT +
+'\n' +
+'RULES\n' +
+'1. For location queries, ALWAYS apply geographic security context above.\n' +
+'2. analytical_perspective: REQUIRED, minimum 5 sentences covering situation\n' +
+'   assessment, patterns and trends, source gaps, analyst-level flags, geopolitical context.\n' +
+'3. recommendations: REQUIRED arrays (minimum 4 items each) for ALL THREE user types.\n' +
+'4. Every flag must cite specific evidence from sources or the geo knowledge base.\n' +
+'5. Return ONLY valid JSON with no markdown fences, no preamble, no trailing text.\n' +
+'\n' +
+'JSON SCHEMA:\n' +
+'{\n' +
+'  "query": "string",\n' +
+'  "type": "person|incident|location|organization|travel_risk",\n' +
+'  "summary": "2-3 sentence executive summary",\n' +
+'  "risk": "HIGH|MEDIUM|LOW",\n' +
+'  "sources": [{"title":"string","url":"string","domain":"string","date":"YYYY-MM-DD or null","type":"official|mainstream|ngo|local|reference","confidence":"high|medium|low"}],\n' +
+'  "timeline": [{"date":"YYYY-MM-DD","event":"string","source_title":"string","source_url":"string","confidence":"high|medium|low"}],\n' +
+'  "flags": [{"name":"string","description":"string","severity":"high|medium|low","evidence":"string","source_url":"string or null"}],\n' +
+'  "risk_assessment": {"level":"HIGH|MEDIUM|LOW","rationale":"string","factors":["string"]},\n' +
+'  "analytical_perspective": "REQUIRED 5+ sentence string",\n' +
+'  "recommendations": {\n' +
+'    "law_enforcement": ["min 4 items"],\n' +
+'    "private_sector": ["min 4 items"],\n' +
+'    "traveler": ["min 4 items"]\n' +
+'  }\n' +
+'}';
 
 // ─── Data fetchers ────────────────────────────────────────────────────────────
 async function tFetch(url, opts, ms) {
-  if (opts === undefined) opts = {};
   if (ms === undefined) ms = 7000;
-  var ac  = new AbortController();
-  var tid = setTimeout(function() { ac.abort(); }, ms);
+  if (opts === undefined) opts = {};
+  const ac  = new AbortController();
+  const tid = setTimeout(function() { ac.abort(); }, ms);
   try {
     return await fetch(url, Object.assign({}, opts, { signal: ac.signal }));
   } finally {
@@ -123,7 +123,7 @@ function parseRSS(xml) {
     var link  = (/<link>(.*?)<\/link>/.exec(c)||[])[1]||'';
     var pub   = (/<pubDate>(.*?)<\/pubDate>/.exec(c)||[])[1]||'';
     var src   = /<source[^>]*url="([^"]*)"[^>]*>(.*?)<\/source>/.exec(c)||[];
-    var clean = title.includes(' - ') ? title.split(' - ').slice(0,-1).join(' - ') : title;
+    var clean = title.indexOf(' - ') !== -1 ? title.split(' - ').slice(0,-1).join(' - ') : title;
     if (clean && link) {
       var domain = '';
       try { domain = new URL(src[1]||'').hostname.replace(/^www\./,''); } catch(_) {}
@@ -173,15 +173,15 @@ function buildContext(news, wiki, wd) {
   var ctx = '';
   if (news.length) {
     ctx += '=== LIVE NEWS ARTICLES ===\n';
-    news.forEach(function(a, i) { ctx += '[N' + (i+1) + '] "' + a.title + '"\n  Source: ' + (a.sourceName||a.domain) + '\n  URL: ' + a.url + '\n  Date: ' + (a.date||'unknown') + '\n\n'; });
+    news.forEach(function(a,i) { ctx += '[N' + (i+1) + '] "' + a.title + '"\n  Source: ' + (a.sourceName||a.domain) + '\n  URL: ' + a.url + '\n  Date: ' + (a.date||'unknown') + '\n\n'; });
   }
   if (wiki.length) {
     ctx += '=== WIKIPEDIA ===\n';
-    wiki.forEach(function(w, i) { ctx += '[W' + (i+1) + '] "' + w.title + '"\n  ' + w.snippet + '\n  URL: ' + w.url + '\n\n'; });
+    wiki.forEach(function(w,i) { ctx += '[W' + (i+1) + '] "' + w.title + '"\n  ' + w.snippet + '\n  URL: ' + w.url + '\n\n'; });
   }
   if (wd.length) {
     ctx += '=== WIKIDATA ===\n';
-    wd.forEach(function(e, i) { ctx += '[D' + (i+1) + '] "' + e.title + '": ' + e.snippet + '\n  URL: ' + e.url + '\n\n'; });
+    wd.forEach(function(e,i) { ctx += '[D' + (i+1) + '] "' + e.title + '": ' + e.snippet + '\n  URL: ' + e.url + '\n\n'; });
   }
   return ctx.trim() || 'No external sources retrieved. Use geographic security context and training knowledge.';
 }
@@ -196,15 +196,23 @@ async function analyzeWithClaude(q, context, apiKey) {
     }],
   });
 
-  var r = await fetch(ANTHROPIC_API, {
-    method:  'POST',
-    headers: {
-      'x-api-key':         apiKey,
-      'anthropic-version': '2023-06-01',
-      'content-type':      'application/json',
-    },
-    body: body,
-  });
+  var ac  = new AbortController();
+  var tid = setTimeout(function() { ac.abort(); }, 25000);
+  var r;
+  try {
+    r = await fetch(ANTHROPIC_API, {
+      method:  'POST',
+      headers: {
+        'x-api-key':         apiKey,
+        'anthropic-version': '2023-06-01',
+        'content-type':      'application/json',
+      },
+      body:   body,
+      signal: ac.signal,
+    });
+  } finally {
+    clearTimeout(tid);
+  }
 
   if (!r.ok) {
     var errText = await r.text();
@@ -212,7 +220,8 @@ async function analyzeWithClaude(q, context, apiKey) {
   }
 
   var data = await r.json();
-  var text = ((data.content && data.content[0] && data.content[0].text) || '').replace(/^```(?:json)?\s*/m, '').replace(/```\s*$/m, '').trim();
+  var text = ((data.content && data.content[0] && data.content[0].text) || '')
+    .replace(/^```(?:json)?\s*/m, '').replace(/```\s*$/m, '').trim();
   try { return JSON.parse(text); }
   catch (_) {
     var match = text.match(/\{[\s\S]*\}/);
