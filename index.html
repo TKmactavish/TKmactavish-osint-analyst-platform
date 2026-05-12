@@ -29,10 +29,10 @@
     a { color: var(--teal); text-decoration: none; }
     a:hover { text-decoration: underline; }
 
-    /* ── Layout ── */
+    /* Layout */
     .wrap { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
 
-    /* ── Header ── */
+    /* Header */
     header {
       display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 28px; flex-wrap: wrap; gap: 12px;
@@ -57,14 +57,14 @@
     }
     .btn-settings:hover { color: var(--text); border-color: var(--teal); }
 
-    /* ── Notice ── */
+    /* Notice */
     .notice {
       background: var(--amber-bg); border: 1px solid var(--amber-bd);
       border-radius: 8px; padding: 11px 16px; font-size: 13px;
       color: #fde68a; margin-bottom: 22px; line-height: 1.5;
     }
 
-    /* ── Setup banner ── */
+    /* Setup banner */
     .setup-banner {
       background: var(--surface); border: 1px solid var(--teal);
       border-radius: 10px; padding: 20px 24px; margin-bottom: 22px;
@@ -76,7 +76,7 @@
       padding: 2px 6px; font-size: 12px; color: #7dd3fc;
     }
 
-    /* ── Search ── */
+    /* Search */
     .search-card {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 12px; padding: 22px; margin-bottom: 24px;
@@ -102,7 +102,7 @@
     .btn-analyze:hover   { opacity: .88; }
     .btn-analyze:disabled { opacity: .45; cursor: not-allowed; }
 
-    /* ── Spinner ── */
+    /* Spinner */
     .spinner-wrap {
       display: flex; align-items: center; gap: 12px; justify-content: center;
       padding: 70px 0; color: var(--muted); font-size: 14px;
@@ -114,7 +114,7 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Tabs ── */
+    /* Tabs */
     .tabs {
       display: flex; gap: 0; flex-wrap: wrap; margin-bottom: 22px;
       border-bottom: 1px solid var(--border);
@@ -128,7 +128,7 @@
     .tab:hover { color: var(--text); }
     .tab.active { color: var(--teal); border-bottom-color: var(--teal); }
 
-    /* ── Cards ── */
+    /* Cards */
     .card {
       background: var(--card); border-radius: 10px; padding: 22px;
       box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 8px 20px rgba(0,0,0,.05);
@@ -137,7 +137,7 @@
     .g2 { display: grid; grid-template-columns: 1.35fr .65fr; gap: 14px; }
     .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
 
-    /* ── Card typography ── */
+    /* Card typography */
     .slabel {
       font-size: 11px; font-weight: 700; letter-spacing: .1em;
       text-transform: uppercase; color: var(--muted); margin-bottom: 14px;
@@ -150,7 +150,7 @@
     .card p:last-child { margin-bottom: 0; }
     .prose p { color: #1e293b; }
 
-    /* ── Stat row ── */
+    /* Stat row */
     .stat-row {
       display: flex; gap: 22px; flex-wrap: wrap;
       margin-top: 16px; padding-top: 16px; border-top: 1px solid #e2e8f0;
@@ -159,7 +159,7 @@
     .stat-val { font-size: 24px; font-weight: 800; color: #0f172a; line-height: 1; }
     .stat-lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
 
-    /* ── Items ── */
+    /* Items */
     .item {
       border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; margin-top: 10px;
     }
@@ -171,7 +171,7 @@
     }
     .item-link { font-size: 12px; color: var(--teal); margin-top: 6px; display: block; word-break: break-all; }
 
-    /* ── Tags ── */
+    /* Tags */
     .tag {
       display: inline-flex; align-items: center; font-size: 11px; font-weight: 700;
       padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: .04em;
@@ -202,14 +202,14 @@
     .cbar { height: 4px; background: #e2e8f0; border-radius: 99px; overflow: hidden; margin-top: 6px; }
     .cbar-fill { height: 100%; background: var(--teal); border-radius: 99px; }
 
-    /* ── Flag cards ── */
+    /* Flag cards */
     .flag-sev { font-size: 22px; font-weight: 900; margin: 6px 0; }
     .flag-sev.high { color: #dc2626; }
     .flag-sev.med  { color: #d97706; }
     .flag-sev.low  { color: #059669; }
     .flag-evidence { font-size: 12px; color: #64748b; margin-top: 8px; font-style: italic; }
 
-    /* ── Risk level ── */
+    /* Risk level */
     .risk-big {
       font-size: 54px; font-weight: 900; letter-spacing: -.03em; line-height: 1;
       margin: 8px 0 6px;
@@ -218,7 +218,7 @@
     .risk-MEDIUM { color: #d97706; }
     .risk-LOW    { color: #059669; }
 
-    /* ── Insight / Rec items ── */
+    /* Insight / Rec items */
     .insight {
       border-left: 3px solid var(--teal); padding: 10px 15px;
       background: #f0fdfa; border-radius: 0 8px 8px 0; margin-top: 10px;
@@ -238,7 +238,7 @@
       font-size: 13px; color: #475569; margin-top: 8px;
     }
 
-    /* ── Timeline ── */
+    /* Timeline */
     .tl-item {
       display: grid; grid-template-columns: 110px 1fr;
       gap: 12px; align-items: start; padding: 12px 0;
@@ -247,7 +247,7 @@
     .tl-item:last-child { border-bottom: none; }
     .tl-date { font-size: 13px; font-weight: 700; color: var(--teal); padding-top: 2px; }
 
-    /* ── Empty / Error ── */
+    /* Empty / Error */
     .empty { text-align: center; padding: 70px 20px; color: var(--muted); }
     .empty h2 { font-size: 17px; color: var(--text); margin-bottom: 8px; font-weight: 600; }
     .error-card {
@@ -255,7 +255,7 @@
       padding: 20px 22px; color: #9f1239;
     }
 
-    /* ── Modal ── */
+    /* Modal */
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(6,17,30,.85);
       display: flex; align-items: center; justify-content: center;
@@ -284,7 +284,7 @@
     }
     .modal-note { font-size: 12px; color: var(--muted); margin-top: 14px; line-height: 1.5; }
 
-    /* ── Responsive ── */
+    /* Responsive */
     @media (max-width: 800px) {
       .g2, .g3 { grid-template-columns: 1fr; }
       .search-row { flex-wrap: wrap; }
@@ -309,7 +309,7 @@
     </div>
     <div class="hdr-right">
       <div class="badge">Lawful public sources only</div>
-      <button class="btn-settings" onclick="openSettings()">⚙ Configure</button>
+      <button class="btn-settings" onclick="openSettings()">&#9881; Configure</button>
     </div>
   </header>
 
@@ -320,15 +320,13 @@
     use this platform for stalking, harassment, doxxing, or targeting of individuals.
   </div>
 
-  <!-- Setup banner (shown on GitHub Pages) -->
+  <!-- Setup banner (shown on GitHub Pages only) -->
   <div id="setup-banner" class="setup-banner" style="display:none">
-    <h3>⚙ Deploy to Vercel to enable AI analysis</h3>
+    <h3>&#9881; Deploy to Vercel to enable AI analysis</h3>
     <p>
       This site is running on GitHub Pages, which does not support the backend API.
-      <strong>Deploy the repo to Vercel</strong> (free, sign in with GitHub — no new password needed)
-      and add your <code>ANTHROPIC_API_KEY</code> as an environment variable.
-      Full instructions are in <strong>README.md</strong>.
-      Already have a Cloudflare Worker URL? Click <strong>Configure</strong> above.
+      <strong>Deploy the repo to Vercel</strong> (free, sign in with GitHub) and add your
+      <code>ANTHROPIC_API_KEY</code> as an environment variable. See <strong>README.md</strong>.
     </p>
   </div>
 
@@ -336,7 +334,7 @@
   <div class="search-card">
     <div class="search-row">
       <input type="text" id="query"
-        placeholder="Enter a person, incident, location, organization, or event…">
+        placeholder="Enter a person, incident, location, organization, or event&hellip;">
       <select id="lang">
         <option value="en">English</option>
         <option value="all">All Languages</option>
@@ -367,31 +365,40 @@
   <div class="modal-box">
     <h2>Configure API Endpoint</h2>
     <p>
-      Enter the URL of your deployed Cloudflare Worker. This is stored in your browser only —
-      it is never sent to any third party.
+      Only needed if using a custom Cloudflare Worker. On Vercel the API works automatically.
+      Leave blank to use the built-in Vercel endpoint.
     </p>
     <input class="modal-input" id="workerUrlInput"
-      placeholder="https://athena-intel.YOUR-SUBDOMAIN.workers.dev">
+      placeholder="https://athena-intel.YOUR-SUBDOMAIN.workers.dev (optional)">
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeSettings()">Cancel</button>
       <button class="btn-save" onclick="saveSettings()">Save</button>
     </div>
     <p class="modal-note">
-      Don't have a Worker yet? See the <strong>README.md</strong> in the repository for a
-      step-by-step deployment guide. It takes about 5 minutes.
+      Vercel deployment: no configuration needed here. The API is built in.
     </p>
   </div>
 </div>
 
 <script>
-// ── API endpoint ──────────────────────────────────────────────────────────────
-// Defaults to /api/analyze (works automatically on Vercel).
-// Override with a custom Cloudflare Worker URL via the Configure button.
-let WORKER_URL = localStorage.getItem('athena_worker_url') || '/api/analyze';
+// API endpoint
+// On Vercel (non-GitHub-Pages), always use /api/analyze regardless of localStorage.
+// On GitHub Pages, let user configure a custom Worker URL.
+const onGitHubPages = location.hostname.endsWith('.github.io');
+let WORKER_URL;
+if (onGitHubPages) {
+  WORKER_URL = localStorage.getItem('athena_worker_url') || '';
+} else {
+  // Always use the built-in Vercel endpoint on non-GitHub-Pages hosts
+  WORKER_URL = '/api/analyze';
+  // Clear any stale Worker URL from previous sessions
+  localStorage.removeItem('athena_worker_url');
+}
+
+document.getElementById('setup-banner').style.display = onGitHubPages ? 'block' : 'none';
 
 function openSettings() {
-  document.getElementById('workerUrlInput').value =
-    WORKER_URL === '/api/analyze' ? '' : WORKER_URL;
+  document.getElementById('workerUrlInput').value = onGitHubPages ? (WORKER_URL || '') : '';
   document.getElementById('modal').style.display = 'flex';
 }
 function closeSettings() {
@@ -402,33 +409,31 @@ function closeOnOverlay(e) {
 }
 function saveSettings() {
   const v = document.getElementById('workerUrlInput').value.trim();
-  WORKER_URL = v || '/api/analyze';
-  if (v) localStorage.setItem('athena_worker_url', v);
-  else   localStorage.removeItem('athena_worker_url');
+  if (onGitHubPages) {
+    WORKER_URL = v || '';
+    if (v) localStorage.setItem('athena_worker_url', v);
+    else   localStorage.removeItem('athena_worker_url');
+  }
   closeSettings();
-  document.getElementById('setup-banner').style.display = 'none';
 }
-// Show setup banner only if this looks like GitHub Pages (not Vercel)
-const onGitHubPages = location.hostname.endsWith('.github.io');
-document.getElementById('setup-banner').style.display = onGitHubPages ? 'block' : 'none';
 
-// ── State ────────────────────────────────────────────────────────────────────
+// State
 let report = null;
 let activeTab = 'Overview';
 const TABS = ['Overview','Timeline','Sources','Red Flags','Risk Assessment','Analytical Perspective','Recommendations'];
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// Helpers
 function esc(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 function confBadge(c) {
   const map = { high: 'c-hi', medium: 'c-med', low: 'c-low' };
   const label = { high: 'High', medium: 'Med', low: 'Low' };
-  return `<span class="conf ${map[c]||'c-med'}">${label[c]||'Med'}</span>`;
+  return '<span class="conf ' + (map[c]||'c-med') + '">' + (label[c]||'Med') + '</span>';
 }
 function typeBadge(t) {
   const map = { official:'t-teal', mainstream:'t-teal', ngo:'t-blue', local:'t-gray', reference:'t-purple' };
-  return `<span class="tag ${map[t]||'t-gray'}">${esc(t)}</span>`;
+  return '<span class="tag ' + (map[t]||'t-gray') + '">' + esc(t) + '</span>';
 }
 function credScore(domain) {
   if (/\.gov(\/|$)/.test(domain)) return 94;
@@ -438,7 +443,7 @@ function credScore(domain) {
   return 45+Math.floor(Math.random()*32);
 }
 
-// ── Loading state ─────────────────────────────────────────────────────────────
+// Loading state
 function setLoading(on) {
   const btn = document.getElementById('analyzeBtn');
   btn.disabled = on;
@@ -446,17 +451,18 @@ function setLoading(on) {
   if (on) {
     document.getElementById('tabs').style.display = 'none';
     document.getElementById('results').innerHTML =
-      `<div class="spinner-wrap"><div class="spinner"></div><span>Gathering and analyzing intelligence — this may take 15–30 seconds…</span></div>`;
+      '<div class="spinner-wrap"><div class="spinner"></div><span>Gathering and analyzing intelligence — this may take 15–30 seconds…</span></div>';
   }
 }
 
-// ── Main analyze ──────────────────────────────────────────────────────────────
+// Main analyze
 async function analyze() {
   const q = (document.getElementById('query').value || '').trim();
   if (!q) { document.getElementById('query').focus(); return; }
 
   if (!WORKER_URL) {
-    openSettings();
+    document.getElementById('results').innerHTML =
+      '<div class="error-card"><strong>Not configured:</strong> This site is on GitHub Pages. Deploy to Vercel or set a Cloudflare Worker URL via Configure.</div>';
     return;
   }
 
@@ -469,11 +475,16 @@ async function analyze() {
       body:    JSON.stringify({ query: q, lang: document.getElementById('lang').value }),
     });
 
-    const data = await resp.json();
+    let data;
+    try {
+      data = await resp.json();
+    } catch (_) {
+      throw new Error('Server returned a non-JSON response (HTTP ' + resp.status + '). Check Vercel logs.');
+    }
 
     if (data.error) {
       document.getElementById('results').innerHTML =
-        `<div class="error-card"><strong>Error:</strong> ${esc(data.error)}</div>`;
+        '<div class="error-card"><strong>Error:</strong> ' + esc(data.error) + '</div>';
       setLoading(false);
       return;
     }
@@ -484,153 +495,111 @@ async function analyze() {
     render();
   } catch (err) {
     document.getElementById('results').innerHTML =
-      `<div class="error-card"><strong>Network error:</strong> ${esc(err.message)}. Check that your Worker URL is correct and the Worker is deployed.</div>`;
+      '<div class="error-card"><strong>Network error:</strong> ' + esc(err.message) + '</div>';
     setLoading(false);
   }
 }
 
 document.getElementById('query').addEventListener('keydown', e => { if (e.key === 'Enter') analyze(); });
 
-// ── Render ────────────────────────────────────────────────────────────────────
+// Render
 function render() {
   if (!report) return;
-
-  // Tabs
   const tabsEl = document.getElementById('tabs');
   tabsEl.style.display = 'flex';
   tabsEl.innerHTML = TABS.map(t =>
-    `<button class="tab${t===activeTab?' active':''}" onclick="activeTab='${t}';render()">${t}</button>`
+    '<button class="tab' + (t===activeTab?' active':'') + '" onclick="activeTab=\'' + t + '\';render()">' + t + '</button>'
   ).join('');
-
-  // Content
   const el = document.getElementById('results');
   const d  = report;
-
   switch (activeTab) {
-    case 'Overview':          el.innerHTML = renderOverview(d);          break;
-    case 'Timeline':          el.innerHTML = renderTimeline(d);          break;
-    case 'Sources':           el.innerHTML = renderSources(d);           break;
-    case 'Red Flags':         el.innerHTML = renderFlags(d);             break;
-    case 'Risk Assessment':   el.innerHTML = renderRisk(d);              break;
-    case 'Analytical Perspective': el.innerHTML = renderPerspective(d); break;
-    case 'Recommendations':   el.innerHTML = renderRecs(d);              break;
+    case 'Overview':               el.innerHTML = renderOverview(d);     break;
+    case 'Timeline':               el.innerHTML = renderTimeline(d);     break;
+    case 'Sources':                el.innerHTML = renderSources(d);      break;
+    case 'Red Flags':              el.innerHTML = renderFlags(d);        break;
+    case 'Risk Assessment':        el.innerHTML = renderRisk(d);         break;
+    case 'Analytical Perspective': el.innerHTML = renderPerspective(d);  break;
+    case 'Recommendations':        el.innerHTML = renderRecs(d);         break;
   }
 }
-
-// ── Tab renderers ─────────────────────────────────────────────────────────────
 
 function renderOverview(d) {
   const riskColor = d.risk==='HIGH'?'#dc2626': d.risk==='MEDIUM'?'#d97706':'#059669';
   const top = (d.sources||[]).slice(0,5);
   const newsCount = (d.sources||[]).filter(s=>s.type!=='reference').length;
-  const refCount  = (d.sources||[]).filter(s=>s.type==='reference').length;
   const latestDate = (d.timeline||[]).map(t=>t.date).filter(Boolean).sort().reverse()[0] || null;
-
-  return `
-  <div class="g2">
-    <div class="card">
-      <div class="slabel">Executive Summary</div>
-      <div class="stitle">${esc(d.query)}</div>
-      <p>${esc(d.summary)}</p>
-      <div class="stat-row">
-        <div class="stat">
-          <span class="stat-val">${(d.sources||[]).length}</span>
-          <span class="stat-lbl">Sources</span>
-        </div>
-        <div class="stat">
-          <span class="stat-val">${newsCount}</span>
-          <span class="stat-lbl">News articles</span>
-        </div>
-        <div class="stat">
-          <span class="stat-val">${(d.flags||[]).length}</span>
-          <span class="stat-lbl">Flags</span>
-        </div>
-        <div class="stat">
-          <span class="stat-val" style="color:${riskColor}">${d.risk||'—'}</span>
-          <span class="stat-lbl">Risk level</span>
-        </div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="slabel">Profile</div>
-      <div class="item"><strong>Query type:</strong> ${esc((d.type||'').replace(/_/g,' '))}</div>
-      ${latestDate ? `<div class="item"><strong>Most recent record:</strong> ${esc(latestDate)}</div>` : ''}
-      <div class="item"><strong>Intelligence flags:</strong> ${(d.flags||[]).length}</div>
-      <p style="margin-top:14px;font-size:13px;color:#64748b">All results sourced from live public APIs. Verify every claim independently before operational use.</p>
-    </div>
-  </div>
-  <div class="card">
-    <div class="slabel">Top Sources</div>
-    ${top.length ? top.map(s => `
-      <div class="item">
-        <div class="item-title">${esc(s.title)}</div>
-        <div class="item-meta">
-          ${typeBadge(s.type)}
-          ${confBadge(s.confidence)}
-          ${s.domain ? `<span class="pill">${esc(s.domain)}</span>` : ''}
-          ${s.date   ? `<span class="pill">${esc(s.date)}</span>` : ''}
-        </div>
-        <a class="item-link" href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.url)}</a>
-      </div>`).join('') : '<p style="color:var(--muted)">No sources available.</p>'}
-  </div>`;
+  return '<div class="g2">'
+    + '<div class="card">'
+    + '<div class="slabel">Executive Summary</div>'
+    + '<div class="stitle">' + esc(d.query) + '</div>'
+    + '<p>' + esc(d.summary) + '</p>'
+    + '<div class="stat-row">'
+    + '<div class="stat"><span class="stat-val">' + (d.sources||[]).length + '</span><span class="stat-lbl">Sources</span></div>'
+    + '<div class="stat"><span class="stat-val">' + newsCount + '</span><span class="stat-lbl">News articles</span></div>'
+    + '<div class="stat"><span class="stat-val">' + (d.flags||[]).length + '</span><span class="stat-lbl">Flags</span></div>'
+    + '<div class="stat"><span class="stat-val" style="color:' + riskColor + '">' + (d.risk||'&mdash;') + '</span><span class="stat-lbl">Risk level</span></div>'
+    + '</div></div>'
+    + '<div class="card">'
+    + '<div class="slabel">Profile</div>'
+    + '<div class="item"><strong>Query type:</strong> ' + esc((d.type||'').replace(/_/g,' ')) + '</div>'
+    + (latestDate ? '<div class="item"><strong>Most recent record:</strong> ' + esc(latestDate) + '</div>' : '')
+    + '<div class="item"><strong>Intelligence flags:</strong> ' + (d.flags||[]).length + '</div>'
+    + '</div></div>'
+    + '<div class="card"><div class="slabel">Top Sources</div>'
+    + (top.length ? top.map(s =>
+      '<div class="item">'
+      + '<div class="item-title">' + esc(s.title) + '</div>'
+      + '<div class="item-meta">' + typeBadge(s.type) + ' ' + confBadge(s.confidence)
+      + (s.domain ? ' <span class="pill">' + esc(s.domain) + '</span>' : '')
+      + (s.date   ? ' <span class="pill">' + esc(s.date)   + '</span>' : '') + '</div>'
+      + '<a class="item-link" href="' + esc(s.url) + '" target="_blank" rel="noopener">' + esc(s.url) + '</a>'
+      + '</div>').join('') : '<p style="color:var(--muted)">No sources available.</p>')
+    + '</div>';
 }
 
 function renderTimeline(d) {
   const items = (d.timeline||[]).filter(t=>t.date).sort((a,b)=>b.date.localeCompare(a.date));
-  return `
-  <div class="card">
-    <div class="slabel">Chronological Timeline — ${items.length} event(s)</div>
-    ${items.length ? items.map(t=>`
-      <div class="tl-item">
-        <div class="tl-date">${esc(t.date)}</div>
-        <div>
-          <div class="item-title">${esc(t.event)}</div>
-          <div class="item-meta" style="margin-top:6px">
-            ${confBadge(t.confidence)}
-            ${t.source_title ? `<span class="pill">${esc(t.source_title)}</span>` : ''}
-          </div>
-          ${t.source_url ? `<a class="item-link" href="${esc(t.source_url)}" target="_blank" rel="noopener">${esc(t.source_url)}</a>` : ''}
-        </div>
-      </div>`).join('') :
-      '<p style="color:var(--muted);padding:8px 0">No dated timeline events found.</p>'}
-  </div>`;
+  return '<div class="card"><div class="slabel">Chronological Timeline &mdash; ' + items.length + ' event(s)</div>'
+    + (items.length ? items.map(t =>
+      '<div class="tl-item">'
+      + '<div class="tl-date">' + esc(t.date) + '</div>'
+      + '<div><div class="item-title">' + esc(t.event) + '</div>'
+      + '<div class="item-meta" style="margin-top:6px">' + confBadge(t.confidence)
+      + (t.source_title ? ' <span class="pill">' + esc(t.source_title) + '</span>' : '') + '</div>'
+      + (t.source_url ? '<a class="item-link" href="' + esc(t.source_url) + '" target="_blank" rel="noopener">' + esc(t.source_url) + '</a>' : '')
+      + '</div></div>').join('') : '<p style="color:var(--muted);padding:8px 0">No dated timeline events found.</p>')
+    + '</div>';
 }
 
 function renderSources(d) {
   const sources = d.sources || [];
-  return `
-  <div class="card">
-    <div class="slabel">All Sources — ${sources.length} record(s)</div>
-    ${sources.map(s=>{
+  return '<div class="card"><div class="slabel">All Sources &mdash; ' + sources.length + ' record(s)</div>'
+    + sources.map(s => {
       const score = credScore(s.domain||'');
-      return `
-      <div class="item">
-        <div class="item-title">${esc(s.title)}</div>
-        <div class="item-meta" style="margin-top:8px">
-          ${typeBadge(s.type)}
-          ${confBadge(s.confidence)}
-          ${s.domain ? `<span class="pill">${esc(s.domain)}</span>` : ''}
-          ${s.date   ? `<span class="pill">${esc(s.date)}</span>`   : ''}
-          <span style="font-size:12px;color:var(--muted)">Credibility: ${score}/100</span>
-        </div>
-        <div class="cbar"><div class="cbar-fill" style="width:${score}%"></div></div>
-        <a class="item-link" href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.url)}</a>
-      </div>`;
-    }).join('')}
-  </div>`;
+      return '<div class="item">'
+        + '<div class="item-title">' + esc(s.title) + '</div>'
+        + '<div class="item-meta" style="margin-top:8px">' + typeBadge(s.type) + ' ' + confBadge(s.confidence)
+        + (s.domain ? ' <span class="pill">' + esc(s.domain) + '</span>' : '')
+        + (s.date   ? ' <span class="pill">' + esc(s.date)   + '</span>' : '')
+        + ' <span style="font-size:12px;color:var(--muted)">Credibility: ' + score + '/100</span></div>'
+        + '<div class="cbar"><div class="cbar-fill" style="width:' + score + '%"></div></div>'
+        + '<a class="item-link" href="' + esc(s.url) + '" target="_blank" rel="noopener">' + esc(s.url) + '</a>'
+        + '</div>';
+    }).join('')
+    + '</div>';
 }
 
 function renderFlags(d) {
   const flags = d.flags || [];
   if (!flags.length) return '<div class="empty"><h2>No flags detected</h2><p>No significant intelligence indicators were identified.</p></div>';
-  return `<div class="g2">${flags.map(f=>`
-    <div class="card">
-      <div class="flag-sev ${f.severity}">${f.severity==='high'?'HIGH RISK':f.severity==='med'||f.severity==='medium'?'MEDIUM':'LOW'}</div>
-      <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:8px">${esc(f.name)}</div>
-      <p style="font-size:14px;color:#334155">${esc(f.description)}</p>
-      ${f.evidence ? `<div class="flag-evidence">Evidence: ${esc(f.evidence)}</div>` : ''}
-      ${f.source_url ? `<a class="item-link" href="${esc(f.source_url)}" target="_blank" rel="noopener">${esc(f.source_url)}</a>` : ''}
-    </div>`).join('')}</div>`;
+  return '<div class="g2">' + flags.map(f =>
+    '<div class="card">'
+    + '<div class="flag-sev ' + f.severity + '">' + (f.severity==='high'?'HIGH RISK':f.severity==='medium'?'MEDIUM':'LOW') + '</div>'
+    + '<div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:8px">' + esc(f.name) + '</div>'
+    + '<p style="font-size:14px;color:#334155">' + esc(f.description) + '</p>'
+    + (f.evidence ? '<div class="flag-evidence">Evidence: ' + esc(f.evidence) + '</div>' : '')
+    + (f.source_url ? '<a class="item-link" href="' + esc(f.source_url) + '" target="_blank" rel="noopener">' + esc(f.source_url) + '</a>' : '')
+    + '</div>').join('') + '</div>';
 }
 
 function renderRisk(d) {
@@ -638,81 +607,63 @@ function renderRisk(d) {
   const level = ra.level || d.risk || 'MEDIUM';
   const riskColor = level==='HIGH'?'#dc2626': level==='MEDIUM'?'#d97706':'#059669';
   const sources = d.sources || [];
-  const typeBreak = ['official','mainstream','ngo','local','reference'].map(t=>{
+  const typeBreak = ['official','mainstream','ngo','local','reference'].map(t => {
     const n = sources.filter(s=>s.type===t);
     if (!n.length) return '';
     const avg = Math.round(n.reduce((a,s)=>a+credScore(s.domain||''),0)/n.length);
-    return `<div class="item" style="margin-top:8px">
-      <div style="display:flex;justify-content:space-between;font-size:13px">
-        <strong style="color:#0f172a;text-transform:capitalize">${t}</strong>
-        <span style="color:var(--muted)">${n.length} source(s) · avg ${avg}/100</span>
-      </div>
-      <div class="cbar" style="margin-top:6px"><div class="cbar-fill" style="width:${avg}%"></div></div>
-    </div>`;
+    return '<div class="item" style="margin-top:8px">'
+      + '<div style="display:flex;justify-content:space-between;font-size:13px">'
+      + '<strong style="color:#0f172a;text-transform:capitalize">' + t + '</strong>'
+      + '<span style="color:var(--muted)">' + n.length + ' source(s) &middot; avg ' + avg + '/100</span></div>'
+      + '<div class="cbar" style="margin-top:6px"><div class="cbar-fill" style="width:' + avg + '%"></div></div></div>';
   }).join('');
-  return `
-  <div class="g2">
-    <div class="card">
-      <div class="slabel">Overall Risk Level</div>
-      <div class="risk-big risk-${level}" style="color:${riskColor}">${level}</div>
-      <p>${esc(ra.rationale || 'Risk derived from intelligence flags and source assessment.')}</p>
-    </div>
-    <div class="card">
-      <div class="slabel">Key Risk Factors</div>
-      ${(ra.factors||[]).length ? (ra.factors||[]).map(f=>`<div class="factor-item">${esc(f)}</div>`).join('') : '<p style="color:var(--muted)">No specific factors listed.</p>'}
-    </div>
-  </div>
-  <div class="card">
-    <div class="slabel">Source Credibility by Type</div>
-    ${typeBreak || '<p style="color:var(--muted)">No breakdown available.</p>'}
-  </div>`;
+  return '<div class="g2">'
+    + '<div class="card"><div class="slabel">Overall Risk Level</div>'
+    + '<div class="risk-big risk-' + level + '" style="color:' + riskColor + '">' + level + '</div>'
+    + '<p>' + esc(ra.rationale || 'Risk derived from intelligence flags and source assessment.') + '</p></div>'
+    + '<div class="card"><div class="slabel">Key Risk Factors</div>'
+    + ((ra.factors||[]).length ? (ra.factors||[]).map(f=>'<div class="factor-item">'+esc(f)+'</div>').join('') : '<p style="color:var(--muted)">No specific factors listed.</p>')
+    + '</div></div>'
+    + '<div class="card"><div class="slabel">Source Credibility by Type</div>'
+    + (typeBreak || '<p style="color:var(--muted)">No breakdown available.</p>') + '</div>';
 }
 
 function renderPerspective(d) {
   const ap = d.analytical_perspective || '';
-  if (!ap) {
-    return `<div class="empty"><h2>No analytical perspective available</h2><p>The analysis did not return an Analytical Perspective. Try re-running the query.</p></div>`;
-  }
+  if (!ap) return '<div class="empty"><h2>No analytical perspective available</h2><p>Try re-running the query.</p></div>';
   const paras = ap.split(/\n\n+/).filter(Boolean);
-  return `
-  <div class="card prose">
-    <div class="slabel">Analytical Perspective</div>
-    ${paras.map(p=>`<p style="margin-bottom:14px">${esc(p)}</p>`).join('')}
-  </div>`;
+  return '<div class="card prose"><div class="slabel">Analytical Perspective</div>'
+    + paras.map(p => '<p style="margin-bottom:14px">' + esc(p) + '</p>').join('')
+    + '</div>';
 }
 
 function renderRecs(d) {
   const rec = d.recommendations || {};
-  const le  = rec.law_enforcement  || [];
-  const ps  = rec.private_sector   || [];
-  const tr  = rec.traveler         || [];
-
-  const panel = (title, icon, items, borderColor) => `
-    <div class="card" style="border-top:3px solid ${borderColor}">
-      <div class="rec-card-title">${icon} ${title}</div>
-      ${items.length ? items.map(r=>`<div class="rec">${esc(r)}</div>`).join('') :
-        '<p style="color:var(--muted);font-size:13px;margin-top:8px">No specific recommendations generated.</p>'}
-    </div>`;
-
+  const le  = rec.law_enforcement || [];
+  const ps  = rec.private_sector  || [];
+  const tr  = rec.traveler        || [];
+  const panel = (title, icon, items, borderColor) =>
+    '<div class="card" style="border-top:3px solid ' + borderColor + '">'
+    + '<div class="rec-card-title">' + icon + ' ' + title + '</div>'
+    + (items.length ? items.map(r => '<div class="rec">' + esc(r) + '</div>').join('')
+      : '<p style="color:var(--muted);font-size:13px;margin-top:8px">No specific recommendations generated.</p>')
+    + '</div>';
   const questions = [
     'Which source has direct firsthand access to the subject?',
-    'Is there confirmed official government or institutional statement?',
+    'Is there a confirmed official government or institutional statement?',
     'Are there credible sources in other languages not yet consulted?',
     'What would escalate or de-escalate the assessed risk level?',
-    'What single piece of information, if wrong, would change this entire assessment?',
+    'What single piece of information, if wrong, would change this assessment?',
     'Have you checked for coordinated disinformation or narrative manipulation?',
   ];
-
-  return `
-  <div class="g3">
-    ${panel('Law Enforcement & Intelligence', '🔎', le, '#6366f1')}
-    ${panel('Private Sector & Corporate Security', '🏢', ps, '#0ea5e9')}
-    ${panel('Traveler & Personal Safety', '✈️', tr, '#10b981')}
-  </div>
-  <div class="card">
-    <div class="slabel">Open Intelligence Questions</div>
-    ${questions.map(q=>`<div class="factor-item">${q}</div>`).join('')}
-  </div>`;
+  return '<div class="g3">'
+    + panel('Law Enforcement & Intelligence', '&#128270;', le, '#6366f1')
+    + panel('Private Sector & Corporate Security', '&#127970;', ps, '#0ea5e9')
+    + panel('Traveler & Personal Safety', '&#9992;', tr, '#10b981')
+    + '</div>'
+    + '<div class="card"><div class="slabel">Open Intelligence Questions</div>'
+    + questions.map(q => '<div class="factor-item">' + q + '</div>').join('')
+    + '</div>';
 }
 </script>
 </body>
