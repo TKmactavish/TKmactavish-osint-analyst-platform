@@ -1,7 +1,7 @@
 export const config = { runtime: 'edge' };
 
 const MODEL      = 'claude-haiku-4-5-20251001';
-const MAX_TOKENS = 2400;
+const MAX_TOKENS = 3500;
 
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
@@ -84,28 +84,43 @@ function buildDynamicPrompt(query, lang, findings) {
 ${langInstruction}
 ${findingsSection}
 
-Return this exact JSON schema — all fields are mandatory, use null for unavailable data:
+BREVITY RULES (critical — schema is long, output must fit):
+- Every text field: 1-2 short sentences MAX.
+- keyFacts: max 6 entries.
+- timeline: max 5 entries (most recent first).
+- riskIndicators: max 5 short strings.
+- informationGaps: max 4 short strings.
+- sourceAssessment: max 6 entries, copy domain/url from findings verbatim.
+- Each recommendation subfield: 1-2 sentences only.
+
+Return this EXACT JSON schema. Field order matters — write top to bottom. All fields mandatory, use null for unavailable data. ALWAYS close all brackets:
+
 {
   "query": "${query}",
   "type": "person|incident|location|organization|travel_risk",
-  "executiveSummary": "3-5 sentence summary. What, where, when, significance.",
-  "keyFacts": [{ "fact": "...", "status": "CONFIRMED|UNCONFIRMED" }],
-  "timeline": [{ "date": "YYYY-MM-DD", "event": "...", "source_title": "...", "source_url": "...", "confidence": "high|medium|low" }],
-  "sourceAssessment": [{ "title": "...", "url": "...", "domain": "...", "date": "YYYY-MM-DD|null", "type": "official|mainstream|ngo|local|reference", "credibility": "HIGH|MEDIUM|LOW", "language": "${isEnglish ? 'EN' : lang.code}|EN" }],
-  "riskIndicators": ["plain string per indicator"],
-  "impactAssessment": { "civilian": "...", "political": "...", "economic": "...", "security": "..." },
-  "intelligenceAssessment": "Analyst interpretation. Trends, patterns, possible next developments.",
+  "executiveSummary": "3-4 sentence summary. What, where, when, significance.",
   "confidenceLevel": "HIGH|MEDIUM|LOW",
   "confidenceJustification": "One sentence.",
-  "informationGaps": ["what is unknown or unverifiable"],
+  "intelligenceAssessment": "Analyst interpretation in 3-5 short sentences. Trends, patterns, likely next developments. NO academic prose.",
   "recommendations": {
-    "whatToWatch": "Indicators to monitor.",
-    "whatToAvoid": "Locations, activities, or contacts to avoid and why.",
-    "recommendedAction": "Clear steps for analysts and decision-makers.",
-    "travelSafetyAdvice": "Relevant if query involves a location.",
-    "monitoringPriority": "What to track over coming days/weeks.",
-    "nextSteps": "Concrete follow-up actions."
-  }
+    "whatToWatch":         "Indicators to monitor (1-2 sentences).",
+    "whatToAvoid":         "Locations, activities, or contacts to avoid and why (1-2 sentences).",
+    "recommendedAction":   "Clear steps (1-2 sentences).",
+    "travelSafetyAdvice":  "Safety advice if location-relevant (1-2 sentences).",
+    "monitoringPriority":  "What to track over coming days/weeks (1-2 sentences).",
+    "nextSteps":           "Concrete follow-up actions (1-2 sentences)."
+  },
+  "keyFacts": [{ "fact": "...", "status": "CONFIRMED|UNCONFIRMED" }],
+  "riskIndicators": ["short string per indicator"],
+  "impactAssessment": {
+    "civilian":  "1-2 sentences.",
+    "political": "1-2 sentences.",
+    "economic":  "1-2 sentences.",
+    "security":  "1-2 sentences."
+  },
+  "informationGaps": ["what is unknown"],
+  "timeline": [{ "date": "YYYY-MM-DD", "event": "...", "source_title": "...", "source_url": "...", "confidence": "high|medium|low" }],
+  "sourceAssessment": [{ "title": "...", "url": "...", "domain": "...", "date": "YYYY-MM-DD|null", "type": "official|mainstream|ngo|local|reference", "credibility": "HIGH|MEDIUM|LOW", "language": "${isEnglish ? 'EN' : lang.code}|EN" }]
 }`;
 }
 
