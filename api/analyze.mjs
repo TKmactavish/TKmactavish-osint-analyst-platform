@@ -1,7 +1,10 @@
 export const config = { runtime: 'edge' };
 
-const MODEL      = 'claude-haiku-4-5-20251001';
-const MAX_TOKENS = 3500;
+const MODEL          = 'claude-haiku-4-5-20251001';
+const MAX_TOKENS     = 2800;
+const MAX_FINDINGS   = 6;
+const MAX_SNIPPET    = 180;
+const ABORT_MS       = 23000;
 
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
@@ -237,7 +240,16 @@ export default async function handler(req) {
   try {
     const body = await req.json();
     query = (body.query || '').trim();
-    findings = Array.isArray(body.findings) ? body.findings.slice(0, 12) : [];
+    // Trim findings: cap count and snippet length to keep prompt compact
+    const raw = Array.isArray(body.findings) ? body.findings.slice(0, MAX_FINDINGS) : [];
+    findings = raw.map(f => ({
+      title:    typeof f?.title    === 'string' ? f.title.slice(0, 140)   : '',
+      url:      typeof f?.url      === 'string' ? f.url                   : '',
+      domain:   typeof f?.domain   === 'string' ? f.domain                : '',
+      date:     f?.date || null,
+      snippet:  typeof f?.snippet  === 'string' ? f.snippet.slice(0, MAX_SNIPPET) : '',
+      language: typeof f?.language === 'string' ? f.language.slice(0, 4)  : 'EN',
+    }));
   } catch {
     return jsonRes({ error: 'Invalid JSON body' }, 400);
   }
@@ -270,7 +282,7 @@ export default async function handler(req) {
           { role: 'user', content: dynamicPrompt },
         ],
       }),
-      signal: AbortSignal.timeout(22000),
+      signal: AbortSignal.timeout(ABORT_MS),
     });
 
     if (!res.ok) {

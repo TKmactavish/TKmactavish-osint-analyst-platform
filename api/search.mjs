@@ -23,11 +23,12 @@ Rules:
 - Prefer authoritative sources: government, mainstream news (Reuters/AP/BBC plus regional outlets), NGOs, academic.
 - If the query references a non-English region, include at least one local-language source where available.
 - Return ONLY valid JSON, no markdown, no commentary.
+- Keep each snippet to 1 short sentence (max 150 chars). Brevity is mandatory.
 
 Schema (strict):
-{"findings":[{"title":"...","url":"...","domain":"...","date":"YYYY-MM-DD|null","snippet":"1-2 sentences","language":"EN|TH|AR|..."}]}
+{"findings":[{"title":"...","url":"...","domain":"...","date":"YYYY-MM-DD|null","snippet":"<150 char","language":"EN|TH|AR|..."}]}
 
-Aim for 4-8 findings. Always close all brackets.`;
+Return 4-6 findings only. Always close all brackets.`;
 
 function extractJson(text) {
   const start = text.indexOf('{');
