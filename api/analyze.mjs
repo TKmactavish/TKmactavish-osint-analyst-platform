@@ -1,7 +1,7 @@
 export const config = { runtime: 'edge' };
 
-const CLAUDE_MODEL = 'claude-haiku-4-5-20251001';
-const MAX_TOKENS   = 2400;
+const MODEL      = 'claude-sonnet-4-6';
+const MAX_TOKENS = 3000;
 
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
@@ -16,77 +16,129 @@ function jsonRes(data, status) {
   });
 }
 
-const SYSTEM_PROMPT = [
-  'You are a senior OSINT analyst for Athena Intel.',
-  '',
-  'GEO RISK (apply when location matches):',
-  'Thai Deep South (Yala/Narathiwat/Pattani/Songkhla): HIGH (BRN insurgency).',
-  'Myanmar conflict zones: HIGH-EXTREME. Gaza/West Bank: EXTREME.',
-  'Yemen/Syria/Sudan(SAF-RSF)/Kashmir/Afghanistan/Sahel/Eastern DRC/Somalia: HIGH.',
-  'Haiti(gangs): EXTREME. Ecuador(armed conflict): HIGH.',
-  'Mexico cartel zones / Colombia rural FARC-EP-ELN: HIGH.',
-  'Mindanao: MEDIUM-HIGH.',
-  '',
-  'RULES:',
-  '- Apply geo risk above for locations.',
-  '- BE CONCISE. Short strings, no fluff.',
-  '- analytical_perspective: exactly 5-6 short sentences.',
-  '- Exactly 3 sources, 2-3 timeline events, 2 flags, 3 recommendations per audience.',
-  '- Return ONLY valid JSON, no markdown.',
-  '- ALWAYS close all brackets and braces. Output complete JSON.',
-  '',
-  'SCHEMA (all fields mandatory):',
-  '{"query":str,"type":"person|incident|location|organization|travel_risk","summary":str,"risk":"HIGH|MEDIUM|LOW",',
-  '"sources":[{"title":str,"url":str,"domain":str,"date":"YYYY-MM-DD|null","type":"official|mainstream|ngo|local|reference","confidence":"high|medium|low"}],',
-  '"timeline":[{"date":"YYYY-MM-DD","event":str,"source_title":str,"source_url":str,"confidence":"high|medium|low"}],',
-  '"flags":[{"name":str,"description":str,"severity":"high|medium|low","evidence":str,"source_url":"str|null"}],',
-  '"risk_assessment":{"level":"HIGH|MEDIUM|LOW","rationale":str,"factors":[str,str,str]},',
-  '"analytical_perspective":str,',
-  '"recommendations":{"law_enforcement":[str,str,str],"private_sector":[str,str,str],"traveler":[str,str,str]}}'
-].join('\n');
+// ── Language detection ──────────────────────────────────────────────────────
+const LANG_HINTS = [
+  // Scripts
+  { re: /[฀-๿]/, code: 'TH', name: 'Thai' },
+  { re: /[؀-ۿ]/, code: 'AR', name: 'Arabic' },
+  { re: /[一-鿿]/, code: 'ZH', name: 'Chinese' },
+  { re: /[぀-ゟ゠-ヿ]/, code: 'JA', name: 'Japanese' },
+  { re: /[가-힯]/, code: 'KO', name: 'Korean' },
+  { re: /[Ѐ-ӿ]/, code: 'RU', name: 'Russian' },
+  { re: /[ऀ-ॿ]/, code: 'HI', name: 'Hindi' },
+];
 
-// --- JSON repair for truncated Claude responses ------------------------------
-function repairJson(text) {
-  // Find the first { and try to parse progressively
+const KEYWORD_LANGS = [
+  { words: ['thailand','thai','bangkok','pattani','yala','narathiwat','songkhla','chiang mai'], code: 'TH', name: 'Thai' },
+  { words: ['japan','japanese','tokyo','osaka'], code: 'JA', name: 'Japanese' },
+  { words: ['china','chinese','beijing','shanghai','hong kong','taiwan'], code: 'ZH', name: 'Chinese' },
+  { words: ['korea','korean','seoul'], code: 'KO', name: 'Korean' },
+  { words: ['myanmar','burma','burmese','yangon','naypyidaw'], code: 'MY', name: 'Burmese' },
+  { words: ['syria','iraq','yemen','gaza','palestine','egypt','libya','sudan','saudi','jordan','lebanon'], code: 'AR', name: 'Arabic' },
+  { words: ['iran','iranian','tehran'], code: 'FA', name: 'Persian' },
+  { words: ['afghanistan','afghan','kabul','taliban'], code: 'PS', name: 'Pashto' },
+  { words: ['russia','russian','moscow','kremlin','ukraine','ukrainian','kyiv','belarus'], code: 'RU', name: 'Russian' },
+  { words: ['france','french','paris','mali','burkina','niger','chad','cameroon','senegal'], code: 'FR', name: 'French' },
+  { words: ['germany','german','berlin'], code: 'DE', name: 'German' },
+  { words: ['spain','spanish','madrid','mexico','cartel','colombia','venezuela','ecuador','peru','argentina'], code: 'ES', name: 'Spanish' },
+  { words: ['brazil','brazilian','rio','sao paulo','favela'], code: 'PT', name: 'Portuguese' },
+  { words: ['turkey','turkish','ankara','istanbul'], code: 'TR', name: 'Turkish' },
+  { words: ['india','indian','delhi','mumbai','kashmir'], code: 'HI', name: 'Hindi' },
+  { words: ['ethiopia','amhara','tigray'], code: 'AM', name: 'Amharic' },
+  { words: ['somalia','somali','mogadishu'], code: 'SO', name: 'Somali' },
+  { words: ['drc','congo','kinshasa'], code: 'FR', name: 'French' },
+  { words: ['israel','tel aviv','jerusalem'], code: 'HE', name: 'Hebrew' },
+  { words: ['haiti','haitian','port-au-prince'], code: 'HT', name: 'Haitian Creole' },
+];
+
+function detectLang(query) {
+  for (const h of LANG_HINTS) {
+    if (h.re.test(query)) return h;
+  }
+  const q = query.toLowerCase();
+  for (const entry of KEYWORD_LANGS) {
+    if (entry.words.some(w => q.includes(w))) return entry;
+  }
+  return { code: 'EN', name: 'English' };
+}
+
+// ── Prompts ─────────────────────────────────────────────────────────────────
+const STATIC_SYSTEM = `You are a senior OSINT analyst producing formal intelligence briefs.
+Writing style: short declarative sentences, no academic prose, no hedging without cause.
+Never fabricate sources or URLs. If information is unavailable, state it explicitly.
+Clearly separate CONFIRMED facts from UNCONFIRMED claims.
+Return ONLY a single valid JSON object — no markdown, no explanation outside the JSON.
+ALWAYS close all JSON brackets and braces completely. Output must be parseable.`;
+
+function buildDynamicPrompt(query, lang) {
+  const isEnglish = lang.code === 'EN';
+  const langInstruction = isEnglish
+    ? 'Search exclusively in English.'
+    : `Search in BOTH English AND ${lang.name} (${lang.code}). Label each source with its language code, e.g. [EN] or [${lang.code}].`;
+
+  return `Query: "${query}"
+${langInstruction}
+Use the web_search tool to find current, real information before writing the brief.
+Prioritize: local news outlets, government statements, security agencies, NGO reports, verified regional media. Do not rely only on Reuters/BBC/AP.
+
+Return this exact JSON schema — all fields are mandatory, use null for unavailable data:
+{
+  "query": "${query}",
+  "type": "person|incident|location|organization|travel_risk",
+  "executiveSummary": "3-5 sentence summary. What, where, when, significance.",
+  "keyFacts": [{ "fact": "...", "status": "CONFIRMED|UNCONFIRMED" }],
+  "timeline": [{ "date": "YYYY-MM-DD", "event": "...", "source_title": "...", "source_url": "...", "confidence": "high|medium|low" }],
+  "sourceAssessment": [{ "title": "...", "url": "...", "domain": "...", "date": "YYYY-MM-DD|null", "type": "official|mainstream|ngo|local|reference", "credibility": "HIGH|MEDIUM|LOW", "language": "${isEnglish ? 'EN' : lang.code}|EN" }],
+  "riskIndicators": ["plain string per indicator"],
+  "impactAssessment": { "civilian": "...", "political": "...", "economic": "...", "security": "..." },
+  "intelligenceAssessment": "Analyst interpretation. Trends, patterns, possible next developments.",
+  "confidenceLevel": "HIGH|MEDIUM|LOW",
+  "confidenceJustification": "One sentence.",
+  "informationGaps": ["what is unknown or unverifiable"],
+  "recommendations": {
+    "whatToWatch": "Indicators to monitor.",
+    "whatToAvoid": "Locations, activities, or contacts to avoid and why.",
+    "recommendedAction": "Clear steps for analysts and decision-makers.",
+    "travelSafetyAdvice": "Relevant if query involves a location.",
+    "monitoringPriority": "What to track over coming days/weeks.",
+    "nextSteps": "Concrete follow-up actions."
+  }
+}`;
+}
+
+// ── JSON extraction + repair ─────────────────────────────────────────────────
+function extractJson(text) {
   const start = text.indexOf('{');
-  if (start < 0) throw new Error('No JSON object found');
+  if (start < 0) throw new Error('No JSON object found in response');
   let s = text.slice(start);
 
-  // Try direct parse first
+  // Direct parse
   try { return JSON.parse(s); } catch {}
 
-  // Try a clean greedy match
+  // Greedy match
   const m = s.match(/^\{[\s\S]*\}/);
-  if (m) {
-    try { return JSON.parse(m[0]); } catch {}
-  }
+  if (m) { try { return JSON.parse(m[0]); } catch {} }
 
-  // Repair: trim to last complete value and close all open brackets
-  // Strip trailing partial string/value
-  let cut = s;
-  // Remove trailing whitespace
-  cut = cut.replace(/\s+$/, '');
-  // If we end in an incomplete string, find the last complete pair/element
-  // Walk back to last `,` or opening bracket and trim
+  // Bracket-tracking repair
+  s = s.replace(/\s+$/, '');
   let depth = 0;
   const stack = [];
   let inString = false;
   let escape = false;
   let lastSafe = 0;
-  for (let i = 0; i < cut.length; i++) {
-    const ch = cut[i];
-    if (escape) { escape = false; continue; }
+
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (escape)  { escape = false; continue; }
     if (ch === '\\') { escape = true; continue; }
-    if (ch === '"') { inString = !inString; continue; }
+    if (ch === '"')  { inString = !inString; continue; }
     if (inString) continue;
     if (ch === '{' || ch === '[') { stack.push(ch); depth++; }
     else if (ch === '}' || ch === ']') { stack.pop(); depth--; if (depth === 0) lastSafe = i + 1; }
-    else if (ch === ',' && depth >= 1) { lastSafe = i; }
+    else if (ch === ',' && depth >= 1) lastSafe = i;
   }
-  // Take prefix up to lastSafe, close remaining open brackets
-  let prefix = cut.slice(0, lastSafe).replace(/,\s*$/, '');
-  // Recompute open stack at lastSafe
-  depth = 0;
+
+  let prefix = s.slice(0, lastSafe).replace(/,\s*$/, '');
   const stk = [];
   inString = false; escape = false;
   for (let i = 0; i < prefix.length; i++) {
@@ -104,57 +156,81 @@ function repairJson(text) {
   return JSON.parse(prefix);
 }
 
-async function analyzeWithClaude(q, apiKey) {
-  const r = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'x-api-key':         apiKey,
-      'anthropic-version': '2023-06-01',
-      'content-type':      'application/json',
-    },
-    body: JSON.stringify({
-      model:      CLAUDE_MODEL,
-      max_tokens: MAX_TOKENS,
-      system:     SYSTEM_PROMPT,
-      messages:   [{ role: 'user', content:
-        `Query: "${q}". Produce the complete JSON brief using your training knowledge. ` +
-        `Cite well-known public sources you remember. BE CONCISE. Output complete valid JSON only.`
-      }],
-    }),
-    signal: AbortSignal.timeout(22000),
-  });
-
-  if (!r.ok) {
-    const errBody = await r.text();
-    throw new Error('Anthropic API ' + r.status + ': ' + errBody.slice(0, 300));
-  }
-
-  const data = await r.json();
-  let text = (data?.content?.[0]?.text) || '';
-  text = text.replace(/^```(?:json)?\s*/m, '').replace(/```\s*$/m, '').trim();
-  return repairJson(text);
-}
-
+// ── Main handler ─────────────────────────────────────────────────────────────
 export default async function handler(req) {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
   if (req.method !== 'POST') return jsonRes({ error: 'Only POST requests are supported' }, 405);
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return jsonRes({ error: 'ANTHROPIC_API_KEY is not set' }, 500);
+  if (!apiKey) return jsonRes({ error: 'ANTHROPIC_API_KEY environment variable is not set' }, 500);
 
-  let q;
+  let query;
   try {
     const body = await req.json();
-    q = (body.query || '').trim();
+    query = (body.query || '').trim();
   } catch {
     return jsonRes({ error: 'Invalid JSON body' }, 400);
   }
-  if (!q || q.length < 2) return jsonRes({ error: 'Query must be at least 2 characters' }, 400);
+  if (!query || query.length < 2) return jsonRes({ error: 'Query must be at least 2 characters' }, 400);
+  if (query.length > 500) return jsonRes({ error: 'Query too long (max 500 characters)' }, 400);
 
   try {
-    const result = await analyzeWithClaude(q, apiKey);
+    const lang = detectLang(query);
+    const dynamicPrompt = buildDynamicPrompt(query, lang);
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key':         apiKey,
+        'anthropic-version': '2023-06-01',
+        'content-type':      'application/json',
+      },
+      body: JSON.stringify({
+        model:      MODEL,
+        max_tokens: MAX_TOKENS,
+        system: [
+          // Static portion — eligible for prompt caching
+          {
+            type: 'text',
+            text: STATIC_SYSTEM,
+            cache_control: { type: 'ephemeral' },
+          },
+        ],
+        tools: [
+          { type: 'web_search_20250305', name: 'web_search' },
+        ],
+        messages: [
+          { role: 'user', content: dynamicPrompt },
+        ],
+      }),
+      signal: AbortSignal.timeout(25000),
+    });
+
+    if (!res.ok) {
+      const errBody = await res.text();
+      throw new Error(`Anthropic API ${res.status}: ${errBody.slice(0, 300)}`);
+    }
+
+    const data = await res.json();
+
+    // Extract text from all content blocks (web_search results are server-side)
+    let text = '';
+    for (const block of (data.content || [])) {
+      if (block.type === 'text') text += block.text;
+    }
+
+    text = text.replace(/^```(?:json)?\s*/m, '').replace(/```\s*$/m, '').trim();
+
+    if (!text) {
+      throw new Error('No text content in API response. Stop reason: ' + (data.stop_reason || 'unknown'));
+    }
+
+    const result = extractJson(text);
     return jsonRes(result);
+
   } catch (err) {
-    return jsonRes({ error: (err && err.message) || 'Analysis failed' }, 500);
+    const msg = err?.message || 'Analysis failed';
+    const status = msg.includes('timed out') || msg.includes('timeout') ? 504 : 500;
+    return jsonRes({ error: msg }, status);
   }
 }
