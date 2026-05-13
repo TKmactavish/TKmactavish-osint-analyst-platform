@@ -1,10 +1,11 @@
-export const config = { runtime: 'edge' };
+// Node.js serverless function — maxDuration 60s set in vercel.json
+// (was edge runtime, 25s hard limit → caused intermittent 504s on complex queries)
 
-const MODEL          = 'claude-haiku-4-5-20251001';
-const MAX_TOKENS     = 2800;
-const MAX_FINDINGS   = 6;
-const MAX_SNIPPET    = 180;
-const ABORT_MS       = 23000;
+const MODEL        = 'claude-haiku-4-5-20251001';
+const MAX_TOKENS   = 2000;
+const MAX_FINDINGS = 5;
+const MAX_SNIPPET  = 150;
+const ABORT_MS     = 55000;
 
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
@@ -12,16 +13,8 @@ const CORS = {
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
-function jsonRes(data, status) {
-  return new Response(JSON.stringify(data), {
-    status: status || 200,
-    headers: { ...CORS, 'Content-Type': 'application/json' },
-  });
-}
-
 // ── Language detection ──────────────────────────────────────────────────────
 const LANG_HINTS = [
-  // Scripts
   { re: /[฀-๿]/, code: 'TH', name: 'Thai' },
   { re: /[؀-ۿ]/, code: 'AR', name: 'Arabic' },
   { re: /[一-鿿]/, code: 'ZH', name: 'Chinese' },
@@ -65,10 +58,7 @@ function detectLang(query) {
   return { code: 'EN', name: 'English' };
 }
 
-// ── Prompts ─────────────────────────────────────────────────────────────────
-// Static system prompt — cached via cache_control: ephemeral.
-// Encodes US Intelligence Community analytic tradecraft standards (ICD-203)
-// plus structured analytic technique cues. Paid once, reused on every query.
+// ── Static system prompt (prompt-cached) ────────────────────────────────────
 const STATIC_SYSTEM = `You are a senior OSINT analyst producing formal intelligence briefs that follow US Intelligence Community analytic tradecraft standards (ICD-203).
 
 ═══════════════════════════════════════════════════════
@@ -140,12 +130,12 @@ ${findingsSection}
 
 BREVITY RULES (critical — schema is long, output must fit):
 - Every text field: 1-2 short sentences MAX.
-- keyFacts: max 6 entries.
-- timeline: max 5 entries (most recent first).
-- riskIndicators: max 5 short strings.
-- informationGaps: max 4 short strings.
-- sourceAssessment: max 6 entries, copy domain/url from findings verbatim.
-- Each recommendation subfield: 1-2 sentences only.
+- keyFacts: max 5 entries.
+- timeline: max 4 entries (most recent first).
+- riskIndicators: max 4 short strings.
+- informationGaps: max 3 short strings.
+- sourceAssessment: max 5 entries, copy domain/url from findings verbatim.
+- Each recommendation subfield: 1 sentence only.
 
 Return this EXACT JSON schema. Field order matters — write top to bottom. All fields mandatory, use null for unavailable data. ALWAYS close all brackets:
 
@@ -157,12 +147,12 @@ Return this EXACT JSON schema. Field order matters — write top to bottom. All 
   "confidenceJustification": "One sentence naming the dominant evidence basis and any load-bearing assumption.",
   "intelligenceAssessment": "3-5 short sentences. State the lead judgment with calibrated probability. Name 1-2 alternative explanations if evidence is contested. End with the single indicator that would most change the assessment.",
   "recommendations": {
-    "whatToWatch":         "Indicators to monitor (1-2 sentences).",
-    "whatToAvoid":         "Locations, activities, or contacts to avoid and why (1-2 sentences).",
-    "recommendedAction":   "Clear steps (1-2 sentences).",
-    "travelSafetyAdvice":  "Safety advice if location-relevant (1-2 sentences).",
-    "monitoringPriority":  "What to track over coming days/weeks (1-2 sentences).",
-    "nextSteps":           "Concrete follow-up actions (1-2 sentences)."
+    "whatToWatch":         "Indicators to monitor (1 sentence).",
+    "whatToAvoid":         "Locations, activities, or contacts to avoid and why (1 sentence).",
+    "recommendedAction":   "Clear steps (1 sentence).",
+    "travelSafetyAdvice":  "Safety advice if location-relevant (1 sentence).",
+    "monitoringPriority":  "What to track over coming days/weeks (1 sentence).",
+    "nextSteps":           "Concrete follow-up actions (1 sentence)."
   },
   "keyFacts": [{ "fact": "...", "status": "CONFIRMED|UNCONFIRMED" }],
   "riskIndicators": ["short string per indicator"],
@@ -184,24 +174,18 @@ function extractJson(text) {
   if (start < 0) throw new Error('No JSON object found in response');
   let s = text.slice(start);
 
-  // Direct parse
   try { return JSON.parse(s); } catch {}
 
-  // Greedy match
   const m = s.match(/^\{[\s\S]*\}/);
   if (m) { try { return JSON.parse(m[0]); } catch {} }
 
-  // Bracket-tracking repair
   s = s.replace(/\s+$/, '');
-  let depth = 0;
   const stack = [];
-  let inString = false;
-  let escape = false;
-  let lastSafe = 0;
+  let depth = 0, inString = false, escape = false, lastSafe = 0;
 
   for (let i = 0; i < s.length; i++) {
     const ch = s[i];
-    if (escape)  { escape = false; continue; }
+    if (escape)      { escape = false; continue; }
     if (ch === '\\') { escape = true; continue; }
     if (ch === '"')  { inString = !inString; continue; }
     if (inString) continue;
@@ -224,26 +208,27 @@ function extractJson(text) {
     else if (ch === '}' || ch === ']') stk.pop();
   }
   while (stk.length) prefix += stk.pop();
-
   return JSON.parse(prefix);
 }
 
-// ── Main handler ─────────────────────────────────────────────────────────────
-export default async function handler(req) {
-  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
-  if (req.method !== 'POST') return jsonRes({ error: 'Only POST requests are supported' }, 405);
+// ── Handler (Node.js serverless — req/res pattern) ───────────────────────────
+export default async function handler(req, res) {
+  Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
+
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  if (req.method !== 'POST')   return res.status(405).json({ error: 'Only POST requests are supported' });
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return jsonRes({ error: 'ANTHROPIC_API_KEY environment variable is not set' }, 500);
+  if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY environment variable is not set' });
 
   let query, findings;
   try {
-    const body = await req.json();
+    // Vercel auto-parses JSON bodies; fall back to manual parse if needed
+    const body = req.body && typeof req.body === 'object' ? req.body : JSON.parse(req.body);
     query = (body.query || '').trim();
-    // Trim findings: cap count and snippet length to keep prompt compact
     const raw = Array.isArray(body.findings) ? body.findings.slice(0, MAX_FINDINGS) : [];
     findings = raw.map(f => ({
-      title:    typeof f?.title    === 'string' ? f.title.slice(0, 140)   : '',
+      title:    typeof f?.title    === 'string' ? f.title.slice(0, 120)   : '',
       url:      typeof f?.url      === 'string' ? f.url                   : '',
       domain:   typeof f?.domain   === 'string' ? f.domain                : '',
       date:     f?.date || null,
@@ -251,16 +236,16 @@ export default async function handler(req) {
       language: typeof f?.language === 'string' ? f.language.slice(0, 4)  : 'EN',
     }));
   } catch {
-    return jsonRes({ error: 'Invalid JSON body' }, 400);
+    return res.status(400).json({ error: 'Invalid JSON body' });
   }
-  if (!query || query.length < 2) return jsonRes({ error: 'Query must be at least 2 characters' }, 400);
-  if (query.length > 500) return jsonRes({ error: 'Query too long (max 500 characters)' }, 400);
+  if (!query || query.length < 2)  return res.status(400).json({ error: 'Query must be at least 2 characters' });
+  if (query.length > 500)          return res.status(400).json({ error: 'Query too long (max 500 characters)' });
 
   try {
     const lang = detectLang(query);
     const dynamicPrompt = buildDynamicPrompt(query, lang, findings);
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const apiRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'x-api-key':         apiKey,
@@ -271,7 +256,6 @@ export default async function handler(req) {
         model:      MODEL,
         max_tokens: MAX_TOKENS,
         system: [
-          // Static portion — eligible for prompt caching
           {
             type: 'text',
             text: STATIC_SYSTEM,
@@ -285,31 +269,26 @@ export default async function handler(req) {
       signal: AbortSignal.timeout(ABORT_MS),
     });
 
-    if (!res.ok) {
-      const errBody = await res.text();
-      throw new Error(`Anthropic API ${res.status}: ${errBody.slice(0, 300)}`);
+    if (!apiRes.ok) {
+      const errBody = await apiRes.text();
+      throw new Error(`Anthropic API ${apiRes.status}: ${errBody.slice(0, 300)}`);
     }
 
-    const data = await res.json();
-
-    // Extract text from all content blocks (web_search results are server-side)
+    const data = await apiRes.json();
     let text = '';
     for (const block of (data.content || [])) {
       if (block.type === 'text') text += block.text;
     }
-
     text = text.replace(/^```(?:json)?\s*/m, '').replace(/```\s*$/m, '').trim();
 
-    if (!text) {
-      throw new Error('No text content in API response. Stop reason: ' + (data.stop_reason || 'unknown'));
-    }
+    if (!text) throw new Error('No text content in API response. Stop reason: ' + (data.stop_reason || 'unknown'));
 
     const result = extractJson(text);
-    return jsonRes(result);
+    return res.status(200).json(result);
 
   } catch (err) {
     const msg = err?.message || 'Analysis failed';
     const status = msg.includes('timed out') || msg.includes('timeout') ? 504 : 500;
-    return jsonRes({ error: msg }, status);
+    return res.status(status).json({ error: msg });
   }
 }
