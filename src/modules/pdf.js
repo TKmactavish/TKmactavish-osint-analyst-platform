@@ -109,8 +109,9 @@ export async function generatePDF(report) {
   doc.setFillColor(46, 164, 161);
   doc.rect(0, 0, PAGE_W, 3, 'F');
 
-  // Dark header background (taller to host larger logo)
-  const HEADER_H = 58;
+  // Dark header background — sized to fully contain ALL header text
+  // (logo + brand + title + metadata). Content starts well below.
+  const HEADER_H = 68;
   doc.setFillColor(13, 17, 23);
   doc.rect(0, 3, PAGE_W, HEADER_H, 'F');
 
@@ -146,20 +147,20 @@ export async function generatePDF(report) {
   doc.text('Open-Source Intelligence Platform', brandX, y + 13);
 
   // Main report title (clear of logo area)
-  doc.setFontSize(19);
+  doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(230, 237, 243);
-  doc.text('OSINT INTELLIGENCE REPORT', MARGIN, y + 30);
+  doc.text('OSINT INTELLIGENCE REPORT', MARGIN, y + 32);
 
-  // Metadata lines
+  // Metadata lines — both fully inside the dark header
   doc.setFontSize(8.5);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(120, 140, 150);
-  doc.text(`Generated: ${now}`, MARGIN, y + 38);
-  doc.text('Classification: UNCLASSIFIED — FOR INFORMATIONAL USE ONLY', MARGIN, y + 44);
+  doc.text(`Generated: ${now}`, MARGIN, y + 41);
+  doc.text('Classification: UNCLASSIFIED — FOR INFORMATIONAL USE ONLY', MARGIN, y + 47);
 
-  // Start content below header with breathing room
-  y = HEADER_H + 12;
+  // Start body content well below the header
+  y = HEADER_H + 16;
 
   // Query
   doc.setFontSize(14);
