@@ -130,12 +130,21 @@ ${findingsSection}
 
 BREVITY RULES (critical — schema is long, output must fit):
 - Every text field: 1-2 short sentences MAX.
-- keyFacts: max 5 entries.
+- keyFacts: max 6 entries (see REQUIRED FACTS below — fill those first).
 - timeline: max 4 entries (most recent first).
 - riskIndicators: max 4 short strings.
 - informationGaps: max 3 short strings.
 - sourceAssessment: max 5 entries, copy domain/url from findings verbatim.
 - Each recommendation subfield: 1 sentence only.
+
+REQUIRED FACTS BY QUERY TYPE — these MUST appear in keyFacts when knowable from the findings or general knowledge. Use status "UNCONFIRMED" if uncertain; do NOT omit:
+- type=organization / company: (1) Legal/registered name + entity form, (2) Leadership — CEO or founder by name, (3) Headquarters city + country, (4) Year founded, (5) Sector or primary line of business, (6) Notable partnerships / clients / parent or subsidiary relationships.
+- type=person: (1) Full name + role, (2) Current employer or affiliation, (3) Nationality or base country, (4) Notable past positions, (5) Public controversies or legal status if any.
+- type=location: (1) Country / region / coordinates, (2) Current security or political status, (3) Population or key demographics if relevant, (4) Active actors / authorities in control.
+- type=incident: (1) Date, (2) Location, (3) Casualties / damage if known, (4) Claimed or attributed actor, (5) Method / mechanism, (6) Official response.
+- type=travel_risk: (1) Country travel advisory level (US / UK / AU if known), (2) Current security threats, (3) High-risk zones, (4) Recent incidents, (5) Health or infrastructure concerns.
+
+If a required fact is genuinely unknown after reviewing all findings, add it to informationGaps instead of omitting it silently.
 
 Return this EXACT JSON schema. Field order matters — write top to bottom. All fields mandatory, use null for unavailable data. ALWAYS close all brackets:
 
