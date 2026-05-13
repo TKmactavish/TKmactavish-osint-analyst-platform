@@ -70,15 +70,19 @@ Clearly separate CONFIRMED facts from UNCONFIRMED claims.
 Return ONLY a single valid JSON object — no markdown, no explanation outside the JSON.
 ALWAYS close all JSON brackets and braces completely. Output must be parseable.`;
 
-function buildDynamicPrompt(query, lang) {
+function buildDynamicPrompt(query, lang, findings) {
   const isEnglish = lang.code === 'EN';
   const langInstruction = isEnglish
-    ? 'Search exclusively in English.'
-    : `Search in BOTH English AND ${lang.name} (${lang.code}). Label each source with its language code, e.g. [EN] or [${lang.code}].`;
+    ? 'Use English sources.'
+    : `Prefer sources in BOTH English AND ${lang.name} (${lang.code}). Label each source with its language code, e.g. [EN] or [${lang.code}].`;
+
+  const findingsSection = (findings && findings.length)
+    ? `\nWEB SEARCH FINDINGS (use these as the primary basis for sources, timeline, and key facts — cite their URLs verbatim):\n${JSON.stringify(findings, null, 0)}\n`
+    : '\nNo web search findings were available; draw on your training knowledge and cite well-known public sources you remember.\n';
 
   return `Query: "${query}"
 ${langInstruction}
-Draw on your training knowledge to produce the brief. Cite well-known public sources you remember (government statements, security agencies, NGO reports, regional media, mainstream news). Do not rely only on Reuters/BBC/AP — include local/regional sources where relevant.
+${findingsSection}
 
 Return this exact JSON schema — all fields are mandatory, use null for unavailable data:
 {
@@ -163,10 +167,11 @@ export default async function handler(req) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return jsonRes({ error: 'ANTHROPIC_API_KEY environment variable is not set' }, 500);
 
-  let query;
+  let query, findings;
   try {
     const body = await req.json();
     query = (body.query || '').trim();
+    findings = Array.isArray(body.findings) ? body.findings.slice(0, 12) : [];
   } catch {
     return jsonRes({ error: 'Invalid JSON body' }, 400);
   }
@@ -175,7 +180,7 @@ export default async function handler(req) {
 
   try {
     const lang = detectLang(query);
-    const dynamicPrompt = buildDynamicPrompt(query, lang);
+    const dynamicPrompt = buildDynamicPrompt(query, lang, findings);
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
