@@ -59,18 +59,49 @@ function addFooter(doc) {
 }
 
 function sectionHeader(doc, y, title) {
-  doc.setFontSize(10);
+  // Teal vertical accent bar to the left of title (no horizontal line crossing text)
+  doc.setFillColor(46, 164, 161);
+  doc.rect(MARGIN, y - 3.2, 1.2, 4.2, 'F');
+
+  doc.setFontSize(10.5);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(30, 30, 30);
-  doc.setDrawColor(180, 180, 180);
-  doc.line(MARGIN, y + 2, PAGE_W - MARGIN, y + 2);
-  doc.text(title.toUpperCase(), MARGIN, y);
-  return y + 8;
+  doc.text(title.toUpperCase(), MARGIN + 3.5, y);
+
+  // Thin divider BELOW the title text, well clear of descenders
+  doc.setDrawColor(220, 220, 220);
+  doc.setLineWidth(0.2);
+  doc.line(MARGIN, y + 3, PAGE_W - MARGIN, y + 3);
+
+  return y + 9;
+}
+
+// Load logo as dataURL once (browser only). Returns null on failure.
+let _logoDataUrl = null;
+let _logoTried = false;
+async function loadLogoDataUrl() {
+  if (_logoTried) return _logoDataUrl;
+  _logoTried = true;
+  try {
+    const res = await fetch('/athena-logo.png');
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    _logoDataUrl = await new Promise((resolve, reject) => {
+      const fr = new FileReader();
+      fr.onload = () => resolve(fr.result);
+      fr.onerror = reject;
+      fr.readAsDataURL(blob);
+    });
+    return _logoDataUrl;
+  } catch {
+    return null;
+  }
 }
 
 export async function generatePDF(report) {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const now = new Date().toISOString();
+  const logo = await loadLogoDataUrl();
   let y = MARGIN;
 
   // ── Cover / Title ──
@@ -78,44 +109,57 @@ export async function generatePDF(report) {
   doc.setFillColor(46, 164, 161);
   doc.rect(0, 0, PAGE_W, 3, 'F');
 
-  // Dark header background
+  // Dark header background (taller to host larger logo)
+  const HEADER_H = 58;
   doc.setFillColor(13, 17, 23);
-  doc.rect(0, 3, PAGE_W, 52, 'F');
+  doc.rect(0, 3, PAGE_W, HEADER_H, 'F');
 
-  // "A" logo mark box (teal)
-  doc.setFillColor(46, 164, 161);
-  doc.roundedRect(MARGIN, y + 3, 11, 10, 1.5, 1.5, 'F');
-  doc.setFontSize(13);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(13, 17, 23);
-  doc.text('A', MARGIN + 3.2, y + 11.5);
+  // Logo (image if available, otherwise fall back to teal "A" mark)
+  if (logo) {
+    try {
+      doc.addImage(logo, 'PNG', MARGIN, y + 1, 18, 18);
+    } catch {
+      doc.setFillColor(46, 164, 161);
+      doc.roundedRect(MARGIN, y + 3, 11, 10, 1.5, 1.5, 'F');
+      doc.setFontSize(13); doc.setFont('helvetica', 'bold');
+      doc.setTextColor(13, 17, 23);
+      doc.text('A', MARGIN + 3.2, y + 11.5);
+    }
+  } else {
+    doc.setFillColor(46, 164, 161);
+    doc.roundedRect(MARGIN, y + 3, 11, 10, 1.5, 1.5, 'F');
+    doc.setFontSize(13); doc.setFont('helvetica', 'bold');
+    doc.setTextColor(13, 17, 23);
+    doc.text('A', MARGIN + 3.2, y + 11.5);
+  }
 
-  // Brand name "ATHENA INTEL"
-  doc.setFontSize(9);
+  // Brand name + sub-label (offset to clear logo)
+  const brandX = MARGIN + (logo ? 22 : 14);
+  doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(46, 164, 161);
-  doc.text('ATHENA INTEL', MARGIN + 14, y + 8);
+  doc.text('ATHENA INTEL', brandX, y + 8);
 
-  // Sub-label "Open-Source Intelligence Platform"
   doc.setFontSize(7.5);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(100, 120, 130);
-  doc.text('Open-Source Intelligence Platform', MARGIN + 14, y + 13);
+  doc.setTextColor(120, 140, 150);
+  doc.text('Open-Source Intelligence Platform', brandX, y + 13);
 
-  // Main report title
+  // Main report title (clear of logo area)
   doc.setFontSize(19);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(230, 237, 243);
-  doc.text('OSINT INTELLIGENCE REPORT', MARGIN, y + 26);
+  doc.text('OSINT INTELLIGENCE REPORT', MARGIN, y + 30);
 
-  // Metadata line
+  // Metadata lines
   doc.setFontSize(8.5);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(100, 120, 130);
-  doc.text(`Generated: ${now}`, MARGIN, y + 34);
-  doc.text('Classification: UNCLASSIFIED — FOR INFORMATIONAL USE ONLY', MARGIN, y + 40);
+  doc.setTextColor(120, 140, 150);
+  doc.text(`Generated: ${now}`, MARGIN, y + 38);
+  doc.text('Classification: UNCLASSIFIED — FOR INFORMATIONAL USE ONLY', MARGIN, y + 44);
 
-  y = 63;
+  // Start content below header with breathing room
+  y = HEADER_H + 12;
 
   // Query
   doc.setFontSize(14);
@@ -149,15 +193,17 @@ export async function generatePDF(report) {
     y = sectionHeader(doc, y, '2. Key Facts');
     doc.setFontSize(9.5);
     for (const f of facts) {
-      y = addPageIfNeeded(doc, y, 12);
-      const status = f.status || 'UNCONFIRMED';
+      y = addPageIfNeeded(doc, y, 14);
+      const status = (f.status || 'UNCONFIRMED').toUpperCase();
+      doc.setFontSize(8);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(status === 'CONFIRMED' ? 35 : 180, status === 'CONFIRMED' ? 134 : 50, 50);
+      doc.setTextColor(status === 'CONFIRMED' ? 35 : 180, status === 'CONFIRMED' ? 134 : 100, status === 'CONFIRMED' ? 84 : 34);
       doc.text(`[${status}]`, MARGIN, y);
+      doc.setFontSize(9.5);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(50, 50, 50);
-      y = addWrappedText(doc, `  ${f.fact || f}`, MARGIN + 22, y, LINE_W - 22, 5.2);
-      y += 2;
+      y = addWrappedText(doc, f.fact || String(f), MARGIN + 26, y, LINE_W - 26, 5.2);
+      y += 3;
     }
     y += 4;
   }
@@ -169,14 +215,14 @@ export async function generatePDF(report) {
     y = sectionHeader(doc, y, '3. Timeline of Events');
     doc.setFontSize(9.5);
     for (const e of timeline) {
-      y = addPageIfNeeded(doc, y, 12);
+      y = addPageIfNeeded(doc, y, 14);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(31, 111, 235);
       doc.text(e.date || '????-??-??', MARGIN, y);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(50, 50, 50);
-      y = addWrappedText(doc, `  ${e.event || ''}`, MARGIN + 28, y, LINE_W - 28, 5.2);
-      y += 2;
+      y = addWrappedText(doc, e.event || '', MARGIN + 30, y, LINE_W - 30, 5.2);
+      y += 3;
     }
     y += 4;
   }
@@ -233,23 +279,22 @@ export async function generatePDF(report) {
   }
 
   // ── Confidence Level ──
-  y = addPageIfNeeded(doc, y, 16);
+  y = addPageIfNeeded(doc, y, 20);
   y = sectionHeader(doc, y, '7. Confidence Level');
-  doc.setFontSize(11);
+  doc.setFontSize(13);
   doc.setFont('helvetica', 'bold');
   const cl = report.confidenceLevel || 'UNKNOWN';
   const clColor = cl === 'HIGH' ? [35, 134, 54] : cl === 'MEDIUM' ? [210, 153, 34] : [218, 54, 51];
   doc.setTextColor(...clColor);
   doc.text(cl, MARGIN, y);
+  y += 7;
   if (report.confidenceJustification) {
     doc.setFontSize(9.5);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(50, 50, 50);
-    y = addWrappedText(doc, report.confidenceJustification, MARGIN + 20, y, LINE_W - 20, 5.5);
-  } else {
-    y += 6;
+    y = addWrappedText(doc, report.confidenceJustification, MARGIN, y, LINE_W, 5.5);
   }
-  y += 4;
+  y += 6;
 
   // ── Information Gaps ──
   const gaps = report.informationGaps || [];
@@ -309,15 +354,20 @@ export async function generatePDF(report) {
     y = sectionHeader(doc, y, '10. Sources');
     doc.setFontSize(9);
     for (const s of sources) {
-      y = addPageIfNeeded(doc, y, 14);
+      y = addPageIfNeeded(doc, y, 16);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(30, 30, 30);
       const titleLine = `${s.title || s.source || 'Source'} [${(s.language || 'EN')}] — Credibility: ${(s.credibility || 'UNKNOWN').toUpperCase()}`;
       y = addWrappedText(doc, titleLine, MARGIN, y, LINE_W, 5);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(100, 100, 100);
-      y = addWrappedText(doc, s.url || '', MARGIN + 3, y, LINE_W - 3, 5);
-      y += 2;
+      y += 1;
+      if (s.url) {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.setTextColor(100, 100, 100);
+        y = addWrappedText(doc, s.url, MARGIN + 3, y, LINE_W - 3, 4.5);
+        doc.setFontSize(9);
+      }
+      y += 4;
     }
   }
 

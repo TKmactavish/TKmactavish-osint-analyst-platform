@@ -41,6 +41,14 @@ const S = {
   },
   logoRow: { display: 'flex', alignItems: 'center', gap: '12px' },
   logoMark: {
+    width: '44px', height: '44px',
+    background: 'transparent',
+    borderRadius: '8px',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    flexShrink: 0,
+    objectFit: 'contain',
+  },
+  logoMarkFallback: {
     width: '38px', height: '38px',
     background: 'var(--teal)',
     borderRadius: '8px',
@@ -651,7 +659,26 @@ export default function App() {
       {/* Header */}
       <header style={S.header}>
         <div style={S.logoRow}>
-          <div style={S.logoMark}>A</div>
+          <img
+            src="/athena-logo.png"
+            alt="Athena Intel"
+            style={S.logoMark}
+            onError={(e) => {
+              // Fall back to the teal "A" mark if the logo file is missing
+              const parent = e.currentTarget.parentNode
+              e.currentTarget.style.display = 'none'
+              const fallback = document.createElement('div')
+              Object.assign(fallback.style, {
+                width: '38px', height: '38px',
+                background: '#2ea4a1', borderRadius: '8px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '20px', fontWeight: '900', color: '#0d1117',
+                flexShrink: '0',
+              })
+              fallback.textContent = 'A'
+              parent.insertBefore(fallback, parent.firstChild)
+            }}
+          />
           <div>
             <div style={S.logoName}>Athena Intel</div>
             <div style={S.logoSub}>Open-Source Intelligence Platform</div>
