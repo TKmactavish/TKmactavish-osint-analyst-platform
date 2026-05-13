@@ -1,7 +1,7 @@
 export const config = { runtime: 'edge' };
 
-const MODEL      = 'claude-sonnet-4-6';
-const MAX_TOKENS = 3000;
+const MODEL      = 'claude-haiku-4-5-20251001';
+const MAX_TOKENS = 2400;
 
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
@@ -78,8 +78,7 @@ function buildDynamicPrompt(query, lang) {
 
   return `Query: "${query}"
 ${langInstruction}
-Use the web_search tool to find current, real information before writing the brief.
-Prioritize: local news outlets, government statements, security agencies, NGO reports, verified regional media. Do not rely only on Reuters/BBC/AP.
+Draw on your training knowledge to produce the brief. Cite well-known public sources you remember (government statements, security agencies, NGO reports, regional media, mainstream news). Do not rely only on Reuters/BBC/AP — include local/regional sources where relevant.
 
 Return this exact JSON schema — all fields are mandatory, use null for unavailable data:
 {
@@ -196,14 +195,11 @@ export default async function handler(req) {
             cache_control: { type: 'ephemeral' },
           },
         ],
-        tools: [
-          { type: 'web_search_20250305', name: 'web_search' },
-        ],
         messages: [
           { role: 'user', content: dynamicPrompt },
         ],
       }),
-      signal: AbortSignal.timeout(25000),
+      signal: AbortSignal.timeout(22000),
     });
 
     if (!res.ok) {
