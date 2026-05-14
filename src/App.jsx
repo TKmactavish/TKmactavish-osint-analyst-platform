@@ -4,9 +4,7 @@ import LoadingState from './components/LoadingState.jsx'
 import ErrorState from './components/ErrorState.jsx'
 import ModeSelection from './components/ModeSelection.jsx'
 import ModeBadge from './components/ModeBadge.jsx'
-import ReportSecurity from './components/ReportSecurity.jsx'
-import ReportBusiness from './components/ReportBusiness.jsx'
-import ReportTraveler from './components/ReportTraveler.jsx'
+import TabbedReport from './components/TabbedReport.jsx'
 import DownloadButton from './components/DownloadButton.jsx'
 import { collectAnalysis } from './modules/collect.js'
 import { modeById } from './modules/modes.js'
@@ -301,7 +299,6 @@ export default function App() {
             <ReportView
               report={report}
               activeMode={activeAnalysisMode}
-              onSwitchMode={handleModeChangeWithReport}
             />
           )}
         </>
@@ -310,12 +307,8 @@ export default function App() {
   )
 }
 
-function ReportView({ report, activeMode, onSwitchMode }) {
+function ReportView({ report, activeMode }) {
   const m = modeById(activeMode)
-  const Component =
-    activeMode === 'business' ? ReportBusiness :
-    activeMode === 'traveler' ? ReportTraveler :
-    ReportSecurity
 
   return (
     <div className="fade-in">
@@ -351,7 +344,7 @@ function ReportView({ report, activeMode, onSwitchMode }) {
         <DownloadButton report={report} />
       </div>
 
-      <Component report={report} />
+      <TabbedReport report={report} mode={activeMode} accent={m.accent} />
 
       {/* Disclaimer */}
       <div style={{
