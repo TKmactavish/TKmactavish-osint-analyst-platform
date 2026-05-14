@@ -4,14 +4,17 @@ import { MODES } from '../modules/modes.js'
 // Human-language question per mode — what a real person asks themselves
 const MODE_HUMAN = {
   security: {
+    label: 'Security Analyst',
     question: 'Is this situation dangerous?',
     examples: ['What\'s happening near this area?', 'Who are the actors involved?', 'Should my team be concerned?'],
   },
   business: {
+    label: 'Business Analyst',
     question: 'Can I trust this company?',
     examples: ['Is this stock worth the risk?', 'What are the red flags?', 'Should I proceed with this deal?'],
   },
   traveler: {
+    label: 'Traveler',
     question: 'Is it safe to go there?',
     examples: ['What should I avoid?', 'Is the airport area safe?', 'What do locals actually say?'],
   },
@@ -212,8 +215,20 @@ export default function ModeSelection({ onSelect }) {
                 <img src={m.iconSrc} alt={m.label} width={32} height={32} style={{ objectFit: 'contain' }} />
               </div>
 
+              {/* Mode label */}
+              <div style={{
+                fontSize: '10px',
+                fontWeight: 700,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                color: m.accent,
+                fontFamily: 'var(--font-mono)',
+              }}>
+                {h.label}
+              </div>
+
               {/* Human question */}
-              <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text)', lineHeight: 1.3 }}>
+              <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text)', lineHeight: 1.3, marginTop: '-4px' }}>
                 {h.question}
               </div>
 
