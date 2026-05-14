@@ -78,6 +78,12 @@ export default function ModeSelection({ onSelect }) {
               gap: 'Government advisories don\'t say this. Locals know. Athena finds what locals say.',
             },
             {
+              accent: '#22d3ee',
+              who: 'Corporate security manager',
+              asked: 'There\'s a protest forming near our Bangkok office. Should I evacuate the team?',
+              gap: 'News reports were vague. Athena found local police announcements, crowd estimates, and route closures — in under 30 seconds.',
+            },
+            {
               accent: '#d4a843',
               who: 'Individual investor',
               asked: 'Is this company a good investment right now?',
