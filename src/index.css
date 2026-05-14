@@ -77,3 +77,41 @@ button { font-family: var(--font-sans); cursor: pointer; }
   body { background: #fff; color: #000; }
   .no-print { display: none !important; }
 }
+
+/* ── Mobile responsive ─────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  /* Landing page */
+  .landing-wrap   { padding: 16px 16px 60px !important; }
+  .landing-hero   { padding: 24px 0 28px !important; }
+  .landing-hero h1 { font-size: 26px !important; line-height: 1.2 !important; }
+  .landing-hero p  { font-size: 14px !important; }
+
+  /* Story section */
+  .story-section-label { font-size: 11px !important; letter-spacing: 0.04em !important; }
+  .story-card          { padding: 14px 14px !important; }
+  .story-card-who      { font-size: 11px !important; }
+  .story-card-asked    { font-size: 13px !important; }
+  .story-card-gap      { font-size: 12px !important; }
+
+  /* Comparison grid — stack vertically */
+  .comparison-grid { grid-template-columns: 1fr !important; gap: 2px !important; }
+
+  /* Mode cards — full width single column */
+  .mode-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+  .mode-card { padding: 18px 16px !important; flex-direction: row !important; align-items: flex-start !important; flex-wrap: wrap !important; gap: 10px !important; }
+  .mode-card-body { flex: 1; min-width: 0; }
+
+  /* Tab bar — allow horizontal scroll, hide bar */
+  .tab-bar { gap: 0 !important; }
+  .tab-bar button { padding: 9px 12px !important; font-size: 11px !important; }
+
+  /* Report sections */
+  .report-header { padding: 12px 14px !important; }
+  .report-header-title { font-size: 15px !important; }
+
+  /* Search bar */
+  .search-wrap { padding: 12px 14px !important; }
+
+  /* App header */
+  .app-header { margin-bottom: 16px !important; }
+}

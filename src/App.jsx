@@ -192,7 +192,7 @@ export default function App() {
   return (
     <div style={S.wrap}>
       {/* Header */}
-      <header style={S.header}>
+      <header className="app-header" style={S.header}>
         <div style={S.logoRow}>
           <img
             src="/athena-logo.png"

@@ -305,13 +305,14 @@ export default function TabbedReport({ report, mode, accent }) {
   return (
     <div>
       {/* Tab bar */}
-      <div style={{
+      <div className="tab-bar" style={{
         display: 'flex',
         gap: '2px',
         borderBottom: '1px solid var(--border)',
         marginBottom: '18px',
         overflowX: 'auto',
         scrollbarWidth: 'none',
+        WebkitOverflowScrolling: 'touch',
       }}>
         {tabs.map(tab => {
           const isActive = tab === activeTab
