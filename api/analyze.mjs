@@ -1,10 +1,11 @@
 // Node.js serverless function — maxDuration 60s set in vercel.json
-// (was edge runtime, 25s hard limit → caused intermittent 504s on complex queries)
+// Mode-routed analyzer: produces three distinct report shapes
+// based on the user's selected analysis mode.
 
 const MODEL        = 'claude-haiku-4-5-20251001';
-const MAX_TOKENS   = 2000;
-const MAX_FINDINGS = 5;
-const MAX_SNIPPET  = 150;
+const MAX_TOKENS   = 2200;
+const MAX_FINDINGS = 6;
+const MAX_SNIPPET  = 160;
 const ABORT_MS     = 55000;
 
 const CORS = {
@@ -13,196 +14,187 @@ const CORS = {
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
-// ── Language detection ──────────────────────────────────────────────────────
-const LANG_HINTS = [
-  { re: /[฀-๿]/, code: 'TH', name: 'Thai' },
-  { re: /[؀-ۿ]/, code: 'AR', name: 'Arabic' },
-  { re: /[一-鿿]/, code: 'ZH', name: 'Chinese' },
-  { re: /[぀-ゟ゠-ヿ]/, code: 'JA', name: 'Japanese' },
-  { re: /[가-힯]/, code: 'KO', name: 'Korean' },
-  { re: /[Ѐ-ӿ]/, code: 'RU', name: 'Russian' },
-  { re: /[ऀ-ॿ]/, code: 'HI', name: 'Hindi' },
-];
+const MODES = new Set(['security', 'business', 'traveler']);
 
-const KEYWORD_LANGS = [
-  { words: ['thailand','thai','bangkok','pattani','yala','narathiwat','songkhla','chiang mai'], code: 'TH', name: 'Thai' },
-  { words: ['japan','japanese','tokyo','osaka'], code: 'JA', name: 'Japanese' },
-  { words: ['china','chinese','beijing','shanghai','hong kong','taiwan'], code: 'ZH', name: 'Chinese' },
-  { words: ['korea','korean','seoul'], code: 'KO', name: 'Korean' },
-  { words: ['myanmar','burma','burmese','yangon','naypyidaw'], code: 'MY', name: 'Burmese' },
-  { words: ['syria','iraq','yemen','gaza','palestine','egypt','libya','sudan','saudi','jordan','lebanon'], code: 'AR', name: 'Arabic' },
-  { words: ['iran','iranian','tehran'], code: 'FA', name: 'Persian' },
-  { words: ['afghanistan','afghan','kabul','taliban'], code: 'PS', name: 'Pashto' },
-  { words: ['russia','russian','moscow','kremlin','ukraine','ukrainian','kyiv','belarus'], code: 'RU', name: 'Russian' },
-  { words: ['france','french','paris','mali','burkina','niger','chad','cameroon','senegal'], code: 'FR', name: 'French' },
-  { words: ['germany','german','berlin'], code: 'DE', name: 'German' },
-  { words: ['spain','spanish','madrid','mexico','cartel','colombia','venezuela','ecuador','peru','argentina'], code: 'ES', name: 'Spanish' },
-  { words: ['brazil','brazilian','rio','sao paulo','favela'], code: 'PT', name: 'Portuguese' },
-  { words: ['turkey','turkish','ankara','istanbul'], code: 'TR', name: 'Turkish' },
-  { words: ['india','indian','delhi','mumbai','kashmir'], code: 'HI', name: 'Hindi' },
-  { words: ['ethiopia','amhara','tigray'], code: 'AM', name: 'Amharic' },
-  { words: ['somalia','somali','mogadishu'], code: 'SO', name: 'Somali' },
-  { words: ['drc','congo','kinshasa'], code: 'FR', name: 'French' },
-  { words: ['israel','tel aviv','jerusalem'], code: 'HE', name: 'Hebrew' },
-  { words: ['haiti','haitian','port-au-prince'], code: 'HT', name: 'Haitian Creole' },
-];
+// ── Region → local language map (used in every mode) ────────────────────────
+const REGION_LANGS = `Thailand→Thai, Cambodia→Khmer, Myanmar→Burmese, Laos→Lao, Vietnam→Vietnamese, China→Chinese, Malaysia→Malay, Indonesia→Indonesian, Philippines→Filipino, Japan→Japanese, Korea→Korean, Russia→Russian, Ukraine→Ukrainian, France→French, Germany→German, Spain→Spanish, Mexico→Spanish, Brazil→Portuguese, Turkey→Turkish, Iran→Persian, Afghanistan→Pashto/Dari, India→Hindi, Pakistan→Urdu, Saudi Arabia→Arabic, Egypt→Arabic, Syria→Arabic, Iraq→Arabic, Israel→Hebrew, Ethiopia→Amharic, Somalia→Somali, Haiti→Haitian Creole`;
 
-function detectLang(query) {
-  for (const h of LANG_HINTS) {
-    if (h.re.test(query)) return h;
+// ── Master system prompt (cached) ───────────────────────────────────────────
+const STATIC_SYSTEM = `You are Athena, an Open Source Intelligence (OSINT) analysis platform. Your task is to generate a role-specific intelligence product based on the user's selected analysis mode. The selected mode controls search intent, source priority, analytical lens, report structure, risk label, tone, recommendation style, and final decision guidance.
+
+If mode = Security / Intelligence:
+Generate an Intelligence Report. Focus on threat actors, incident patterns, modus operandi, indicators, threat assessment, intelligence gaps, recommended collection, and operational awareness.
+
+If mode = Business / Risk:
+Generate a Business Risk Brief. Focus on operational impact, employee and customer exposure, reputation risk, financial exposure, business continuity, executive decision-making, monitoring triggers, and management recommendations.
+
+If mode = Traveler / Public Safety:
+Generate a Travel Safety Advisory. Focus on simple safety assessment, areas to avoid, practical do/don't advice, movement guidance, emergency awareness, and go/caution/avoid/no-go recommendation.
+
+Rules for all modes:
+- Detect the region and search in English AND the local language for that region.
+- Region→Language reference: ${REGION_LANGS}.
+- Clearly separate confirmed facts, reported claims, and analytical assessment.
+- Always identify information gaps explicitly.
+- Never present unverified claims as confirmed facts.
+- Avoid unnecessary abbreviations. Define any abbreviation on first use (e.g. "Open Source Intelligence (OSINT)").
+- Adapt tone, structure, risk label, and recommendations to the mode.
+- Do not fabricate sources, URLs, names, dates, or statistics.
+- If information is unavailable, state it clearly in the report or in information gaps.
+
+TRADECRAFT — CALIBRATED PROBABILITY LANGUAGE (Sherman Kent scale):
+- "almost certain" 95-99% | "highly likely" 80-95% | "likely" 55-80% | "roughly even chance" 45-55% | "unlikely" 20-45% | "highly unlikely" 5-20% | "almost no chance" 1-5".
+Pair the word with a one-line rationale when stakes are material.
+
+SOURCE RELIABILITY GRADING:
+- HIGH: official government, primary source, multiple independent corroborating reports.
+- MEDIUM: established mainstream or regional outlet, single attribution; NGO with track record.
+- LOW: anonymous, single uncorroborated source, partisan outlet, social-media-only claim.
+- UNVERIFIED: claim has not been confirmed by any credible outlet.
+
+OUTPUT FORMAT:
+Return ONE valid JSON object. No markdown fences. No commentary outside the JSON. ALWAYS close every bracket and brace. The output must parse on the first attempt.`;
+
+// ── Mode-specific user prompts ──────────────────────────────────────────────
+function findingsBlock(findings) {
+  if (!findings || !findings.length) {
+    return '\nNo web search findings were available. Draw on your training knowledge of well-known entities, public events, and established sources. Mark any fact not in findings with appropriate confidence labeling.\n';
   }
-  const q = query.toLowerCase();
-  for (const entry of KEYWORD_LANGS) {
-    if (entry.words.some(w => q.includes(w))) return entry;
-  }
-  return { code: 'EN', name: 'English' };
+  return `\nWEB SEARCH FINDINGS (primary basis for sources, timeline, and key facts — cite URLs verbatim):\n${JSON.stringify(findings, null, 0)}\n`;
 }
 
-// ── Static system prompt (prompt-cached) ────────────────────────────────────
-const STATIC_SYSTEM = `You are a senior OSINT analyst producing formal intelligence briefs that follow US Intelligence Community analytic tradecraft standards (ICD-203).
+function brevityLine() {
+  return `BREVITY: every text field 1-3 short sentences max; arrays capped to 5 items each. Output must fit within token budget — write critical fields first.`;
+}
 
-═══════════════════════════════════════════════════════
-ANALYTIC TRADECRAFT STANDARDS (apply rigorously)
-═══════════════════════════════════════════════════════
-
-1. SEPARATE EVIDENCE FROM INFERENCE
-   - State what is observed (facts, source-attributed) before what is concluded (judgments).
-   - Every judgment must be defensible by named evidence elsewhere in the brief.
-
-2. USE CALIBRATED PROBABILITY LANGUAGE — never bare "may" or "could"
-   - "almost certain" / "virtually certain"  (95-99%)
-   - "highly likely"                          (80-95%)
-   - "likely" / "probable"                    (55-80%)
-   - "roughly even chance"                    (45-55%)
-   - "unlikely" / "improbable"                (20-45%)
-   - "highly unlikely"                        (5-20%)
-   - "almost no chance"                       (1-5%)
-   Pair the word with a one-line rationale when stakes are material.
-
-3. DISTINGUISH ASSUMPTIONS FROM JUDGMENTS
-   - If a conclusion rests on an unverified premise, label it: "Assumption: …".
-   - Surface load-bearing assumptions in the informationGaps array.
-
-4. CONSIDER ALTERNATIVES (mini-ACH)
-   - When a lead hypothesis is contested or evidence is thin, name 1-2 alternative explanations briefly in intelligenceAssessment.
-   - Note what evidence would distinguish them.
-
-5. SOURCE RELIABILITY GRADING
-   - HIGH: official government statement, direct primary source, or multiple independent corroborating reports.
-   - MEDIUM: established mainstream / regional outlet with single-source attribution, or NGO with track record.
-   - LOW: anonymous account, single uncorroborated source, partisan outlet, or social-media-only claim.
-
-6. CONFIRMED vs UNCONFIRMED
-   - CONFIRMED: 2+ independent credible sources OR an authoritative primary source (court doc, treaty text, official statement).
-   - UNCONFIRMED: single-sourced, claimed but not verified, or contested.
-
-7. INFORMATION GAPS DRIVE THE ASSESSMENT
-   - State what is unknown that would change the assessment if known.
-   - Be specific: "Casualty count not independently verified" not "more info needed".
-
-═══════════════════════════════════════════════════════
-WRITING STYLE
-═══════════════════════════════════════════════════════
-- Short declarative sentences. Active voice. Direct attribution ("Reuters reports …" not "It is reported …").
-- No academic prose, no throat-clearing, no hedging without a calibrated probability anchor.
-- No fabricated sources, URLs, names, dates, or statistics. If unknown, say so explicitly.
-- Plain-language recommendations: spell out an abbreviation the first time it appears.
-
-═══════════════════════════════════════════════════════
-OUTPUT FORMAT
-═══════════════════════════════════════════════════════
-Return ONE valid JSON object. No markdown fences, no commentary outside the JSON.
-ALWAYS close every bracket and brace. The output must parse on the first attempt.`;
-
-function buildDynamicPrompt(query, lang, findings) {
-  const isEnglish = lang.code === 'EN';
-  const langInstruction = isEnglish
-    ? 'Use English sources.'
-    : `Prefer sources in BOTH English AND ${lang.name} (${lang.code}). Label each source with its language code, e.g. [EN] or [${lang.code}].`;
-
-  const findingsSection = (findings && findings.length)
-    ? `\nWEB SEARCH FINDINGS (use these as the primary basis for sources, timeline, and key facts — cite their URLs verbatim):\n${JSON.stringify(findings, null, 0)}\n`
-    : '\nNo web search findings were available; draw on your training knowledge and cite well-known public sources you remember.\n';
-
+function securityPrompt(query, findings) {
   return `Query: "${query}"
-${langInstruction}
-${findingsSection}
+Active mode: Security / Intelligence.
+Source priority: threat actors, suspects, criminal groups, official statements, police reports, local-language reporting, incident history, escalation indicators, modus operandi, security patterns, social-media signals.
+${findingsBlock(findings)}
+${brevityLine()}
 
-BREVITY RULES (critical — schema is long, output must fit):
-- Every text field: 1-2 short sentences MAX.
-- keyFacts: max 6 entries (see REQUIRED FACTS below — fill those first).
-- timeline: max 4 entries (most recent first).
-- riskIndicators: max 4 short strings.
-- informationGaps: max 3 short strings.
-- sourceAssessment: max 5 entries, copy domain/url from findings verbatim.
-- Each recommendation subfield: 1 sentence only.
-
-REQUIRED FACTS BY QUERY TYPE — these MUST appear in keyFacts when knowable from the findings or general knowledge. Use status "UNCONFIRMED" if uncertain; do NOT omit:
-- type=organization / company: (1) Legal/registered name + entity form, (2) Leadership — CEO or founder by name, (3) Headquarters city + country, (4) Year founded, (5) Sector or primary line of business, (6) Notable partnerships / clients / parent or subsidiary relationships.
-- type=person: (1) Full name + role, (2) Current employer or affiliation, (3) Nationality or base country, (4) Notable past positions, (5) Public controversies or legal status if any.
-- type=location: (1) Country / region / coordinates, (2) Current security or political status, (3) Population or key demographics if relevant, (4) Active actors / authorities in control.
-- type=incident: (1) Date, (2) Location, (3) Casualties / damage if known, (4) Claimed or attributed actor, (5) Method / mechanism, (6) Official response.
-- type=travel_risk: (1) Country travel advisory level (US / UK / AU if known), (2) Current security threats, (3) High-risk zones, (4) Recent incidents, (5) Health or infrastructure concerns.
-
-If a required fact is genuinely unknown after reviewing all findings, add it to informationGaps instead of omitting it silently.
-
-Return this EXACT JSON schema. Field order matters — write top to bottom. All fields mandatory, use null for unavailable data. ALWAYS close all brackets:
+Return EXACTLY this JSON schema (top-to-bottom field order). Use null for unknown:
 
 {
+  "reportType": "intelligence",
+  "mode": "security",
   "query": "${query}",
-  "type": "person|incident|location|organization|travel_risk",
-  "executiveSummary": "3-4 sentence summary using calibrated language. What, where, when, significance.",
+  "reportTitle": "Intelligence Report",
+  "intelligenceSummary": "3-4 sentence intelligence-style summary using calibrated probability.",
+  "keyJudgments": ["3-5 short analytical judgments, each anchored to evidence"],
+  "incidentOverview": "What happened or what is observed — facts only, source-attributed.",
+  "timeline": [{ "date": "YYYY-MM-DD", "event": "...", "source_url": "...", "confidence": "high|medium|low" }],
+  "locationContext": "Geography, terrain, jurisdiction, surrounding area dynamics.",
+  "actors": [{ "name": "...", "type": "individual|group|state|unknown", "role": "subject|suspect|witness|authority|victim", "status": "CONFIRMED|UNCONFIRMED|UNDER INVESTIGATION" }],
+  "modusOperandi": "Methods, tactics, weapons, patterns — if pattern of life or repeat behavior.",
+  "indicatorsAndPatterns": ["3-5 short indicators or escalation patterns"],
+  "threatAssessment": "Lead analytical judgment with calibrated probability; name 1-2 alternative hypotheses if evidence is contested.",
+  "threatLevel": "Low|Moderate|Medium|High|Critical",
+  "intelligenceGaps": ["specific unknowns that would change the assessment"],
+  "recommendedCollection": "Targeted collection priorities: what to seek, where, in what language.",
+  "recommendedAction": "Operational awareness, monitoring, verification, or escalation steps.",
   "confidenceLevel": "HIGH|MEDIUM|LOW",
   "confidenceJustification": "One sentence naming the dominant evidence basis and any load-bearing assumption.",
-  "intelligenceAssessment": "3-5 short sentences. State the lead judgment with calibrated probability. Name 1-2 alternative explanations if evidence is contested. End with the single indicator that would most change the assessment.",
-  "recommendations": {
-    "whatToWatch":         "Indicators to monitor (1 sentence).",
-    "whatToAvoid":         "Locations, activities, or contacts to avoid and why (1 sentence).",
-    "recommendedAction":   "Clear steps (1 sentence).",
-    "travelSafetyAdvice":  "Safety advice if location-relevant (1 sentence).",
-    "monitoringPriority":  "What to track over coming days/weeks (1 sentence).",
-    "nextSteps":           "Concrete follow-up actions (1 sentence)."
-  },
-  "keyFacts": [{ "fact": "...", "status": "CONFIRMED|UNCONFIRMED" }],
-  "riskIndicators": ["short string per indicator"],
-  "impactAssessment": {
-    "civilian":  "1-2 sentences.",
-    "political": "1-2 sentences.",
-    "economic":  "1-2 sentences.",
-    "security":  "1-2 sentences."
-  },
-  "informationGaps": ["what is unknown"],
-  "timeline": [{ "date": "YYYY-MM-DD", "event": "...", "source_title": "...", "source_url": "...", "confidence": "high|medium|low" }],
-  "sourceAssessment": [{ "title": "...", "url": "...", "domain": "...", "date": "YYYY-MM-DD|null", "type": "official|mainstream|ngo|local|reference", "credibility": "HIGH|MEDIUM|LOW", "language": "${isEnglish ? 'EN' : lang.code}|EN" }]
+  "sourceAssessment": [{ "title": "...", "url": "...", "domain": "...", "date": "YYYY-MM-DD|null", "type": "official|established media|local media|social media|ngo|corporate|travel advisory|unverified", "language": "EN|local code", "reliability": "HIGH|MEDIUM|LOW|UNVERIFIED", "note": "one-line relevance" }]
 }`;
 }
 
-// ── JSON extraction + repair ─────────────────────────────────────────────────
+function businessPrompt(query, findings) {
+  return `Query: "${query}"
+Active mode: Business / Risk.
+Source priority: business impact, operational disruption, transport, road closures, business districts, staff movement, customer exposure, supply chain, market impact, reputation risk, continuity concern, executive decision impact.
+${findingsBlock(findings)}
+${brevityLine()}
+
+Return EXACTLY this JSON schema (top-to-bottom field order). Use null for unknown:
+
+{
+  "reportType": "business",
+  "mode": "business",
+  "query": "${query}",
+  "reportTitle": "Business Risk Brief",
+  "executiveSummary": "3-4 sentence executive summary aimed at a decision-maker.",
+  "keyBusinessJudgments": ["3-5 short decision-oriented judgments"],
+  "situationOverview": "What is happening, where, when, and how it intersects with business operations.",
+  "businessImpact": "Direct impact on operations, revenue, or service delivery (1-3 sentences).",
+  "operationalRisk": "Logistics, transport, staff movement, premises access, IT/cyber, vendor exposure.",
+  "employeeCustomerExposure": "Specific exposure for staff and customers — locations, timing, demographics.",
+  "reputationRisk": "Brand, PR, regulatory, or stakeholder reputation considerations.",
+  "financialMarketExposure": "Currency, market, insurance, contract, or financing exposure if relevant; null if none.",
+  "businessContinuity": "Continuity concern — what could disrupt critical functions, for how long, recoverability.",
+  "businessRiskLevel": "Low|Moderate|Medium|High|Severe",
+  "recommendedBusinessAction": "Concrete management actions — staffing, sites, communications, controls.",
+  "decisionGuidance": "Go / hold / scale-back / pause guidance for the next 24-72 hours and beyond.",
+  "monitoringTriggers": ["specific events or thresholds that should trigger reassessment"],
+  "confidenceLevel": "HIGH|MEDIUM|LOW",
+  "confidenceJustification": "One sentence naming the dominant evidence basis and any load-bearing assumption.",
+  "sourceAssessment": [{ "title": "...", "url": "...", "domain": "...", "date": "YYYY-MM-DD|null", "type": "official|established media|local media|social media|ngo|corporate|travel advisory|unverified", "language": "EN|local code", "reliability": "HIGH|MEDIUM|LOW|UNVERIFIED", "note": "one-line relevance" }]
+}`;
+}
+
+function travelerPrompt(query, findings) {
+  return `Query: "${query}"
+Active mode: Traveler / Public Safety.
+Source priority: public safety, travel advisories, areas to avoid, transport status, local warnings, police instructions, tourist exposure, safe routes, timing advice, practical safety guidance.
+${findingsBlock(findings)}
+${brevityLine()}
+TONE: simple, calm, practical, public-facing. Plain language. No intelligence jargon. No abbreviations.
+
+Return EXACTLY this JSON schema (top-to-bottom field order). Use null for unknown:
+
+{
+  "reportType": "traveler",
+  "mode": "traveler",
+  "query": "${query}",
+  "reportTitle": "Travel Safety Advisory",
+  "safetySummary": "3-4 plain sentences any traveler can understand. What is happening and what it means for personal safety.",
+  "isItSafe": "Direct answer in 1-2 sentences. Use plain language.",
+  "travelAdviceLevel": "Safe|Use Caution|Avoid Area|No-Go",
+  "areasToAvoid": ["specific districts, streets, or landmarks to avoid"],
+  "mainSafetyConcerns": ["3-5 short safety concerns in plain language"],
+  "whatYouShouldDo": ["3-5 concrete do-actions"],
+  "whatYouShouldAvoid": ["3-5 concrete avoid-actions"],
+  "movementAdvice": "How to move around: transport, timing, daylight vs night, route choices.",
+  "emergencyAwareness": "Local emergency numbers if known, nearest hospitals, embassy contact guidance.",
+  "finalRecommendation": "Single clear bottom-line: Go / Caution / Avoid / No-Go and why.",
+  "confidenceLevel": "HIGH|MEDIUM|LOW",
+  "confidenceJustification": "One sentence naming the dominant evidence basis.",
+  "sourceAssessment": [{ "title": "...", "url": "...", "domain": "...", "date": "YYYY-MM-DD|null", "type": "official|established media|local media|social media|ngo|corporate|travel advisory|unverified", "language": "EN|local code", "reliability": "HIGH|MEDIUM|LOW|UNVERIFIED", "note": "one-line relevance" }]
+}`;
+}
+
+function buildPromptForMode(mode, query, findings) {
+  switch (mode) {
+    case 'security': return securityPrompt(query, findings);
+    case 'business': return businessPrompt(query, findings);
+    case 'traveler': return travelerPrompt(query, findings);
+    default:         return securityPrompt(query, findings);
+  }
+}
+
+// ── JSON repair (bracket-balanced) ──────────────────────────────────────────
 function extractJson(text) {
   const start = text.indexOf('{');
   if (start < 0) throw new Error('No JSON object found in response');
   let s = text.slice(start);
 
   try { return JSON.parse(s); } catch {}
-
   const m = s.match(/^\{[\s\S]*\}/);
   if (m) { try { return JSON.parse(m[0]); } catch {} }
 
   s = s.replace(/\s+$/, '');
-  const stack = [];
   let depth = 0, inString = false, escape = false, lastSafe = 0;
-
   for (let i = 0; i < s.length; i++) {
     const ch = s[i];
     if (escape)      { escape = false; continue; }
     if (ch === '\\') { escape = true; continue; }
     if (ch === '"')  { inString = !inString; continue; }
     if (inString) continue;
-    if (ch === '{' || ch === '[') { stack.push(ch); depth++; }
-    else if (ch === '}' || ch === ']') { stack.pop(); depth--; if (depth === 0) lastSafe = i + 1; }
+    if (ch === '{' || ch === '[') depth++;
+    else if (ch === '}' || ch === ']') { depth--; if (depth === 0) lastSafe = i + 1; }
     else if (ch === ',' && depth >= 1) lastSafe = i;
   }
-
   let prefix = s.slice(0, lastSafe).replace(/,\s*$/, '');
   const stk = [];
   inString = false; escape = false;
@@ -220,7 +212,7 @@ function extractJson(text) {
   return JSON.parse(prefix);
 }
 
-// ── Handler (Node.js serverless — req/res pattern) ───────────────────────────
+// ── Handler ─────────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
 
@@ -230,14 +222,15 @@ export default async function handler(req, res) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY environment variable is not set' });
 
-  let query, findings;
+  let query, findings, mode;
   try {
-    // Vercel auto-parses JSON bodies; fall back to manual parse if needed
     const body = req.body && typeof req.body === 'object' ? req.body : JSON.parse(req.body);
     query = (body.query || '').trim();
+    mode  = String(body.mode || '').toLowerCase();
+    if (!MODES.has(mode)) return res.status(400).json({ error: 'mode must be one of: security, business, traveler' });
     const raw = Array.isArray(body.findings) ? body.findings.slice(0, MAX_FINDINGS) : [];
     findings = raw.map(f => ({
-      title:    typeof f?.title    === 'string' ? f.title.slice(0, 120)   : '',
+      title:    typeof f?.title    === 'string' ? f.title.slice(0, 130)   : '',
       url:      typeof f?.url      === 'string' ? f.url                   : '',
       domain:   typeof f?.domain   === 'string' ? f.domain                : '',
       date:     f?.date || null,
@@ -251,8 +244,7 @@ export default async function handler(req, res) {
   if (query.length > 500)          return res.status(400).json({ error: 'Query too long (max 500 characters)' });
 
   try {
-    const lang = detectLang(query);
-    const dynamicPrompt = buildDynamicPrompt(query, lang, findings);
+    const userPrompt = buildPromptForMode(mode, query, findings);
 
     const apiRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -265,14 +257,10 @@ export default async function handler(req, res) {
         model:      MODEL,
         max_tokens: MAX_TOKENS,
         system: [
-          {
-            type: 'text',
-            text: STATIC_SYSTEM,
-            cache_control: { type: 'ephemeral' },
-          },
+          { type: 'text', text: STATIC_SYSTEM, cache_control: { type: 'ephemeral' } },
         ],
         messages: [
-          { role: 'user', content: dynamicPrompt },
+          { role: 'user', content: userPrompt },
         ],
       }),
       signal: AbortSignal.timeout(ABORT_MS),
@@ -289,7 +277,6 @@ export default async function handler(req, res) {
       if (block.type === 'text') text += block.text;
     }
     text = text.replace(/^```(?:json)?\s*/m, '').replace(/```\s*$/m, '').trim();
-
     if (!text) throw new Error('No text content in API response. Stop reason: ' + (data.stop_reason || 'unknown'));
 
     const result = extractJson(text);

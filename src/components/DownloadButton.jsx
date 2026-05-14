@@ -26,22 +26,18 @@ export default function DownloadButton({ report }) {
         alignItems: 'center',
         gap: '8px',
         padding: '10px 22px',
-        background: 'transparent',
-        border: '1px solid var(--border)',
+        background: generating ? 'var(--border)' : 'var(--primary)',
+        border: `1px solid ${generating ? 'var(--border)' : 'var(--primary)'}`,
         borderRadius: '7px',
-        color: generating ? 'var(--muted)' : 'var(--text)',
+        color: '#0a0e1a',
         fontSize: '13px',
-        fontWeight: 500,
+        fontWeight: 700,
         cursor: generating ? 'wait' : 'pointer',
-        transition: 'border-color 0.2s, color 0.2s',
+        letterSpacing: '0.02em',
       }}
-      onMouseEnter={e => {
-        if (!generating) e.currentTarget.style.borderColor = 'var(--accent)'
-      }}
-      onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
     >
       <span style={{ fontSize: '15px' }}>{generating ? '⌛' : '⬇'}</span>
-      {generating ? 'Generating PDF...' : 'Download PDF Report'}
+      {generating ? 'Generating PDF...' : 'Export PDF'}
     </button>
   )
 }

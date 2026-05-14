@@ -1,36 +1,18 @@
-import React, { useState, useRef, useCallback } from 'react'
+import React, { useState, useRef, useCallback, useEffect } from 'react'
 import SearchBar from './components/SearchBar.jsx'
-import ReportCard from './components/ReportCard.jsx'
-import Timeline from './components/Timeline.jsx'
-import SourceList from './components/SourceList.jsx'
-import RiskBadge from './components/RiskBadge.jsx'
-import ConfidenceBadge from './components/ConfidenceBadge.jsx'
-import DownloadButton from './components/DownloadButton.jsx'
 import LoadingState from './components/LoadingState.jsx'
-import EmptyState from './components/EmptyState.jsx'
 import ErrorState from './components/ErrorState.jsx'
+import ModeSelection from './components/ModeSelection.jsx'
+import ModeBadge from './components/ModeBadge.jsx'
+import ReportSecurity from './components/ReportSecurity.jsx'
+import ReportBusiness from './components/ReportBusiness.jsx'
+import ReportTraveler from './components/ReportTraveler.jsx'
+import DownloadButton from './components/DownloadButton.jsx'
 import { collectAnalysis } from './modules/collect.js'
-import { parseReport, getOverallRisk } from './modules/analyze.js'
-import { buildSearchContext, getLoadingSteps } from './modules/search.js'
-import { formatRecommendations } from './modules/recommend.js'
+import { modeById } from './modules/modes.js'
 
-const TABS = [
-  'Overview',
-  'Key Facts',
-  'Timeline',
-  'Sources',
-  'Risk & Impact',
-  'Intelligence Assessment',
-  'Recommendations',
-]
-
-// ── Inline styles as objects ──────────────────────────────────────────────────
 const S = {
-  wrap: {
-    maxWidth: '1100px',
-    margin: '0 auto',
-    padding: '28px 20px 60px',
-  },
+  wrap: { maxWidth: '1100px', margin: '0 auto', padding: '28px 20px 80px' },
   header: {
     display: 'flex',
     alignItems: 'center',
@@ -40,619 +22,174 @@ const S = {
     gap: '12px',
   },
   logoRow: { display: 'flex', alignItems: 'center', gap: '12px' },
-  logoMark: {
-    width: '44px', height: '44px',
-    background: 'transparent',
-    borderRadius: '8px',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    flexShrink: 0,
-    objectFit: 'contain',
-  },
-  logoMarkFallback: {
-    width: '38px', height: '38px',
-    background: 'var(--teal)',
-    borderRadius: '8px',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: '20px', fontWeight: 900,
-    color: '#0d1117',
-    flexShrink: 0,
-    fontFamily: 'var(--font-sans)',
-  },
-  logoName: {
-    fontSize: '18px', fontWeight: 700,
-    color: '#fff', letterSpacing: '-0.02em',
-  },
+  logo: { width: 44, height: 44, borderRadius: 8, objectFit: 'contain', flexShrink: 0 },
+  logoName: { fontSize: '18px', fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' },
   logoSub: {
-    fontSize: '11px', color: 'var(--muted)',
-    textTransform: 'uppercase', letterSpacing: '0.1em',
-  },
-  hdrRight: { display: 'flex', alignItems: 'center', gap: '10px' },
-  pill: {
-    fontSize: '12px', color: 'var(--muted)',
-    border: '1px solid var(--border)',
-    borderRadius: '20px', padding: '5px 12px',
-    whiteSpace: 'nowrap',
-  },
-  newSearchBtn: {
-    height: '34px', padding: '0 14px',
-    background: 'transparent',
-    border: '1px solid var(--border)',
-    borderRadius: '6px',
+    fontSize: '11px',
     color: 'var(--muted)',
-    fontSize: '13px',
-    cursor: 'pointer',
-    transition: 'color 0.15s, border-color 0.15s',
+    textTransform: 'uppercase',
+    letterSpacing: '0.1em',
   },
   notice: {
-    background: 'rgba(210,153,34,0.08)',
-    border: '1px solid rgba(210,153,34,0.25)',
+    background: 'rgba(245,158,11,0.08)',
+    border: '1px solid rgba(245,158,11,0.25)',
     borderRadius: '7px',
     padding: '10px 16px',
     fontSize: '12px',
-    color: '#d29922',
+    color: '#f59e0b',
     marginBottom: '20px',
     lineHeight: 1.5,
   },
-  tabsRow: {
+  modeBar: {
     display: 'flex',
-    borderBottom: '1px solid var(--border)',
-    marginBottom: '20px',
-    overflowX: 'auto',
-  },
-  tab: (active) => ({
-    background: 'none',
-    border: 'none',
-    borderBottom: active ? '2px solid var(--teal)' : '2px solid transparent',
-    color: active ? 'var(--teal)' : 'var(--muted)',
-    padding: '10px 16px',
-    fontSize: '13px',
-    fontWeight: 600,
-    cursor: 'pointer',
-    whiteSpace: 'nowrap',
-    marginBottom: '-1px',
-    transition: 'color 0.15s',
-    fontFamily: 'var(--font-sans)',
-  }),
-  grid2: {
-    display: 'grid',
-    gridTemplateColumns: '1.4fr 0.6fr',
-    gap: '14px',
-    marginBottom: '14px',
-  },
-  grid3: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: '14px',
-    marginBottom: '14px',
-  },
-  statRow: {
-    display: 'flex',
-    gap: '20px',
+    alignItems: 'center',
+    gap: '12px',
     flexWrap: 'wrap',
-    marginTop: '16px',
-    paddingTop: '16px',
-    borderTop: '1px solid var(--border)',
+    marginBottom: '18px',
   },
-  factItem: (status) => ({
+  reportHeader: {
     display: 'flex',
-    gap: '10px',
-    padding: '10px 14px',
-    borderRadius: '6px',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: '12px',
+    marginBottom: '18px',
+    padding: '14px 16px',
+    background: 'var(--card)',
     border: '1px solid var(--border)',
-    marginBottom: '8px',
-    alignItems: 'flex-start',
-  }),
-  factStatus: (status) => ({
-    fontSize: '10px',
-    fontWeight: 700,
-    padding: '3px 7px',
-    borderRadius: '3px',
-    background: status === 'CONFIRMED'
-      ? 'rgba(35,134,54,0.15)'
-      : 'rgba(210,153,34,0.15)',
-    color: status === 'CONFIRMED' ? '#3fb950' : '#d29922',
-    fontFamily: 'var(--font-mono)',
-    whiteSpace: 'nowrap',
-    flexShrink: 0,
-    marginTop: '2px',
-  }),
-  redFlagItem: {
-    borderLeft: '3px solid var(--warning)',
-    padding: '10px 14px',
-    background: 'rgba(210,153,34,0.06)',
-    borderRadius: '0 6px 6px 0',
-    marginBottom: '8px',
-    fontSize: '13px',
-    color: 'var(--text)',
-    lineHeight: 1.5,
-  },
-  impactCat: {
-    padding: '12px 14px',
-    border: '1px solid var(--border)',
-    borderRadius: '6px',
-    marginBottom: '10px',
-  },
-  gapItem: {
-    padding: '8px 14px',
-    borderLeft: '2px solid var(--border)',
-    marginBottom: '6px',
-    fontSize: '13px',
-    color: 'var(--muted)',
-    lineHeight: 1.5,
-  },
-  recSection: (color) => ({
-    background: 'var(--surface)',
-    border: '1px solid var(--border)',
-    borderTop: `3px solid ${color}`,
     borderRadius: '8px',
-    padding: '16px 18px',
-  }),
-  recContent: {
-    fontSize: '13px',
+  },
+  reportTitle: {
+    fontSize: '20px',
+    fontWeight: 700,
     color: 'var(--text)',
-    lineHeight: 1.6,
-    marginTop: '8px',
-    whiteSpace: 'pre-wrap',
+    letterSpacing: '-0.01em',
+  },
+  reportSub: { fontSize: '12px', color: 'var(--muted)', marginTop: '4px' },
+  btn: {
+    height: '36px',
+    padding: '0 14px',
+    background: 'transparent',
+    border: '1px solid var(--border)',
+    borderRadius: '6px',
+    color: 'var(--muted)',
+    fontSize: '13px',
+    cursor: 'pointer',
+    fontFamily: 'var(--font-sans)',
+  },
+  btnPrimary: {
+    height: '36px',
+    padding: '0 16px',
+    background: 'var(--primary)',
+    border: '1px solid var(--primary)',
+    borderRadius: '6px',
+    color: '#0a0e1a',
+    fontSize: '13px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    letterSpacing: '0.02em',
+  },
+  btnAccent: {
+    height: '36px',
+    padding: '0 16px',
+    background: 'var(--accent)',
+    border: '1px solid var(--accent)',
+    borderRadius: '6px',
+    color: '#0a0e1a',
+    fontSize: '13px',
+    fontWeight: 700,
+    cursor: 'pointer',
   },
 }
-
-// ── Helper components ─────────────────────────────────────────────────────────
-
-function StatBox({ value, label, color }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-      <span style={{
-        fontSize: '22px',
-        fontWeight: 800,
-        color: color || 'var(--text)',
-        fontFamily: 'var(--font-mono)',
-        lineHeight: 1,
-      }}>
-        {value}
-      </span>
-      <span style={{
-        fontSize: '11px',
-        color: 'var(--muted)',
-        textTransform: 'uppercase',
-        letterSpacing: '0.06em',
-      }}>
-        {label}
-      </span>
-    </div>
-  )
-}
-
-// ── Tab panels ────────────────────────────────────────────────────────────────
-
-function OverviewPanel({ report }) {
-  const risk = getOverallRisk(report)
-  const riskColor = risk === 'HIGH' ? '#da3633' : risk === 'MEDIUM' ? '#d29922' : '#238636'
-  const sources = report.sourceAssessment || report.sources || []
-  const flags = report.riskIndicators || report.flags || []
-
-  return (
-    <>
-      <div style={S.grid2}>
-        <ReportCard label="Executive Summary">
-          <h2 style={{
-            fontSize: '20px',
-            fontWeight: 700,
-            color: 'var(--text)',
-            marginBottom: '10px',
-            lineHeight: 1.3,
-          }}>
-            {report.query}
-          </h2>
-          <p style={{ fontSize: '14px', color: 'var(--muted)', lineHeight: 1.7 }}>
-            {report.executiveSummary || report.summary}
-          </p>
-          <div style={S.statRow}>
-            <StatBox value={sources.length} label="Sources" />
-            <StatBox value={(report.timeline || []).length} label="Events" />
-            <StatBox value={flags.length} label="Flags" />
-            <StatBox
-              value={risk}
-              label="Risk Level"
-              color={riskColor}
-            />
-          </div>
-        </ReportCard>
-
-        <ReportCard label="Classification">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <div>
-              <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '4px' }}>
-                QUERY TYPE
-              </div>
-              <div style={{
-                fontSize: '13px',
-                color: 'var(--text)',
-                fontFamily: 'var(--font-mono)',
-                textTransform: 'uppercase',
-              }}>
-                {(report.type || 'unknown').replace(/_/g, ' ')}
-              </div>
-            </div>
-            <div>
-              <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '6px' }}>
-                CONFIDENCE LEVEL
-              </div>
-              <ConfidenceBadge level={report.confidenceLevel} />
-              {report.confidenceJustification && (
-                <div style={{
-                  fontSize: '12px',
-                  color: 'var(--muted)',
-                  marginTop: '6px',
-                  lineHeight: 1.5,
-                }}>
-                  {report.confidenceJustification}
-                </div>
-              )}
-            </div>
-            <div>
-              <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '6px' }}>
-                OVERALL RISK
-              </div>
-              <RiskBadge level={risk} />
-            </div>
-          </div>
-        </ReportCard>
-      </div>
-
-      {/* Risk indicators preview */}
-      {flags.length > 0 && (
-        <ReportCard label={`Risk Indicators — ${flags.length} flag(s)`}>
-          {flags.slice(0, 4).map((flag, i) => (
-            <div key={i} style={S.redFlagItem}>
-              {typeof flag === 'string' ? flag : `${flag.name || ''}: ${flag.description || ''}`}
-            </div>
-          ))}
-          {flags.length > 4 && (
-            <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '6px' }}>
-              +{flags.length - 4} more in the Risk & Impact tab
-            </div>
-          )}
-        </ReportCard>
-      )}
-    </>
-  )
-}
-
-function KeyFactsPanel({ report }) {
-  const facts = report.keyFacts || []
-  if (!facts.length) {
-    return <EmptyState message="No key facts extracted for this query." />
-  }
-
-  const confirmed = facts.filter(f => (f.status || '').toUpperCase() === 'CONFIRMED')
-  const unconfirmed = facts.filter(f => (f.status || '').toUpperCase() !== 'CONFIRMED')
-
-  return (
-    <ReportCard label={`Key Facts — ${facts.length} total (${confirmed.length} confirmed, ${unconfirmed.length} unconfirmed)`}>
-      {facts.map((f, i) => {
-        const status = (f.status || 'UNCONFIRMED').toUpperCase()
-        return (
-          <div key={i} style={S.factItem(status)}>
-            <span style={S.factStatus(status)}>{status}</span>
-            <span style={{ fontSize: '13px', color: 'var(--text)', lineHeight: 1.6 }}>
-              {f.fact || f}
-            </span>
-          </div>
-        )
-      })}
-    </ReportCard>
-  )
-}
-
-function RiskImpactPanel({ report }) {
-  const indicators = report.riskIndicators || report.flags || []
-  const ra = report.risk_assessment || {}
-  const impact = report.impactAssessment || {}
-  const risk = getOverallRisk(report)
-  const riskColor = risk === 'HIGH' ? '#da3633' : risk === 'MEDIUM' ? '#d29922' : '#238636'
-
-  return (
-    <>
-      <div style={S.grid2}>
-        <ReportCard label="Overall Risk Level">
-          <div style={{
-            fontSize: '52px',
-            fontWeight: 900,
-            color: riskColor,
-            letterSpacing: '-0.03em',
-            lineHeight: 1,
-            marginBottom: '10px',
-            fontFamily: 'var(--font-mono)',
-          }}>
-            {risk}
-          </div>
-          <p style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.6 }}>
-            {ra.rationale || 'Risk level derived from intelligence indicators and source assessment.'}
-          </p>
-        </ReportCard>
-
-        <ReportCard label="Risk Factors">
-          {(ra.factors || []).length > 0
-            ? ra.factors.map((f, i) => (
-                <div key={i} style={{
-                  borderLeft: '2px solid var(--danger)',
-                  padding: '6px 12px',
-                  marginBottom: '6px',
-                  fontSize: '13px',
-                  color: 'var(--text)',
-                }}>
-                  {f}
-                </div>
-              ))
-            : <div style={{ fontSize: '13px', color: 'var(--muted)' }}>No specific factors listed.</div>
-          }
-        </ReportCard>
-      </div>
-
-      {indicators.length > 0 && (
-        <ReportCard label={`Risk Indicators / Red Flags — ${indicators.length}`}>
-          {indicators.map((flag, i) => (
-            <div key={i} style={S.redFlagItem}>
-              {typeof flag === 'string'
-                ? flag
-                : (
-                  <>
-                    <strong style={{ color: 'var(--warning)' }}>{flag.name}</strong>
-                    {flag.description ? ` — ${flag.description}` : ''}
-                    {flag.evidence && (
-                      <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '4px' }}>
-                        Evidence: {flag.evidence}
-                      </div>
-                    )}
-                  </>
-                )
-              }
-            </div>
-          ))}
-        </ReportCard>
-      )}
-
-      {Object.keys(impact).length > 0 && (
-        <ReportCard label="Impact Assessment">
-          {['civilian', 'political', 'economic', 'security'].map(cat => {
-            if (!impact[cat]) return null
-            return (
-              <div key={cat} style={S.impactCat}>
-                <div style={{
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  color: 'var(--muted)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
-                  marginBottom: '6px',
-                  fontFamily: 'var(--font-mono)',
-                }}>
-                  {cat}
-                </div>
-                <div style={{ fontSize: '13px', color: 'var(--text)', lineHeight: 1.6 }}>
-                  {impact[cat]}
-                </div>
-              </div>
-            )
-          })}
-        </ReportCard>
-      )}
-    </>
-  )
-}
-
-function IntelAssessmentPanel({ report }) {
-  const ia = report.intelligenceAssessment || report.analytical_perspective || ''
-  const gaps = report.informationGaps || []
-
-  return (
-    <>
-      <ReportCard label="Intelligence Assessment">
-        {ia
-          ? ia.split(/\n\n+/).filter(Boolean).map((p, i) => (
-              <p key={i} style={{
-                fontSize: '14px',
-                color: 'var(--text)',
-                lineHeight: 1.75,
-                marginBottom: '14px',
-              }}>
-                {p}
-              </p>
-            ))
-          : <EmptyState message="No intelligence assessment available." />
-        }
-      </ReportCard>
-
-      {gaps.length > 0 && (
-        <ReportCard label={`Information Gaps — ${gaps.length}`} style={{ marginTop: '14px' }}>
-          {gaps.map((g, i) => (
-            <div key={i} style={S.gapItem}>• {g}</div>
-          ))}
-        </ReportCard>
-      )}
-    </>
-  )
-}
-
-function RecommendationsPanel({ report }) {
-  const recs = formatRecommendations(report.recommendations || {})
-  const legacyRec = report.recommendations || {}
-
-  // Support both new schema (plain text) and old schema (arrays per audience)
-  const hasNew = recs.length > 0
-  const hasLegacy = Array.isArray(legacyRec.law_enforcement) ||
-                    Array.isArray(legacyRec.private_sector) ||
-                    Array.isArray(legacyRec.traveler)
-
-  if (!hasNew && !hasLegacy) {
-    return <EmptyState message="No recommendations generated for this query." />
-  }
-
-  const OPEN_INTEL_QUESTIONS = [
-    'Which source has direct firsthand access to the subject?',
-    'Is there a confirmed official government or institutional statement?',
-    'Are there credible sources in other languages not yet consulted?',
-    'What would escalate or de-escalate the assessed risk level?',
-    'What single piece of information, if wrong, would change this entire assessment?',
-    'Have you checked for coordinated disinformation or narrative manipulation?',
-  ]
-
-  return (
-    <>
-      {hasNew && (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-          gap: '14px',
-          marginBottom: '14px',
-        }}>
-          {recs.map(({ key, label, icon, color, content }) => (
-            <div key={key} style={S.recSection(color)}>
-              <div style={{
-                fontSize: '11px',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                color: 'var(--muted)',
-                fontFamily: 'var(--font-mono)',
-              }}>
-                {icon} {label}
-              </div>
-              <div style={S.recContent}>{content}</div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {hasLegacy && !hasNew && (
-        <div style={S.grid3}>
-          {[
-            { key: 'law_enforcement', label: 'Law Enforcement & Intelligence', color: '#8957e5' },
-            { key: 'private_sector', label: 'Private Sector & Corporate Security', color: '#1f6feb' },
-            { key: 'traveler', label: 'Traveler & Personal Safety', color: '#238636' },
-          ].map(({ key, label, color }) => {
-            const items = legacyRec[key] || []
-            if (!items.length) return null
-            return (
-              <div key={key} style={S.recSection(color)}>
-                <div style={{
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
-                  color: 'var(--muted)',
-                  fontFamily: 'var(--font-mono)',
-                  marginBottom: '10px',
-                }}>
-                  {label}
-                </div>
-                {items.map((item, i) => (
-                  <div key={i} style={{
-                    borderLeft: `2px solid ${color}`,
-                    padding: '7px 12px',
-                    marginBottom: '6px',
-                    fontSize: '13px',
-                    color: 'var(--text)',
-                    lineHeight: 1.5,
-                  }}>
-                    {item}
-                  </div>
-                ))}
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      <ReportCard label="Open Intelligence Questions">
-        {OPEN_INTEL_QUESTIONS.map((q, i) => (
-          <div key={i} style={{
-            borderLeft: '2px solid var(--border)',
-            padding: '7px 14px',
-            marginBottom: '6px',
-            fontSize: '13px',
-            color: 'var(--muted)',
-            lineHeight: 1.5,
-          }}>
-            {q}
-          </div>
-        ))}
-      </ReportCard>
-    </>
-  )
-}
-
-// ── App ───────────────────────────────────────────────────────────────────────
 
 export default function App() {
+  const [activeAnalysisMode, setActiveAnalysisMode] = useState(null)
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
   const [loadingStep, setLoadingStep] = useState(0)
-  const [loadingSteps, setLoadingSteps] = useState([])
   const [report, setReport] = useState(null)
   const [error, setError] = useState(null)
-  const [activeTab, setActiveTab] = useState('Overview')
-  const [lastQuery, setLastQuery] = useState('')
+  const [pendingMode, setPendingMode] = useState(null) // mode to re-analyze with
   const stepTimerRef = useRef(null)
-  const reportRef = useRef(null)
 
-  const resetState = () => {
+  const loadingSteps = [
+    'Detecting region and language',
+    'Searching open sources',
+    'Cross-referencing findings',
+    'Generating mode-specific brief',
+    'Validating analytic tradecraft',
+  ]
+
+  const resetReportState = () => {
     setReport(null)
     setError(null)
-    setActiveTab('Overview')
+    setPendingMode(null)
     if (stepTimerRef.current) clearInterval(stepTimerRef.current)
   }
 
-  const handleNewSearch = useCallback(() => {
-    resetState()
+  const handleSelectMode = (id) => {
+    setActiveAnalysisMode(id)
+    resetReportState()
     setQuery('')
-    setLoading(false)
-  }, [])
+  }
 
-  const handleSubmit = useCallback(async () => {
+  const handleChangeMode = () => {
+    setActiveAnalysisMode(null)
+    resetReportState()
+    setQuery('')
+  }
+
+  const handleNewSearch = () => {
+    resetReportState()
+    setQuery('')
+  }
+
+  const runAnalysis = useCallback(async (modeOverride) => {
     const q = query.trim()
-    if (!q || loading) return
+    const mode = modeOverride || activeAnalysisMode
+    if (!q || !mode || loading) return
 
-    resetState()
+    resetReportState()
     setLoading(true)
     setLoadingStep(0)
-    setLastQuery(q)
-
-    const ctx = buildSearchContext(q)
-    const steps = getLoadingSteps(ctx)
-    setLoadingSteps(steps)
 
     let step = 0
     stepTimerRef.current = setInterval(() => {
-      step = Math.min(step + 1, steps.length - 1)
+      step = Math.min(step + 1, loadingSteps.length - 1)
       setLoadingStep(step)
     }, 3500)
 
     try {
-      const raw = await collectAnalysis(q)
-      const parsed = parseReport(raw)
-      setReport(parsed)
+      const raw = await collectAnalysis(q, mode)
+      setReport({ ...raw, _mode: mode, _query: q })
     } catch (err) {
-      setError(err.message || 'Analysis failed. Please try again.')
+      setError(err.message || 'Analysis failed.')
     } finally {
       clearInterval(stepTimerRef.current)
       setLoading(false)
     }
-  }, [query, loading])
+  }, [query, activeAnalysisMode, loading])
 
-  const renderTabPanel = () => {
-    if (!report) return null
-    switch (activeTab) {
-      case 'Overview':                return <OverviewPanel report={report} />
-      case 'Key Facts':               return <KeyFactsPanel report={report} />
-      case 'Timeline':                return <Timeline events={report.timeline} />
-      case 'Sources':                 return <SourceList sources={report.sourceAssessment || report.sources} />
-      case 'Risk & Impact':           return <RiskImpactPanel report={report} />
-      case 'Intelligence Assessment': return <IntelAssessmentPanel report={report} />
-      case 'Recommendations':         return <RecommendationsPanel report={report} />
-      default:                        return null
+  // If user changes mode after report exists, flag for re-analyze instead of mutating
+  const handleModeChangeWithReport = (newMode) => {
+    if (report && newMode !== report._mode) {
+      setPendingMode(newMode)
+    } else {
+      setActiveAnalysisMode(newMode)
     }
   }
+
+  const reAnalyze = () => {
+    if (!pendingMode) return
+    setActiveAnalysisMode(pendingMode)
+    runAnalysis(pendingMode)
+  }
+
+  useEffect(() => () => {
+    if (stepTimerRef.current) clearInterval(stepTimerRef.current)
+  }, [])
+
+  const activeMode = modeById(activeAnalysisMode)
 
   return (
     <div style={S.wrap}>
@@ -662,17 +199,16 @@ export default function App() {
           <img
             src="/athena-logo.png"
             alt="Athena Intel"
-            style={S.logoMark}
+            style={S.logo}
             onError={(e) => {
-              // Fall back to the teal "A" mark if the logo file is missing
               const parent = e.currentTarget.parentNode
               e.currentTarget.style.display = 'none'
               const fallback = document.createElement('div')
               Object.assign(fallback.style, {
                 width: '38px', height: '38px',
-                background: '#2ea4a1', borderRadius: '8px',
+                background: '#d4a843', borderRadius: '8px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '20px', fontWeight: '900', color: '#0d1117',
+                fontSize: '20px', fontWeight: '900', color: '#0a0e1a',
                 flexShrink: '0',
               })
               fallback.textContent = 'A'
@@ -684,25 +220,6 @@ export default function App() {
             <div style={S.logoSub}>Open-Source Intelligence Platform</div>
           </div>
         </div>
-        <div style={S.hdrRight}>
-          <span style={S.pill}>Lawful public sources only</span>
-          {report && (
-            <button
-              style={S.newSearchBtn}
-              onClick={handleNewSearch}
-              onMouseEnter={e => {
-                e.currentTarget.style.color = 'var(--text)'
-                e.currentTarget.style.borderColor = 'var(--accent)'
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.color = 'var(--muted)'
-                e.currentTarget.style.borderColor = 'var(--border)'
-              }}
-            >
-              + New Search
-            </button>
-          )}
-        </div>
       </header>
 
       {/* Legal notice */}
@@ -712,83 +229,145 @@ export default function App() {
         for stalking, harassment, doxxing, or targeting of individuals.
       </div>
 
-      {/* Search bar */}
-      <div style={{ marginBottom: '28px' }}>
-        <SearchBar
-          value={query}
-          onChange={setQuery}
-          onSubmit={handleSubmit}
-          loading={loading}
-        />
+      {/* Mode selection landing — shown when no mode is active */}
+      {!activeAnalysisMode && (
+        <ModeSelection onSelect={handleSelectMode} />
+      )}
+
+      {/* Search + report flow — only when mode is active */}
+      {activeAnalysisMode && (
+        <>
+          <div style={S.modeBar}>
+            <ModeBadge modeId={activeAnalysisMode} onChange={handleChangeMode} />
+            {report && (
+              <button style={S.btn} onClick={handleNewSearch}>+ New Search</button>
+            )}
+          </div>
+
+          {/* Search input (hidden until mode is selected) */}
+          {!loading && (
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{
+                fontSize: '12px',
+                color: 'var(--muted)',
+                marginBottom: '6px',
+                fontFamily: 'var(--font-mono)',
+                letterSpacing: '0.06em',
+              }}>WHAT DO YOU WANT ATHENA TO ANALYZE?</div>
+              <SearchBar
+                value={query}
+                onChange={setQuery}
+                onSubmit={() => runAnalysis()}
+                loading={loading}
+                placeholder="Example: protest near Bangkok, shooting in Pattaya, scam compound near border, is Phnom Penh safe"
+              />
+            </div>
+          )}
+
+          {/* Pending re-analyze prompt */}
+          {pendingMode && report && (
+            <div style={{
+              background: 'var(--card)',
+              border: '1px solid var(--accent)',
+              borderRadius: '8px',
+              padding: '14px 18px',
+              marginBottom: '18px',
+              display: 'flex',
+              gap: '12px',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              justifyContent: 'space-between',
+            }}>
+              <div style={{ fontSize: '13px', color: 'var(--text)' }}>
+                Mode change pending: <strong>{modeById(pendingMode)?.label}</strong>.
+                Rerun this query to generate a new report.
+              </div>
+              <button style={S.btnAccent} onClick={reAnalyze}>
+                Re-analyze with {modeById(pendingMode)?.label}
+              </button>
+            </div>
+          )}
+
+          {loading && <LoadingState step={loadingStep} steps={loadingSteps} />}
+
+          {!loading && error && (
+            <ErrorState
+              message={error}
+              onRetry={() => { setError(null); }}
+            />
+          )}
+
+          {!loading && report && (
+            <ReportView
+              report={report}
+              activeMode={activeAnalysisMode}
+              onSwitchMode={handleModeChangeWithReport}
+            />
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
+function ReportView({ report, activeMode, onSwitchMode }) {
+  const m = modeById(activeMode)
+  const Component =
+    activeMode === 'business' ? ReportBusiness :
+    activeMode === 'traveler' ? ReportTraveler :
+    ReportSecurity
+
+  return (
+    <div className="fade-in">
+      {/* Report header band */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '12px',
+        marginBottom: '18px',
+        padding: '14px 18px',
+        background: 'var(--card)',
+        border: '1px solid var(--border)',
+        borderTop: `3px solid ${m.accent}`,
+        borderRadius: '8px',
+      }}>
+        <div>
+          <div style={{
+            fontSize: '10px',
+            color: m.accent,
+            fontFamily: 'var(--font-mono)',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            marginBottom: '4px',
+          }}>
+            {report.reportTitle || m.reportTitle}
+          </div>
+          <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text)' }}>
+            {report._query || report.query}
+          </div>
+        </div>
+        <DownloadButton report={report} />
       </div>
 
-      {/* Loading */}
-      {loading && (
-        <LoadingState step={loadingStep} steps={loadingSteps} />
-      )}
+      <Component report={report} />
 
-      {/* Error */}
-      {!loading && error && (
-        <ErrorState
-          message={error}
-          onRetry={() => {
-            setError(null)
-            setQuery(lastQuery)
-          }}
-        />
-      )}
-
-      {/* Report */}
-      {!loading && report && (
-        <div ref={reportRef}>
-          {/* Tab bar */}
-          <div style={S.tabsRow}>
-            {TABS.map(tab => (
-              <button
-                key={tab}
-                style={S.tab(tab === activeTab)}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-
-          {/* Tab content */}
-          <div className="fade-in">
-            {renderTabPanel()}
-          </div>
-
-          {/* Download button */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            marginTop: '24px',
-            paddingTop: '20px',
-            borderTop: '1px solid var(--border)',
-          }}>
-            <DownloadButton report={report} />
-          </div>
-        </div>
-      )}
-
-      {/* Empty state shown before first search */}
-      {!loading && !report && !error && (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '60px 0',
-          gap: '8px',
-          opacity: 0.5,
-        }}>
-          <div style={{ fontSize: '28px' }}>◎</div>
-          <div style={{ fontSize: '14px', color: 'var(--muted)' }}>
-            Enter a query above to begin analysis
-          </div>
-        </div>
-      )}
+      {/* Disclaimer */}
+      <div style={{
+        marginTop: '18px',
+        padding: '12px 16px',
+        background: 'var(--surface)',
+        border: '1px dashed var(--border)',
+        borderRadius: '6px',
+        fontSize: '11px',
+        color: 'var(--muted)',
+        lineHeight: 1.6,
+        fontStyle: 'italic',
+      }}>
+        This report is generated from open-source information. It should support, not replace,
+        professional judgment, official guidance, or real-time local authority instructions.
+      </div>
     </div>
   )
 }
