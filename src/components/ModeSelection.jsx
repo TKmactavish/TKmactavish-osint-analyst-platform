@@ -47,14 +47,15 @@ const S = {
     borderTop: `3px solid ${accent}`,
   }),
   iconBox: (accent) => ({
-    width: '44px',
-    height: '44px',
+    width: '52px',
+    height: '52px',
     background: `${accent}1f`,
     border: `1px solid ${accent}55`,
-    borderRadius: '8px',
+    borderRadius: '10px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   }),
   title: { fontSize: '17px', fontWeight: 700, color: 'var(--text)' },
   subtitle: { fontSize: '13px', color: 'var(--muted)', lineHeight: 1.6 },
@@ -68,11 +69,15 @@ const S = {
   }),
 }
 
-function Icon({ d, color }) {
+function ModeIcon({ src, label }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill={color} aria-hidden="true">
-      <path d={d} />
-    </svg>
+    <img
+      src={src}
+      alt={label}
+      width={36}
+      height={36}
+      style={{ objectFit: 'contain', display: 'block' }}
+    />
   )
 }
 
@@ -105,7 +110,7 @@ export default function ModeSelection({ onSelect }) {
             }}
           >
             <div style={S.iconBox(m.accent)}>
-              <Icon d={m.iconPath} color={m.accent} />
+              <ModeIcon src={m.iconSrc} label={m.label} />
             </div>
             <div style={S.title}>{m.label}</div>
             <div style={S.subtitle}>{m.subtitle}</div>
