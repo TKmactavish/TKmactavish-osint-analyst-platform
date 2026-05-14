@@ -1,6 +1,8 @@
 import React, { useRef, useEffect } from 'react'
 
-export default function SearchBar({ value, onChange, onSubmit, loading }) {
+const DEFAULT_PLACEHOLDER = 'Example: protest near Bangkok, shooting in Pattaya, scam compound near border, is Phnom Penh safe'
+
+export default function SearchBar({ value, onChange, onSubmit, loading, placeholder }) {
   const inputRef = useRef(null)
 
   useEffect(() => {
@@ -28,9 +30,7 @@ export default function SearchBar({ value, onChange, onSubmit, loading }) {
             color: 'var(--muted)',
             fontSize: '16px',
             pointerEvents: 'none',
-          }}>
-            ⌕
-          </span>
+          }}>⌕</span>
           <input
             ref={inputRef}
             type="text"
@@ -38,11 +38,11 @@ export default function SearchBar({ value, onChange, onSubmit, loading }) {
             onChange={e => onChange(e.target.value)}
             onKeyDown={handleKey}
             disabled={loading}
-            placeholder="Enter a person, incident, location, organization, or event..."
+            placeholder={placeholder || DEFAULT_PLACEHOLDER}
             style={{
               width: '100%',
               height: '48px',
-              background: '#0d1117',
+              background: 'var(--bg)',
               border: '1px solid var(--border)',
               borderRadius: '7px',
               color: 'var(--text)',
@@ -62,28 +62,20 @@ export default function SearchBar({ value, onChange, onSubmit, loading }) {
           style={{
             height: '48px',
             padding: '0 24px',
-            background: loading ? 'var(--border)' : 'var(--accent)',
-            color: '#fff',
+            background: loading ? 'var(--border)' : 'var(--primary)',
+            color: '#0a0e1a',
             fontSize: '14px',
-            fontWeight: 600,
+            fontWeight: 700,
             border: 'none',
             borderRadius: '7px',
             cursor: loading || !value.trim() ? 'not-allowed' : 'pointer',
             opacity: loading || !value.trim() ? 0.6 : 1,
             whiteSpace: 'nowrap',
-            transition: 'opacity 0.2s, background 0.2s',
+            letterSpacing: '0.02em',
           }}
         >
           {loading ? 'Analyzing...' : 'Analyze'}
         </button>
-      </div>
-      <div style={{
-        marginTop: '10px',
-        fontSize: '12px',
-        color: 'var(--muted)',
-        fontFamily: 'var(--font-mono)',
-      }}>
-        Examples: "Yala insurgency 2024" · "Wagner Group Mali" · "Hamas Gaza October 7" · "Sinaloa cartel routes"
       </div>
     </div>
   )
