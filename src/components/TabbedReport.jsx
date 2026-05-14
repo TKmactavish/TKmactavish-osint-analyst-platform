@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Section, BulletList, Paragraph, Callout } from './Section.jsx'
+import { Section, BulletList, TimelineList, Paragraph, Callout } from './Section.jsx'
 import SourceList from './SourceList.jsx'
 import RiskBadge, { getRiskLabelForMode } from './RiskBadge.jsx'
 
@@ -62,13 +62,13 @@ function SecurityPanels({ report, activeTab, accent }) {
     case 'Timeline':
       return (
         <Section title="Timeline" accent={accent}>
-          <BulletList items={report.timeline} accent={accent} />
+          <TimelineList items={report.timeline} accent={accent} />
         </Section>
       )
     case 'Sources':
       return (
         <Section title="Source Assessment" accent={accent}>
-          <SourceList sources={report.sourceAssessment} />
+          <SourceList sources={report.sourceAssessment || report.sources || []} />
         </Section>
       )
     case 'Threat Assessment':
@@ -165,7 +165,7 @@ function BusinessPanels({ report, activeTab, accent }) {
     case 'Sources':
       return (
         <Section title="Source Assessment" accent={accent}>
-          <SourceList sources={report.sourceAssessment} />
+          <SourceList sources={report.sourceAssessment || report.sources || []} />
         </Section>
       )
     case 'Business Risk':
@@ -260,7 +260,7 @@ function TravelerPanels({ report, activeTab, accent }) {
     case 'Sources':
       return (
         <Section title="Source Assessment" accent={accent}>
-          <SourceList sources={report.sourceAssessment} />
+          <SourceList sources={report.sourceAssessment || report.sources || []} />
         </Section>
       )
     case 'Travel Advice':
