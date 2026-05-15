@@ -103,9 +103,36 @@ Return EXACTLY this JSON schema (top-to-bottom field order). ALL text fields FIR
 function businessPrompt(query, findings) {
   return `Query: "${query}"
 Active mode: Business / Risk.
-Source priority: business impact, operational disruption, transport, road closures, business districts, staff movement, customer exposure, supply chain, market impact, reputation risk, continuity concern, executive decision impact.
+
+QUERY TYPE DETECTION — Classify before writing:
+- TYPE A (Employer / Market Research): query asks which company is best to work for, career choice, employer comparison, hiring market, compensation, agent/advisor job selection, where to apply.
+- TYPE B (Risk Event): query asks about an incident, situation, disruption, or threat affecting business operations, staff, or supply chain.
+
+Source priority for TYPE A: company financial-strength ratings, regulatory compliance records (e.g. OIC Thailand), market share, agent commission structures (first-year, renewal, override), product range, training quality, brand trust, digital tools, agent/employee reviews, industry rankings.
+Source priority for TYPE B: business impact, operational disruption, transport, road closures, business districts, staff movement, customer exposure, supply chain, market impact, reputation risk, continuity concern, executive decision impact.
+
 ${findingsBlock(findings)}
 ${brevityLine()}
+
+Adapt EVERY field to the detected query type:
+
+If TYPE A (Employer Research) — write ALL fields through an EMPLOYER RANKING lens:
+- reportTitle: "Employer Intelligence Brief"
+- businessRiskLevel: use "Low" / "Moderate" / "High" to rate the RISK OF CHOOSING THE WRONG EMPLOYER (not a safety level)
+- executiveSummary: overview of the employer landscape in this market + your top picks with one-line rationale each.
+- recommendedBusinessAction: NAME specific companies to target, organised by tier. Example format — "Tier 1 (apply now): [Company A] — reason; [Company B] — reason. Tier 2 (strong alternative): [Company C]. Avoid: [Company D] — compliance or stability concern." Never use vague language like "tier-1 companies listed".
+- decisionGuidance: sharp ranking verdict naming the single best pick and why. Example — "Best overall: [X] — [reason]. Strong alternative: [Y]. Avoid [Z] due to [specific issue]."
+- situationOverview: describe the employment/agent market landscape — competition for advisors, commission trends, regulatory climate, recent market shifts.
+- businessImpact: earning potential — typical commission structures, renewal income, average FA earnings at top firms in this market.
+- operationalRisk: risks of choosing wrong employer — financial instability, mis-selling pressure, compliance failures, high churn, exclusivity traps.
+- employeeCustomerExposure: what agents or advisors typically experience — culture, sales targets, support, product quality.
+- reputationRisk: any companies with compliance issues, OIC sanctions, or reputation problems an FA should avoid.
+- financialMarketExposure: financial stability of key employers — capital adequacy, claims-paying ability, solvency ratings.
+- businessContinuity: long-term career sustainability at top employers — product pipeline, digital investment, company growth trajectory.
+- keyBusinessJudgments: 3-5 specific company-level findings that differentiate top from bottom employers. Name companies explicitly.
+- monitoringTriggers: things to verify before signing any contract — OIC license status, exclusivity clauses, trail commission ownership, vesting periods.
+
+If TYPE B (Risk Event) — write all fields as a standard business risk brief: operational impact, staff exposure, continuity, management decision.
 
 Return EXACTLY this JSON schema (top-to-bottom field order). ALL text fields FIRST, ALL arrays LAST. Use empty string "" for unknown text, empty array [] for unknown arrays:
 
@@ -116,19 +143,19 @@ Return EXACTLY this JSON schema (top-to-bottom field order). ALL text fields FIR
   "reportTitle": "Business Risk Brief",
   "businessRiskLevel": "Low|Moderate|Medium|High|Severe",
   "confidenceLevel": "HIGH|MEDIUM|LOW",
-  "executiveSummary": "3-4 sentence executive summary for a decision-maker.",
-  "recommendedBusinessAction": "WRITE THIS — Concrete management actions. Never empty.",
-  "decisionGuidance": "WRITE THIS — Go / hold / scale-back / pause guidance for next 24-72 hours. Never empty.",
+  "executiveSummary": "WRITE THIS — specific, named insight. Never generic.",
+  "recommendedBusinessAction": "WRITE THIS — name companies or concrete actions. Never empty.",
+  "decisionGuidance": "WRITE THIS — name the best pick or GO/HOLD verdict with specific reasoning. Never empty.",
   "confidenceJustification": "One sentence naming the dominant evidence basis.",
-  "situationOverview": "What is happening, where, when, and how it intersects with business operations.",
-  "businessImpact": "Direct impact on operations, revenue, or service delivery.",
-  "operationalRisk": "Logistics, transport, staff movement, premises, vendor exposure.",
-  "employeeCustomerExposure": "Specific exposure for staff and customers.",
-  "reputationRisk": "Brand, PR, regulatory, or stakeholder considerations.",
-  "financialMarketExposure": "Currency, market, insurance, contract exposure if relevant; empty string if none.",
-  "businessContinuity": "What could disrupt critical functions, for how long, recoverability.",
-  "keyBusinessJudgments": ["3-5 short decision-oriented judgments"],
-  "monitoringTriggers": ["specific events or thresholds that should trigger reassessment"],
+  "situationOverview": "...",
+  "businessImpact": "...",
+  "operationalRisk": "...",
+  "employeeCustomerExposure": "...",
+  "reputationRisk": "...",
+  "financialMarketExposure": "...",
+  "businessContinuity": "...",
+  "keyBusinessJudgments": ["3-5 short judgments — name companies explicitly for TYPE A"],
+  "monitoringTriggers": ["specific things to verify or watch"],
   "sourceAssessment": [{ "title": "...", "url": "...", "domain": "...", "date": "YYYY-MM-DD|null", "type": "official|established media|local media|social media|ngo|corporate|travel advisory|unverified", "language": "EN|local code", "reliability": "HIGH|MEDIUM|LOW|UNVERIFIED", "note": "one-line relevance" }]
 }`;
 }
@@ -292,9 +319,9 @@ export default async function handler(req, res) {
     }
     if (mode === 'business') {
       if (!result.recommendedBusinessAction)
-        result.recommendedBusinessAction = 'Assess current operational exposure and brief relevant staff. Maintain heightened situational awareness through official channels.';
+        result.recommendedBusinessAction = 'Insufficient open-source data to make a specific recommendation. Research the named companies directly through official industry registries and verified employee/agent reviews before proceeding.';
       if (!result.decisionGuidance)
-        result.decisionGuidance = 'Hold current operations and reassess within 24-48 hours as the situation develops. Avoid committing new resources until the picture clarifies.';
+        result.decisionGuidance = 'Verify the financial strength, regulatory standing, and contract terms of any shortlisted company before committing. Prioritize OIC-licensed, financially stable employers with transparent commission structures.';
     }
 
     return res.status(200).json(result);
