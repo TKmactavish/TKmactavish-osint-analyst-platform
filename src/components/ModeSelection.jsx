@@ -77,21 +77,49 @@ function Divider({ label }) {
 
 export default function ModeSelection({ onSelect }) {
   return (
-    <div className="landing-wrap" style={{ maxWidth: '860px', margin: '0 auto', padding: '24px 20px 80px' }}>
+    <div className="landing-wrap" style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 0 80px' }}>
 
-      {/* ── Hero ── */}
-      <div className="landing-hero" style={{ textAlign: 'center', padding: '28px 0 32px' }}>
-        <h1 style={{
-          fontSize: 'clamp(26px, 4.5vw, 44px)', fontWeight: 900, color: 'var(--text)',
-          letterSpacing: '-0.03em', lineHeight: 1.15, marginBottom: '12px',
-        }}>
-          Professional intelligence.<br />
-          <span style={{ color: '#22d3ee' }}>Zero training required.</span>
-        </h1>
-        <p style={{ fontSize: '15px', color: 'var(--muted)', lineHeight: 1.7, maxWidth: '460px', margin: '0 auto' }}>
-          Ask a question. Get a structured verdict — not a list of links.
-        </p>
+      {/* ── Hero banner ── */}
+      <div className="landing-hero" style={{
+        position: 'relative',
+        borderRadius: '12px',
+        overflow: 'hidden',
+        marginBottom: '32px',
+        minHeight: '260px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        {/* Background image */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'url(/background-image.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center top',
+        }} />
+        {/* Dark overlay so text stays readable */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(to right, rgba(10,14,26,0.82) 45%, rgba(10,14,26,0.3) 100%)',
+        }} />
+        {/* Text content */}
+        <div style={{ position: 'relative', textAlign: 'left', padding: '48px 48px', maxWidth: '580px', width: '100%' }}>
+          <h1 style={{
+            fontSize: 'clamp(26px, 4vw, 44px)', fontWeight: 900, color: '#fff',
+            letterSpacing: '-0.03em', lineHeight: 1.15, marginBottom: '12px',
+            textShadow: '0 2px 12px rgba(0,0,0,0.5)',
+          }}>
+            Professional intelligence.<br />
+            <span style={{ color: '#22d3ee' }}>Zero training required.</span>
+          </h1>
+          <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.72)', lineHeight: 1.7, maxWidth: '420px' }}>
+            Ask a question. Get a structured verdict — not a list of links.
+          </p>
+        </div>
       </div>
+
+      {/* ── Content wrapper with padding ── */}
+      <div style={{ padding: '0 20px' }}>
 
       {/* ── Mode selector — immediate CTA ── */}
       <p style={{
@@ -242,6 +270,7 @@ export default function ModeSelection({ onSelect }) {
         Free to use · No account required · Powered by live web sources
       </p>
 
+      </div> {/* end content wrapper */}
     </div>
   )
 }

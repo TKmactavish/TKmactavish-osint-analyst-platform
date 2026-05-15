@@ -93,10 +93,11 @@ button { font-family: var(--font-sans); cursor: pointer; }
 /* ── Mobile responsive ─────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
   /* Landing page */
-  .landing-wrap   { padding: 16px 16px 60px !important; }
-  .landing-hero   { padding: 24px 0 28px !important; }
-  .landing-hero h1 { font-size: 26px !important; line-height: 1.2 !important; }
-  .landing-hero p  { font-size: 14px !important; }
+  .landing-wrap   { padding: 0 0 60px !important; }
+  .landing-hero   { min-height: 180px !important; border-radius: 0 !important; margin-bottom: 20px !important; }
+  .landing-hero h1 { font-size: 22px !important; line-height: 1.2 !important; }
+  .landing-hero p  { font-size: 13px !important; }
+  .landing-hero > div:last-child { padding: 28px 20px !important; }
 
   /* Story section */
   .story-section-label { font-size: 11px !important; letter-spacing: 0.04em !important; }
