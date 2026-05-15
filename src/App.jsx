@@ -21,7 +21,7 @@ const S = {
   },
   logoRow: { display: 'flex', alignItems: 'center', gap: '12px' },
   logo: { width: 44, height: 44, borderRadius: 8, objectFit: 'contain', flexShrink: 0 },
-  logoName: { fontSize: '18px', fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' },
+  logoName: { fontSize: '18px', fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.02em' },
   logoSub: {
     fontSize: '11px',
     color: 'var(--muted)',
@@ -101,6 +101,7 @@ const S = {
 }
 
 export default function App() {
+  const [theme, setTheme] = useState(() => localStorage.getItem('athena-theme') || 'dark')
   const [activeAnalysisMode, setActiveAnalysisMode] = useState(null)
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
@@ -183,6 +184,11 @@ export default function App() {
     runAnalysis(pendingMode)
   }
 
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('athena-theme', theme)
+  }, [theme])
+
   useEffect(() => () => {
     if (stepTimerRef.current) clearInterval(stepTimerRef.current)
   }, [])
@@ -218,6 +224,13 @@ export default function App() {
             <div style={S.logoSub}>Open-Source Intelligence Platform</div>
           </div>
         </div>
+        <button
+          onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
+          style={{ ...S.btn, fontSize: '12px', padding: '0 12px' }}
+          title="Toggle light/dark mode"
+        >
+          {theme === 'dark' ? '☀ Light' : '◑ Dark'}
+        </button>
       </header>
 
       {/* Legal notice */}

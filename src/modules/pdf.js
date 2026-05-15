@@ -114,7 +114,7 @@ function bullets(doc, y, items, accent) {
 }
 
 // ── Footer / Cover ──────────────────────────────────────────────────────────
-function addFooter(doc, accent, title) {
+function addFooter(doc, accent, title, logo) {
   const total = doc.internal.getNumberOfPages()
   const date = new Date().toISOString().split('T')[0]
   for (let i = 1; i <= total; i++) {
@@ -122,10 +122,20 @@ function addFooter(doc, accent, title) {
     doc.setDrawColor(200, 200, 200)
     doc.line(MARGIN, PAGE_H - MARGIN, PAGE_W - MARGIN, PAGE_H - MARGIN)
 
-    doc.setFillColor(...accent)
-    doc.roundedRect(MARGIN, PAGE_H - MARGIN + 2, 6, 5, 0.8, 0.8, 'F')
-    doc.setFontSize(7); doc.setFont('helvetica', 'bold'); doc.setTextColor(255, 255, 255)
-    doc.text('A', MARGIN + 2.1, PAGE_H - MARGIN + 5.8)
+    if (logo) {
+      try { doc.addImage(logo, 'PNG', MARGIN, PAGE_H - MARGIN + 1.5, 6, 6) }
+      catch {
+        doc.setFillColor(...accent)
+        doc.roundedRect(MARGIN, PAGE_H - MARGIN + 2, 6, 5, 0.8, 0.8, 'F')
+        doc.setFontSize(7); doc.setFont('helvetica', 'bold'); doc.setTextColor(255, 255, 255)
+        doc.text('A', MARGIN + 2.1, PAGE_H - MARGIN + 5.8)
+      }
+    } else {
+      doc.setFillColor(...accent)
+      doc.roundedRect(MARGIN, PAGE_H - MARGIN + 2, 6, 5, 0.8, 0.8, 'F')
+      doc.setFontSize(7); doc.setFont('helvetica', 'bold'); doc.setTextColor(255, 255, 255)
+      doc.text('A', MARGIN + 2.1, PAGE_H - MARGIN + 5.8)
+    }
 
     doc.setFontSize(7.5); doc.setFont('helvetica', 'bold'); doc.setTextColor(...accent)
     doc.text('ATHENA INTEL', MARGIN + 8, PAGE_H - MARGIN + 5)
@@ -231,7 +241,7 @@ function renderSecurity(doc, y, report, accent) {
       }
       return y + 2
     }],
-    ['Modus Operandi',               () => paragraph(doc, y, report.modusOperandi)],
+    ['Modus Operandi',               () => bullets(doc, y, report.modusOperandi, accent)],
     ['Indicators and Patterns',      () => bullets(doc, y, report.indicatorsAndPatterns, accent)],
     ['Threat Assessment',            () => paragraph(doc, y, report.threatAssessment)],
     ['Intelligence Gaps',            () => bullets(doc, y, report.intelligenceGaps, [245, 158, 11])],
@@ -343,6 +353,7 @@ export async function generatePDF(report) {
   const meta = MODE_META[mode] || MODE_META.security
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
 
+  const logo = await loadLogoDataUrl()
   let y = await drawCover(doc, report, mode, meta)
   y = drawQueryAndRisk(doc, y, report, mode, meta)
 
@@ -354,7 +365,7 @@ export async function generatePDF(report) {
   next.y = renderSources(doc, next.y, report.sourceAssessment, meta.accent, next.n)
 
   drawDisclaimer(doc)
-  addFooter(doc, meta.accent, meta.title)
+  addFooter(doc, meta.accent, meta.title, logo)
 
   const q = (report._query || report.query || 'report').replace(/[^a-z0-9]/gi, '-').toLowerCase().slice(0, 40)
   doc.save(`athena-${mode}-${q}-${Date.now()}.pdf`)
