@@ -114,7 +114,7 @@ function SecurityPanels({ report, activeTab, accent }) {
       return (
         <Section title="Recommended Action" accent={accent}>
           <Callout color={accent} label="ACTION">
-            <BulletList items={report.recommendedAction} accent={accent} />
+            <Paragraph>{report.recommendedAction}</Paragraph>
           </Callout>
         </Section>
       )
@@ -187,7 +187,7 @@ function BusinessPanels({ report, activeTab, accent }) {
         <>
           <Section title="Recommended Business Action" accent={accent}>
             <Callout color={accent} label="ACTION">
-              <BulletList items={report.recommendedBusinessAction} accent={accent} />
+              <Paragraph>{report.recommendedBusinessAction}</Paragraph>
             </Callout>
           </Section>
           <Section title="Monitoring Triggers" accent={accent}>
@@ -204,7 +204,7 @@ function BusinessPanels({ report, activeTab, accent }) {
       return (
         <Section title="Decision Guidance" accent={accent}>
           <Callout color={accent} label="GUIDANCE">
-            <BulletList items={report.decisionGuidance} accent={accent} />
+            <Paragraph>{report.decisionGuidance}</Paragraph>
           </Callout>
         </Section>
       )
