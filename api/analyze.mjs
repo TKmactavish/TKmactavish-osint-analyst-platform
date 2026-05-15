@@ -90,7 +90,7 @@ Return EXACTLY this JSON schema (top-to-bottom field order). ALL text fields FIR
   "confidenceJustification": "One sentence naming the dominant evidence basis.",
   "incidentOverview": "What happened — facts only, source-attributed.",
   "locationContext": "Geography, jurisdiction, surrounding area dynamics.",
-  "modusOperandi": "Methods, tactics, weapons, patterns.",
+  "modusOperandi": ["method or tactic 1", "method or tactic 2"],
   "keyJudgments": ["3-5 short judgments anchored to evidence"],
   "intelligenceGaps": ["specific unknowns that would change the assessment"],
   "indicatorsAndPatterns": ["3-5 short indicators or escalation patterns"],
@@ -280,6 +280,23 @@ export default async function handler(req, res) {
     if (!text) throw new Error('No text content in API response. Stop reason: ' + (data.stop_reason || 'unknown'));
 
     const result = extractJson(text);
+
+    // Guarantee critical fields are never null — model sometimes skips them
+    if (mode === 'security') {
+      if (!result.recommendedAction)
+        result.recommendedAction = 'Monitor the situation closely. Follow official guidance from local authorities and verify through credible open sources before taking action.';
+      if (!result.recommendedCollection)
+        result.recommendedCollection = 'Continue monitoring local media, official police/government statements, and regional news sources for further developments and official confirmation.';
+      if (!result.modusOperandi || (Array.isArray(result.modusOperandi) && !result.modusOperandi.length))
+        result.modusOperandi = ['Insufficient information available to characterize methods at this time.'];
+    }
+    if (mode === 'business') {
+      if (!result.recommendedBusinessAction)
+        result.recommendedBusinessAction = 'Assess current operational exposure and brief relevant staff. Maintain heightened situational awareness through official channels.';
+      if (!result.decisionGuidance)
+        result.decisionGuidance = 'Hold current operations and reassess within 24-48 hours as the situation develops. Avoid committing new resources until the picture clarifies.';
+    }
+
     return res.status(200).json(result);
 
   } catch (err) {
