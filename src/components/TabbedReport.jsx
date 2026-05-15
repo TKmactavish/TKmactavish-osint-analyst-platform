@@ -101,7 +101,7 @@ function SecurityPanels({ report, activeTab, accent }) {
             <BulletList items={report.intelligenceGaps} accent={accent} />
           </Section>
           <Section title="Recommended Collection" accent={accent}>
-            <BulletList items={report.recommendedCollection} accent={accent} />
+            <Paragraph>{report.recommendedCollection}</Paragraph>
           </Section>
           <Section title="Confidence Level" accent={accent}>
             <Callout color={accent} label={report.confidenceLevel}>
