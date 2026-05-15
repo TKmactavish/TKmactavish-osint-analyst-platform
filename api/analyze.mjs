@@ -3,7 +3,7 @@
 // based on the user's selected analysis mode.
 
 const MODEL        = 'claude-haiku-4-5-20251001';
-const MAX_TOKENS   = 3000;
+const MAX_TOKENS   = 3500;
 const MAX_FINDINGS = 6;
 const MAX_SNIPPET  = 160;
 const ABORT_MS     = 55000;
@@ -74,7 +74,7 @@ Source priority: threat actors, suspects, criminal groups, official statements, 
 ${findingsBlock(findings)}
 ${brevityLine()}
 
-Return EXACTLY this JSON schema (top-to-bottom field order). Critical short fields FIRST. Arrays LAST. Use null for unknown:
+Return EXACTLY this JSON schema (top-to-bottom field order). ALL text fields FIRST, ALL arrays LAST. Use empty string "" for unknown text, empty array [] for unknown arrays:
 
 {
   "reportType": "intelligence",
@@ -85,16 +85,16 @@ Return EXACTLY this JSON schema (top-to-bottom field order). Critical short fiel
   "confidenceLevel": "HIGH|MEDIUM|LOW",
   "intelligenceSummary": "3-4 sentence summary using calibrated probability.",
   "threatAssessment": "Lead judgment with calibrated probability; 1-2 alternative hypotheses if contested.",
-  "recommendedAction": "REQUIRED — never null. 1-2 sentences on what the reader should do or monitor right now.",
-  "keyJudgments": ["3-5 short judgments anchored to evidence"],
+  "recommendedAction": "WRITE THIS — 1-2 sentences on what the reader should do or monitor right now. Never empty.",
+  "recommendedCollection": "WRITE THIS — What to monitor, search, or verify next. Never empty.",
+  "confidenceJustification": "One sentence naming the dominant evidence basis.",
   "incidentOverview": "What happened — facts only, source-attributed.",
   "locationContext": "Geography, jurisdiction, surrounding area dynamics.",
   "modusOperandi": "Methods, tactics, weapons, patterns.",
-  "actors": [{ "name": "...", "type": "individual|group|state|unknown", "role": "subject|suspect|witness|authority|victim", "status": "CONFIRMED|UNCONFIRMED|UNDER INVESTIGATION" }],
-  "indicatorsAndPatterns": ["3-5 short indicators or escalation patterns"],
+  "keyJudgments": ["3-5 short judgments anchored to evidence"],
   "intelligenceGaps": ["specific unknowns that would change the assessment"],
-  "recommendedCollection": "REQUIRED — never null. What to monitor, search, or verify next.",
-  "confidenceJustification": "One sentence naming the dominant evidence basis.",
+  "indicatorsAndPatterns": ["3-5 short indicators or escalation patterns"],
+  "actors": [{ "name": "...", "type": "individual|group|state|unknown", "role": "subject|suspect|witness|authority|victim", "status": "CONFIRMED|UNCONFIRMED|UNDER INVESTIGATION" }],
   "timeline": [{ "date": "YYYY-MM-DD", "event": "...", "source_url": "...", "confidence": "high|medium|low" }],
   "sourceAssessment": [{ "title": "...", "url": "...", "domain": "...", "date": "YYYY-MM-DD|null", "type": "official|established media|local media|social media|ngo|corporate|travel advisory|unverified", "language": "EN|local code", "reliability": "HIGH|MEDIUM|LOW|UNVERIFIED", "note": "one-line relevance" }]
 }`;
@@ -107,7 +107,7 @@ Source priority: business impact, operational disruption, transport, road closur
 ${findingsBlock(findings)}
 ${brevityLine()}
 
-Return EXACTLY this JSON schema (top-to-bottom field order). Critical short fields FIRST. Arrays LAST. Use null for unknown:
+Return EXACTLY this JSON schema (top-to-bottom field order). ALL text fields FIRST, ALL arrays LAST. Use empty string "" for unknown text, empty array [] for unknown arrays:
 
 {
   "reportType": "business",
@@ -117,18 +117,18 @@ Return EXACTLY this JSON schema (top-to-bottom field order). Critical short fiel
   "businessRiskLevel": "Low|Moderate|Medium|High|Severe",
   "confidenceLevel": "HIGH|MEDIUM|LOW",
   "executiveSummary": "3-4 sentence executive summary for a decision-maker.",
-  "recommendedBusinessAction": "Concrete management actions — staffing, sites, communications, controls.",
-  "decisionGuidance": "Go / hold / scale-back / pause guidance for next 24-72 hours and beyond.",
-  "keyBusinessJudgments": ["3-5 short decision-oriented judgments"],
+  "recommendedBusinessAction": "WRITE THIS — Concrete management actions. Never empty.",
+  "decisionGuidance": "WRITE THIS — Go / hold / scale-back / pause guidance for next 24-72 hours. Never empty.",
+  "confidenceJustification": "One sentence naming the dominant evidence basis.",
   "situationOverview": "What is happening, where, when, and how it intersects with business operations.",
   "businessImpact": "Direct impact on operations, revenue, or service delivery.",
   "operationalRisk": "Logistics, transport, staff movement, premises, vendor exposure.",
   "employeeCustomerExposure": "Specific exposure for staff and customers.",
   "reputationRisk": "Brand, PR, regulatory, or stakeholder considerations.",
-  "financialMarketExposure": "Currency, market, insurance, contract exposure if relevant; null if none.",
+  "financialMarketExposure": "Currency, market, insurance, contract exposure if relevant; empty string if none.",
   "businessContinuity": "What could disrupt critical functions, for how long, recoverability.",
+  "keyBusinessJudgments": ["3-5 short decision-oriented judgments"],
   "monitoringTriggers": ["specific events or thresholds that should trigger reassessment"],
-  "confidenceJustification": "One sentence naming the dominant evidence basis.",
   "sourceAssessment": [{ "title": "...", "url": "...", "domain": "...", "date": "YYYY-MM-DD|null", "type": "official|established media|local media|social media|ngo|corporate|travel advisory|unverified", "language": "EN|local code", "reliability": "HIGH|MEDIUM|LOW|UNVERIFIED", "note": "one-line relevance" }]
 }`;
 }
@@ -141,7 +141,7 @@ ${findingsBlock(findings)}
 ${brevityLine()}
 TONE: simple, calm, practical, public-facing. Plain language. No intelligence jargon. No abbreviations.
 
-Return EXACTLY this JSON schema (top-to-bottom field order). Critical short fields FIRST. Arrays LAST. Use null for unknown:
+Return EXACTLY this JSON schema (top-to-bottom field order). ALL text fields FIRST, ALL arrays LAST. Use empty string "" for unknown text, empty array [] for unknown arrays:
 
 {
   "reportType": "traveler",
