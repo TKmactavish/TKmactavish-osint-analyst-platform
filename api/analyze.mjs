@@ -85,7 +85,7 @@ Return EXACTLY this JSON schema (top-to-bottom field order). Critical short fiel
   "confidenceLevel": "HIGH|MEDIUM|LOW",
   "intelligenceSummary": "3-4 sentence summary using calibrated probability.",
   "threatAssessment": "Lead judgment with calibrated probability; 1-2 alternative hypotheses if contested.",
-  "recommendedAction": "Operational awareness, monitoring, or escalation steps.",
+  "recommendedAction": "REQUIRED — never null. 1-2 sentences on what the reader should do or monitor right now.",
   "keyJudgments": ["3-5 short judgments anchored to evidence"],
   "incidentOverview": "What happened — facts only, source-attributed.",
   "locationContext": "Geography, jurisdiction, surrounding area dynamics.",
@@ -93,7 +93,7 @@ Return EXACTLY this JSON schema (top-to-bottom field order). Critical short fiel
   "actors": [{ "name": "...", "type": "individual|group|state|unknown", "role": "subject|suspect|witness|authority|victim", "status": "CONFIRMED|UNCONFIRMED|UNDER INVESTIGATION" }],
   "indicatorsAndPatterns": ["3-5 short indicators or escalation patterns"],
   "intelligenceGaps": ["specific unknowns that would change the assessment"],
-  "recommendedCollection": "Collection priorities: what to seek, where, in what language.",
+  "recommendedCollection": "REQUIRED — never null. What to monitor, search, or verify next.",
   "confidenceJustification": "One sentence naming the dominant evidence basis.",
   "timeline": [{ "date": "YYYY-MM-DD", "event": "...", "source_url": "...", "confidence": "high|medium|low" }],
   "sourceAssessment": [{ "title": "...", "url": "...", "domain": "...", "date": "YYYY-MM-DD|null", "type": "official|established media|local media|social media|ngo|corporate|travel advisory|unverified", "language": "EN|local code", "reliability": "HIGH|MEDIUM|LOW|UNVERIFIED", "note": "one-line relevance" }]
