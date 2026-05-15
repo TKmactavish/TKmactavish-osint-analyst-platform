@@ -108,6 +108,9 @@ button { font-family: var(--font-sans); cursor: pointer; }
   /* Comparison grid — stack vertically */
   .comparison-grid { grid-template-columns: 1fr !important; gap: 2px !important; }
 
+  /* How it works — stack vertically */
+  .how-grid { grid-template-columns: 1fr !important; }
+
   /* Mode cards — full width single column */
   .mode-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
   .mode-card { padding: 18px 16px !important; flex-direction: row !important; align-items: flex-start !important; flex-wrap: wrap !important; gap: 10px !important; }

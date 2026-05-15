@@ -157,6 +157,62 @@ export default function ModeSelection({ onSelect }) {
         ))}
       </div>
 
+      {/* ── How it works ── */}
+      <div style={{ marginBottom: '48px' }}>
+        <p style={{
+          fontSize: '12px',
+          fontWeight: 600,
+          color: 'var(--muted)',
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          textAlign: 'center',
+          marginBottom: '20px',
+        }}>How it works</p>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '12px',
+        }}>
+          {[
+            { step: '01', icon: '✍', title: 'You ask', desc: 'Type any safety, security, or business intelligence question in plain language. No special syntax.' },
+            { step: '02', icon: '⚡', title: 'Athena searches', desc: 'Live web sources, local-language reporting, official advisories — searched and read in seconds.' },
+            { step: '03', icon: '📋', title: 'You get a brief', desc: 'A structured, role-specific intelligence report. Verdict first, evidence behind it.' },
+          ].map((s) => (
+            <div key={s.step} style={{
+              background: 'var(--card)',
+              border: '1px solid var(--border)',
+              borderRadius: '10px',
+              padding: '20px 18px',
+              textAlign: 'center',
+            }}>
+              <div style={{
+                fontSize: '22px',
+                marginBottom: '10px',
+              }}>{s.icon}</div>
+              <div style={{
+                fontSize: '10px',
+                fontFamily: 'var(--font-mono)',
+                color: '#22d3ee',
+                fontWeight: 700,
+                letterSpacing: '0.1em',
+                marginBottom: '6px',
+              }}>STEP {s.step}</div>
+              <div style={{
+                fontSize: '14px',
+                fontWeight: 700,
+                color: 'var(--text)',
+                marginBottom: '8px',
+              }}>{s.title}</div>
+              <div style={{
+                fontSize: '12px',
+                color: 'var(--muted)',
+                lineHeight: 1.6,
+              }}>{s.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* ── Mode selector ── */}
       <p style={{
         fontSize: 'clamp(18px, 3vw, 24px)',
@@ -275,6 +331,51 @@ export default function ModeSelection({ onSelect }) {
             </button>
           )
         })}
+      </div>
+
+      {/* ── What Athena is not ── */}
+      <div style={{ marginTop: '48px', marginBottom: '12px' }}>
+        <p style={{
+          fontSize: '12px',
+          fontWeight: 600,
+          color: 'var(--muted)',
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          textAlign: 'center',
+          marginBottom: '16px',
+        }}>What Athena is not</p>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '10px',
+        }}>
+          {[
+            { label: 'Not a replacement for official advice', desc: 'Always follow local authority instructions. Athena supports your judgment — it does not replace it.' },
+            { label: 'Not a real-time alert system', desc: 'Athena analyzes on demand. It does not push live notifications or monitor situations continuously.' },
+            { label: 'Not a private data collector', desc: 'Athena uses only publicly available open sources. It does not access private records or personal data.' },
+            { label: 'Not a guarantee', desc: 'Intelligence is probabilistic. Athena gives you the best available picture — not a promise about what will happen.' },
+          ].map((item, i) => (
+            <div key={i} style={{
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              borderLeft: '3px solid #ef4444',
+              borderRadius: '8px',
+              padding: '14px 16px',
+            }}>
+              <div style={{
+                fontSize: '12px',
+                fontWeight: 700,
+                color: 'var(--text)',
+                marginBottom: '4px',
+              }}>{item.label}</div>
+              <div style={{
+                fontSize: '12px',
+                color: 'var(--muted)',
+                lineHeight: 1.6,
+              }}>{item.desc}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* ── Footer note ── */}
