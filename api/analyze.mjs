@@ -3,7 +3,7 @@
 // based on the user's selected analysis mode.
 
 const MODEL        = 'claude-haiku-4-5-20251001';
-const MAX_TOKENS   = 2200;
+const MAX_TOKENS   = 2600;
 const MAX_FINDINGS = 6;
 const MAX_SNIPPET  = 160;
 const ABORT_MS     = 55000;
@@ -83,8 +83,9 @@ Return EXACTLY this JSON schema (top-to-bottom field order). Use null for unknow
   "reportTitle": "Intelligence Report",
   "intelligenceSummary": "3-4 sentence intelligence-style summary using calibrated probability.",
   "keyJudgments": ["3-5 short analytical judgments, each anchored to evidence"],
-  "incidentOverview": "What happened or what is observed — facts only, source-attributed.",
   "timeline": [{ "date": "YYYY-MM-DD", "event": "...", "source_url": "...", "confidence": "high|medium|low" }],
+  "sourceAssessment": [{ "title": "...", "url": "...", "domain": "...", "date": "YYYY-MM-DD|null", "type": "official|established media|local media|social media|ngo|corporate|travel advisory|unverified", "language": "EN|local code", "reliability": "HIGH|MEDIUM|LOW|UNVERIFIED", "note": "one-line relevance" }],
+  "incidentOverview": "What happened or what is observed — facts only, source-attributed.",
   "locationContext": "Geography, terrain, jurisdiction, surrounding area dynamics.",
   "actors": [{ "name": "...", "type": "individual|group|state|unknown", "role": "subject|suspect|witness|authority|victim", "status": "CONFIRMED|UNCONFIRMED|UNDER INVESTIGATION" }],
   "modusOperandi": "Methods, tactics, weapons, patterns — if pattern of life or repeat behavior.",
@@ -95,8 +96,7 @@ Return EXACTLY this JSON schema (top-to-bottom field order). Use null for unknow
   "recommendedCollection": "Targeted collection priorities: what to seek, where, in what language.",
   "recommendedAction": "Operational awareness, monitoring, verification, or escalation steps.",
   "confidenceLevel": "HIGH|MEDIUM|LOW",
-  "confidenceJustification": "One sentence naming the dominant evidence basis and any load-bearing assumption.",
-  "sourceAssessment": [{ "title": "...", "url": "...", "domain": "...", "date": "YYYY-MM-DD|null", "type": "official|established media|local media|social media|ngo|corporate|travel advisory|unverified", "language": "EN|local code", "reliability": "HIGH|MEDIUM|LOW|UNVERIFIED", "note": "one-line relevance" }]
+  "confidenceJustification": "One sentence naming the dominant evidence basis and any load-bearing assumption."
 }`;
 }
 
@@ -117,6 +117,7 @@ Return EXACTLY this JSON schema (top-to-bottom field order). Use null for unknow
   "executiveSummary": "3-4 sentence executive summary aimed at a decision-maker.",
   "keyBusinessJudgments": ["3-5 short decision-oriented judgments"],
   "situationOverview": "What is happening, where, when, and how it intersects with business operations.",
+  "sourceAssessment": [{ "title": "...", "url": "...", "domain": "...", "date": "YYYY-MM-DD|null", "type": "official|established media|local media|social media|ngo|corporate|travel advisory|unverified", "language": "EN|local code", "reliability": "HIGH|MEDIUM|LOW|UNVERIFIED", "note": "one-line relevance" }],
   "businessImpact": "Direct impact on operations, revenue, or service delivery (1-3 sentences).",
   "operationalRisk": "Logistics, transport, staff movement, premises access, IT/cyber, vendor exposure.",
   "employeeCustomerExposure": "Specific exposure for staff and customers — locations, timing, demographics.",
@@ -128,8 +129,7 @@ Return EXACTLY this JSON schema (top-to-bottom field order). Use null for unknow
   "decisionGuidance": "Go / hold / scale-back / pause guidance for the next 24-72 hours and beyond.",
   "monitoringTriggers": ["specific events or thresholds that should trigger reassessment"],
   "confidenceLevel": "HIGH|MEDIUM|LOW",
-  "confidenceJustification": "One sentence naming the dominant evidence basis and any load-bearing assumption.",
-  "sourceAssessment": [{ "title": "...", "url": "...", "domain": "...", "date": "YYYY-MM-DD|null", "type": "official|established media|local media|social media|ngo|corporate|travel advisory|unverified", "language": "EN|local code", "reliability": "HIGH|MEDIUM|LOW|UNVERIFIED", "note": "one-line relevance" }]
+  "confidenceJustification": "One sentence naming the dominant evidence basis and any load-bearing assumption."
 }`;
 }
 
@@ -151,6 +151,7 @@ Return EXACTLY this JSON schema (top-to-bottom field order). Use null for unknow
   "safetySummary": "3-4 plain sentences any traveler can understand. What is happening and what it means for personal safety.",
   "isItSafe": "Direct answer in 1-2 sentences. Use plain language.",
   "travelAdviceLevel": "Safe|Use Caution|Avoid Area|No-Go",
+  "sourceAssessment": [{ "title": "...", "url": "...", "domain": "...", "date": "YYYY-MM-DD|null", "type": "official|established media|local media|social media|ngo|corporate|travel advisory|unverified", "language": "EN|local code", "reliability": "HIGH|MEDIUM|LOW|UNVERIFIED", "note": "one-line relevance" }],
   "areasToAvoid": ["specific districts, streets, or landmarks to avoid"],
   "mainSafetyConcerns": ["3-5 short safety concerns in plain language"],
   "whatYouShouldDo": ["3-5 concrete do-actions"],
@@ -159,8 +160,7 @@ Return EXACTLY this JSON schema (top-to-bottom field order). Use null for unknow
   "emergencyAwareness": "Local emergency numbers if known, nearest hospitals, embassy contact guidance.",
   "finalRecommendation": "Single clear bottom-line: Go / Caution / Avoid / No-Go and why.",
   "confidenceLevel": "HIGH|MEDIUM|LOW",
-  "confidenceJustification": "One sentence naming the dominant evidence basis.",
-  "sourceAssessment": [{ "title": "...", "url": "...", "domain": "...", "date": "YYYY-MM-DD|null", "type": "official|established media|local media|social media|ngo|corporate|travel advisory|unverified", "language": "EN|local code", "reliability": "HIGH|MEDIUM|LOW|UNVERIFIED", "note": "one-line relevance" }]
+  "confidenceJustification": "One sentence naming the dominant evidence basis."
 }`;
 }
 
