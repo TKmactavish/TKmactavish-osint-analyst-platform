@@ -53,25 +53,25 @@ export default function ModeSelection({ onSelect }) {
       {/* ── Hero ── */}
       <div className="landing-hero" style={{ textAlign: 'center', padding: '40px 0 48px' }}>
         <h1 style={{
-          fontSize: 'clamp(26px, 4.5vw, 42px)',
+          fontSize: 'clamp(26px, 4.5vw, 44px)',
           fontWeight: 900,
           color: 'var(--text)',
-          letterSpacing: '-0.025em',
+          letterSpacing: '-0.03em',
           lineHeight: 1.15,
           marginBottom: '16px',
         }}>
-          What do you need to know{' '}
-          <span style={{ color: '#22d3ee' }}>right now?</span>
+          Professional intelligence.<br />
+          <span style={{ color: '#22d3ee' }}>Zero training required.</span>
         </h1>
         <p style={{
           fontSize: '16px',
           color: 'var(--muted)',
           lineHeight: 1.75,
-          maxWidth: '480px',
+          maxWidth: '500px',
           margin: '0 auto',
         }}>
-          Just ask. Athena searches live sources and gives you
-          a clear answer — not a list of links, not a wall of text.
+          Ask a question. Athena searches live sources, reads them for you,
+          and returns a structured verdict — not a list of links.
         </p>
       </div>
 
@@ -159,13 +159,22 @@ export default function ModeSelection({ onSelect }) {
 
       {/* ── Mode selector ── */}
       <p style={{
-        fontSize: '15px',
-        fontWeight: 700,
+        fontSize: 'clamp(18px, 3vw, 24px)',
+        fontWeight: 800,
         color: 'var(--text)',
         textAlign: 'center',
-        marginBottom: '16px',
+        letterSpacing: '-0.02em',
+        marginBottom: '6px',
       }}>
-        What kind of question do you have?
+        What do you need to know <span style={{ color: '#22d3ee' }}>right now?</span>
+      </p>
+      <p style={{
+        fontSize: '13px',
+        color: 'var(--muted)',
+        textAlign: 'center',
+        marginBottom: '18px',
+      }}>
+        Choose your role — Athena adjusts the analysis to match.
       </p>
 
       <div className="mode-grid" style={{
