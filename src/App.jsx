@@ -185,7 +185,7 @@ export default function App() {
   }
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
+    document.body.classList.toggle('light-theme', theme === 'light')
     localStorage.setItem('athena-theme', theme)
   }, [theme])
 

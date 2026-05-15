@@ -16,13 +16,15 @@
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-[data-theme="light"] {
+body.light-theme {
   --bg:      #f1f5f9;
   --surface: #ffffff;
   --card:    #ffffff;
   --border:  #cbd5e1;
   --text:    #0f172a;
   --muted:   #64748b;
+  background: #f1f5f9;
+  color: #0f172a;
 }
 
 *, *::before, *::after {
@@ -42,6 +44,7 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 a {
