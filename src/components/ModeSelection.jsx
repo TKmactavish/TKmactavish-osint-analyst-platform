@@ -85,34 +85,32 @@ export default function ModeSelection({ onSelect }) {
         borderRadius: '12px',
         overflow: 'hidden',
         marginBottom: '32px',
-        minHeight: '260px',
+        minHeight: '280px',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
       }}>
         {/* Background image */}
         <div style={{
           position: 'absolute', inset: 0,
           backgroundImage: 'url(/background-image.png)',
           backgroundSize: 'cover',
-          backgroundPosition: 'center top',
+          backgroundPosition: 'center center',
         }} />
-        {/* Dark overlay so text stays readable */}
+        {/* Heavy dark overlay left → fades right, completely hides image text on left */}
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'linear-gradient(to right, rgba(10,14,26,0.82) 45%, rgba(10,14,26,0.3) 100%)',
+          background: 'linear-gradient(to right, rgba(10,14,26,0.97) 0%, rgba(10,14,26,0.97) 38%, rgba(10,14,26,0.55) 62%, rgba(10,14,26,0.15) 100%)',
         }} />
-        {/* Text content */}
-        <div style={{ position: 'relative', textAlign: 'left', padding: '48px 48px', maxWidth: '580px', width: '100%' }}>
+        {/* Text pinned to left */}
+        <div style={{ position: 'relative', textAlign: 'left', padding: '48px 48px', maxWidth: '520px' }}>
           <h1 style={{
-            fontSize: 'clamp(26px, 4vw, 44px)', fontWeight: 900, color: '#fff',
-            letterSpacing: '-0.03em', lineHeight: 1.15, marginBottom: '12px',
-            textShadow: '0 2px 12px rgba(0,0,0,0.5)',
+            fontSize: 'clamp(24px, 3.8vw, 42px)', fontWeight: 900, color: '#fff',
+            letterSpacing: '-0.03em', lineHeight: 1.15, marginBottom: '14px',
           }}>
             Professional intelligence.<br />
             <span style={{ color: '#22d3ee' }}>Zero training required.</span>
           </h1>
-          <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.72)', lineHeight: 1.7, maxWidth: '420px' }}>
+          <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.65)', lineHeight: 1.7, maxWidth: '380px' }}>
             Ask a question. Get a structured verdict — not a list of links.
           </p>
         </div>
