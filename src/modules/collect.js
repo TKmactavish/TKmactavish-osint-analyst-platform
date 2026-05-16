@@ -21,15 +21,14 @@ function parseRadarSectors(query) {
   return payload.split(',').map(s => s.trim()).filter(Boolean);
 }
 
-// 3 different search angles so we get a diverse pool of real small-cap news
+// 2 search angles — sequential, not parallel, to stay within rate limits
 function buildRadarSearchTerms(sectors) {
   const s = sectors.length
     ? sectors.join(' ')
-    : 'AI EdgeAI defense space semiconductor biotech robotics';
+    : 'AI semiconductor photonics defense space biotech robotics';
   return [
-    `small cap micro cap ${s} partnership announcement 2025 undiscovered NYSE NASDAQ`,
-    `micro cap stock ${s} supply chain contract award hidden signal 2025`,
-    `small company ${s} 8-K partnership NVIDIA Cerebras SpaceX AWS announcement 2025`,
+    `small cap micro cap ${s} partnership supply chain announcement undiscovered 2025 NYSE NASDAQ`,
+    `micro cap ${s} critical supplier substrate material component hidden gem 2025 stock`,
   ];
 }
 
@@ -37,25 +36,28 @@ function buildRadarSearchTerms(sectors) {
 function buildRadarAnalysisQuery(sectors) {
   const sectorStr = sectors.length
     ? sectors.join(', ')
-    : 'AI, EdgeAI, defense, space, semiconductors, biotech, robotics';
+    : 'AI, semiconductors, photonics, defense, space, biotech, robotics';
 
   return `RADAR SCAN COMMAND — output RADAR SCAN schema only.
 
 Sectors in scope: ${sectorStr}
 
-CRITICAL: Use ONLY companies that appear in the web search results below. Do NOT invent tickers or partnerships. If the search results do not contain qualifying small-cap companies with specific hidden signals, return 0-1 candidates with low confidence and explain in scanSummary.
+CRITICAL: Only return companies that appear in the web search results below. Do NOT invent tickers. If results contain no qualifying small-cap companies, return scanSummary explaining this — do not fabricate candidates.
 
-Find up to 3 U.S.-listed stocks (NYSE or NASDAQ only, NOT OTC penny stocks) where a confirmed partnership, supply chain role, or contract appears in the search results — but the signal has NOT yet been amplified by mainstream financial media (Bloomberg, CNBC, WSJ).
+Find up to 3 U.S.-listed stocks (NYSE or NASDAQ only, not OTC) where the search results reveal a hidden signal not yet priced in by the majority of the market.
+
+SIGNAL TYPES — any of these qualifies:
+1. HIDDEN PARTNERSHIP: Confirmed deal with a major AI/Space/Defense/Cloud player in a filing or press release — not yet covered by Bloomberg/CNBC/WSJ
+2. CRITICAL SUPPLY CHAIN POSITION: Company makes a key material, substrate, or component that is essential for a hot technology — market doesn't know yet. Example: AXTI (AXT Inc.) makes compound semiconductor substrates (InP, GaAs) that are critical for AI photonics and 5G — nobody knew until the narrative hit. SNDK was the Sandisk spin-off from Western Digital — corporate restructuring that was underpriced before the market understood the value.
+3. CORPORATE EVENT: Spin-off, merger, or restructuring that creates a new narrative the market hasn't fully priced yet
 
 Target profile:
-- Market cap under $500M strongly preferred, hard max $2B
-- Fewer than 5 sell-side analysts (information gaps only survive with thin coverage)
-- Signal must be confirmed in a named public source (8-K filing, press release, company website, conference)
-- Market awareness: Unnoticed or Emerging only
+- Under $500M market cap strongly preferred, hard max $2B
+- Fewer than 5 sell-side analysts — gaps only survive with thin coverage
+- Signal confirmed in a named public source (8-K, press release, SEC filing, company website)
+- Awareness: Unnoticed or Emerging only — Widely Known means already priced in
 
-Real examples of this exact play: DGXX confirmed Cerebras partnership sat in filings for days; RDW had RKLB/SpaceX documentation before retail found it; OSS was Edge AI hardware supplier with zero coverage. All were real, all were small, all were in public sources nobody had amplified yet.
-
-Rank by: specificity of signal + thinness of analyst coverage + imminence of retail discovery.`;
+Rank by: clarity of signal + thinness of coverage + how close the crowd is to discovering it.`;
 }
 
 export async function collectAnalysis(query, mode, onStage) {
@@ -66,24 +68,21 @@ export async function collectAnalysis(query, mode, onStage) {
     const sectors = parseRadarSectors(query);
     const searchTerms = buildRadarSearchTerms(sectors);
 
-    // Run 3 targeted searches in parallel
+    // Run searches sequentially to avoid rate limit (not parallel)
     onStage?.('search');
-    const searchResults = await Promise.allSettled(
-      searchTerms.map(term => postJson('/api/search', { query: term, mode }))
-    );
-
-    // Combine and deduplicate findings across all 3 searches
     const seen = new Set();
     const findings = [];
-    for (const result of searchResults) {
-      if (result.status !== 'fulfilled') continue;
-      const raw = Array.isArray(result.value?.findings) ? result.value.findings : [];
-      for (const f of raw) {
-        const key = f.url || f.title;
-        if (!key || seen.has(key)) continue;
-        seen.add(key);
-        findings.push(f);
-      }
+    for (const term of searchTerms) {
+      try {
+        const res = await postJson('/api/search', { query: term, mode });
+        const raw = Array.isArray(res.findings) ? res.findings : [];
+        for (const f of raw) {
+          const key = f.url || f.title;
+          if (!key || seen.has(key)) continue;
+          seen.add(key);
+          findings.push(f);
+        }
+      } catch { /* one search failing doesn't kill the whole scan */ }
     }
 
     // Analyze grounded in real search results
