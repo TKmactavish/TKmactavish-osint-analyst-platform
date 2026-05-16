@@ -1,238 +1,193 @@
 import React, { useState } from 'react'
 
-const SECTORS = [
-  { id: 'AI Infrastructure',   label: 'AI Infra' },
-  { id: 'Defense Technology',  label: 'Defense Tech' },
-  { id: 'Biotech / Medtech',   label: 'Biotech' },
-  { id: 'Semiconductors',      label: 'Semiconductors' },
-  { id: 'Energy / Grid',       label: 'Energy / Grid' },
-  { id: 'Drones / Robotics',   label: 'Drones / Robotics' },
-  { id: 'Crypto Mining Infra', label: 'Crypto Mining' },
-  { id: 'Space Technology',    label: 'Space Tech' },
+const THEMES = [
+  { id: 'AI / Machine Learning',  label: 'AI / ML' },
+  { id: 'Defense Technology',     label: 'Defense Tech' },
+  { id: 'Semiconductor / Chip',   label: 'Semiconductors' },
+  { id: 'Space Technology',       label: 'Space Tech' },
+  { id: 'Biotech / Medtech',      label: 'Biotech' },
+  { id: 'Energy / Power Grid',    label: 'Energy' },
+  { id: 'Quantum Computing',      label: 'Quantum' },
+  { id: 'Drones / Robotics',      label: 'Robotics' },
 ]
 
-const TIMEFRAMES = [
-  { id: '7d',  label: 'Next 7 days' },
-  { id: '14d', label: 'Next 2 weeks' },
-  { id: '1m',  label: 'Next month' },
-]
-
-const MARKET_CAPS = [
-  { id: 'micro', label: 'Micro-cap', desc: '$50M–$300M', range: '$50M–$300M market cap' },
-  { id: 'small', label: 'Small-cap', desc: '$300M–$2B',  range: '$300M–$2B market cap' },
-  { id: 'mid',   label: 'Mid-cap',   desc: '$2B–$10B',   range: '$2B–$10B market cap' },
-]
-
-function buildRadarQuery(sectors, timeframeId, marketCaps) {
-  const sectorStr = sectors.length
-    ? sectors.join(', ')
-    : 'AI Infrastructure, Defense Technology, Biotech, Semiconductors, Energy, Space Technology'
-  const tfLabel = { '7d': 'next 7 days', '14d': 'next 2 weeks', '1m': 'next month' }[timeframeId] || 'next 7 days'
-
-  const caps = marketCaps.length ? marketCaps : ['micro', 'small']
-  const capRanges = caps.map(c => MARKET_CAPS.find(m => m.id === c)?.range).filter(Boolean).join(' or ')
+function buildRadarQuery(themes) {
+  const themeClause = themes.length
+    ? `Focus the scan on sectors: ${themes.join(', ')}.`
+    : 'Scan across all sectors — AI, defense, semiconductors, space, biotech, energy, quantum, robotics.'
 
   return `RADAR SCAN COMMAND — output RADAR SCAN schema only.
 
-CRITICAL CONSTRAINTS — strictly enforced:
-1. MARKET CAP: Only include companies with ${capRanges}. HARD EXCLUDE any company with market cap above $10B. Never return NVDA, RTX, LMT, GD, NOC, AVGO, AMAT, or any mega/large-cap stock. These cannot rerate meaningfully in 1-2 weeks.
-2. AWARENESS FILTER: EXCLUDE any candidate where market awareness is "Widely Known". Only return stocks where awareness is "Unnoticed" or "Emerging" — that is the edge.
-3. MOVE POTENTIAL: Only include stocks where the catalyst could realistically move the stock 20%+ in 1-2 weeks.
-4. PREFER: low float (under 50M shares), high short interest, or confirmed insider open-market buying — these amplify moves.
-5. If you cannot find 4 qualifying small/micro-cap candidates, return 2-3 strong ones rather than padding with large-caps.
+Objective: Find 3-4 micro-cap or small-cap U.S.-listed stocks (strictly under $2B market cap) with the highest probability of moving 5-20%+ in the next 3-7 days. The user's strategy: buy the signal today → hold 3-7 days as FOMO builds → sell at the peak. Scan for genuine early-mover opportunities only.
 
-TARGET: Identify 4 U.S.-listed small/micro-cap stocks with specific upcoming public catalysts in the ${tfLabel}. Sectors: ${sectorStr}.
+${themeClause}
 
-CATALYST PRIORITY ORDER:
-1. FDA PDUFA decision date — exact date known, binary outcome, huge move potential
-2. Form 4 insider open-market cluster — 2+ insiders buying personally within 14 days
-3. Government contract award — small company, contract value significant relative to market cap
-4. Clinical trial primary completion or readout date — registered on ClinicalTrials.gov
-5. Short squeeze setup — short interest >15% of float + specific positive catalyst incoming
+Scan for candidates from ALL three signal categories and return the strongest regardless of category:
 
-For each candidate: specific catalyst date if known, why market has not priced it in, float size if known, red flags.`
+1. PARTNERSHIP PLAY — Small company just announced a contract, licensing deal, or partnership with a tech giant (NVIDIA, Microsoft, Amazon AWS, Google, Meta, Qualcomm) or defense prime (Lockheed, Raytheon, Northrop, Boeing). The giant's validation hasn't been fully priced in yet by the market.
+
+2. TECH NARRATIVE — Early-to-mid stage disruptive technology story gaining momentum before mainstream retail discovers it. Real technology, early adoption, catalyst incoming. Example: MRAM replacing NAND memory before it was widely covered.
+
+3. SHORT SQUEEZE SETUP — Short interest above 15% of float AND a specific positive catalyst incoming (partnership, contract win, trial result, approval). Forced covering + FOMO = violent move up.
+
+HARD RULES — no exceptions:
+1. Market cap: micro-cap (<$300M) or small-cap ($300M–$2B) ONLY. Hard exclude any company above $2B. NEVER return NVDA, MSFT, GOOGL, AMZN, RTX, LMT, NOC, GD, AVGO, AMAT or any mega/large-cap. These cannot move 20% in a week.
+2. Market awareness must be "Unnoticed" or "Emerging". Exclude "Widely Known" — already priced in, edge is gone.
+3. Every candidate needs a specific, identifiable catalyst — not "may announce" or "possible upcoming" vague language.
+4. Rank candidates by conviction — highest conviction first.
+5. Return 3 strong picks rather than 5 padded ones. Quality over quantity.`
 }
 
 export default function InvestmentPanel({ onRunRadar, onAnalyzeTicker, loading }) {
-  const [selectedSectors,    setSelectedSectors]    = useState([])
-  const [timeframe,          setTimeframe]           = useState('7d')
-  const [selectedMarketCaps, setSelectedMarketCaps]  = useState(['micro', 'small'])
-  const [ticker,             setTicker]              = useState('')
+  const [selectedThemes, setSelectedThemes] = useState([])
+  const [ticker, setTicker]                 = useState('')
+  const accent = '#d4a843'
 
-  const toggleSector = (id) =>
-    setSelectedSectors(prev => prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id])
-
-  const toggleMarketCap = (id) =>
-    setSelectedMarketCaps(prev => prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id])
+  const toggleTheme = id =>
+    setSelectedThemes(prev => prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id])
 
   const handleRunRadar = () => {
     if (loading) return
-    const query = buildRadarQuery(selectedSectors, timeframe, selectedMarketCaps)
-    onRunRadar(query)
+    onRunRadar(buildRadarQuery(selectedThemes))
   }
 
-  const handleTickerSubmit = (e) => {
+  const handleTickerSubmit = e => {
     e.preventDefault()
     const t = ticker.trim()
     if (!t || loading) return
     onAnalyzeTicker(t)
   }
 
-  const accent = '#d4a843'
-  const teal   = '#22d3ee'
-
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: '14px', marginBottom: '24px' }}>
 
-      {/* ── HIDDEN GEM RADAR ── */}
+      {/* ── WEEKLY RADAR ── */}
       <div style={{
         background: 'var(--card)',
         border: '1px solid var(--border)',
         borderTop: `3px solid ${accent}`,
         borderRadius: '10px',
-        padding: '20px',
+        padding: '22px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '14px',
+        gap: '16px',
       }}>
-        {/* Header */}
+        {/* Title */}
         <div>
-          <div style={{ fontSize: '11px', fontWeight: 700, color: accent, fontFamily: 'var(--font-mono)', letterSpacing: '0.1em', marginBottom: '2px' }}>
-            HIDDEN GEM RADAR
+          <div style={{ fontSize: '11px', fontWeight: 700, color: accent, fontFamily: 'var(--font-mono)', letterSpacing: '0.12em', marginBottom: '4px' }}>
+            WEEKLY OPPORTUNITY RADAR
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>
-            Scans for small/micro-cap catalysts before the crowd finds them.
-            Buy the signal → hold the FOMO → sell the peak.
+          <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>
+            What should I buy this week?
+          </div>
+          <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.6 }}>
+            Flux Intel scans for micro &amp; small-cap stocks with a real signal — partnership validations, tech narrative momentum, squeeze setups — that the crowd hasn't priced in yet. Buy the signal, hold 3-7 days, sell the FOMO peak.
           </div>
         </div>
 
-        {/* Market cap */}
+        {/* Sector filter */}
         <div>
-          <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.08em', marginBottom: '6px' }}>
-            MARKET CAP TARGET
-          </div>
-          <div style={{ display: 'flex', gap: '6px' }}>
-            {MARKET_CAPS.map(mc => {
-              const active = selectedMarketCaps.includes(mc.id)
-              return (
-                <button key={mc.id} onClick={() => toggleMarketCap(mc.id)} style={{
-                  flex: 1, padding: '7px 0', borderRadius: '6px', cursor: 'pointer',
-                  border: active ? `1px solid ${accent}` : '1px solid var(--border)',
-                  background: active ? `rgba(212,168,67,0.12)` : 'var(--surface)',
-                  color: active ? accent : 'var(--muted)',
-                  fontFamily: 'var(--font-sans)', transition: 'all 0.12s',
-                }}>
-                  <div style={{ fontSize: '11px', fontWeight: 700 }}>{mc.label}</div>
-                  <div style={{ fontSize: '10px', opacity: 0.7 }}>{mc.desc}</div>
-                </button>
-              )
-            })}
-          </div>
-          {selectedMarketCaps.includes('mid') && !selectedMarketCaps.includes('micro') && !selectedMarketCaps.includes('small') && (
-            <div style={{ fontSize: '11px', color: '#f59e0b', marginTop: '4px' }}>
-              Mid-cap stocks rerate slower — add Micro or Small for better short-term setups.
-            </div>
-          )}
-        </div>
-
-        {/* Sectors */}
-        <div>
-          <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.08em', marginBottom: '6px' }}>
-            SECTOR FOCUS <span style={{ color: 'var(--border)', fontWeight: 400 }}>(leave blank = broad scan)</span>
+          <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.08em', marginBottom: '7px' }}>
+            SECTOR FOCUS <span style={{ color: 'var(--border)', fontWeight: 400 }}>— leave blank to scan everything</span>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
-            {SECTORS.map(s => {
-              const active = selectedSectors.includes(s.id)
+            {THEMES.map(t => {
+              const active = selectedThemes.includes(t.id)
               return (
-                <button key={s.id} onClick={() => toggleSector(s.id)} style={{
-                  padding: '4px 10px', borderRadius: '5px', cursor: 'pointer',
-                  fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-sans)',
+                <button key={t.id} onClick={() => toggleTheme(t.id)} style={{
+                  padding: '5px 11px',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  fontFamily: 'var(--font-sans)',
                   border: active ? `1px solid ${accent}` : '1px solid var(--border)',
-                  background: active ? `rgba(212,168,67,0.12)` : 'var(--surface)',
+                  background: active ? `${accent}18` : 'var(--surface)',
                   color: active ? accent : 'var(--muted)',
                   transition: 'all 0.12s',
-                }}>{s.label}</button>
+                }}>{t.label}</button>
               )
             })}
           </div>
         </div>
 
-        {/* Timeframe */}
-        <div>
-          <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.08em', marginBottom: '6px' }}>
-            HOLD WINDOW
-          </div>
-          <div style={{ display: 'flex', gap: '6px' }}>
-            {TIMEFRAMES.map(tf => {
-              const active = timeframe === tf.id
-              return (
-                <button key={tf.id} onClick={() => setTimeframe(tf.id)} style={{
-                  flex: 1, padding: '7px 0', borderRadius: '6px', cursor: 'pointer',
-                  fontSize: '12px', fontWeight: 600, fontFamily: 'var(--font-sans)',
-                  border: active ? `1px solid ${accent}` : '1px solid var(--border)',
-                  background: active ? `rgba(212,168,67,0.12)` : 'var(--surface)',
-                  color: active ? accent : 'var(--muted)',
-                  transition: 'all 0.12s',
-                }}>{tf.label}</button>
-              )
-            })}
+        {/* What the scan covers */}
+        <div style={{
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          borderRadius: '7px',
+          padding: '12px 14px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '6px',
+        }}>
+          {[
+            { icon: '◈', color: '#22d3ee', label: 'Partnership Play', desc: 'Tech giant or defense prime just validated a small company' },
+            { icon: '◈', color: '#d4a843', label: 'Tech Narrative',   desc: 'Disruptive story gaining momentum before mainstream discovers it' },
+            { icon: '◈', color: '#f97316', label: 'Squeeze Setup',    desc: 'High short interest + specific catalyst = forced buying wave' },
+          ].map(item => (
+            <div key={item.label} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+              <span style={{ color: item.color, fontSize: '12px', marginTop: '1px', flexShrink: 0 }}>{item.icon}</span>
+              <div>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: item.color, fontFamily: 'var(--font-mono)', marginRight: '6px' }}>{item.label}</span>
+                <span style={{ fontSize: '11px', color: 'var(--muted)' }}>{item.desc}</span>
+              </div>
+            </div>
+          ))}
+          <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px', fontStyle: 'italic' }}>
+            Micro &amp; small-cap only (&lt;$2B). Mega-cap excluded — they cannot rerate 20% in a week.
           </div>
         </div>
 
         {/* Run button */}
         <button onClick={handleRunRadar} disabled={loading} style={{
-          height: '44px',
+          height: '48px',
           background: loading ? 'var(--border)' : accent,
-          border: 'none', borderRadius: '7px',
+          border: 'none',
+          borderRadius: '8px',
           color: loading ? 'var(--muted)' : '#0a0e1a',
-          fontSize: '13px', fontWeight: 800, letterSpacing: '0.06em',
+          fontSize: '14px',
+          fontWeight: 800,
+          letterSpacing: '0.06em',
           cursor: loading ? 'not-allowed' : 'pointer',
-          fontFamily: 'var(--font-sans)', transition: 'opacity 0.15s',
+          fontFamily: 'var(--font-sans)',
+          transition: 'background 0.2s',
         }}>
-          {loading ? 'SCANNING...' : 'RUN HIDDEN GEM RADAR →'}
+          {loading ? 'SCANNING...' : 'SCAN THIS WEEK\'S OPPORTUNITIES →'}
         </button>
-
-        {/* Strategy note */}
-        <div style={{
-          fontSize: '11px', color: 'var(--muted)', lineHeight: 1.6,
-          padding: '8px 10px', background: 'var(--surface)',
-          border: '1px solid var(--border)', borderRadius: '6px',
-        }}>
-          Scan logic: FDA PDUFA dates · insider buying clusters · gov contracts (small co.) · short squeeze setups · trial readouts.
-          Mega/large-caps excluded — they cannot rerate 20%+ in 1-2 weeks.
-        </div>
       </div>
 
-      {/* ── TICKER ANALYSIS ── */}
+      {/* ── TICKER DEEP DIVE ── */}
       <div style={{
         background: 'var(--card)',
         border: '1px solid var(--border)',
-        borderTop: `3px solid ${teal}`,
+        borderTop: '3px solid #22d3ee',
         borderRadius: '10px',
-        padding: '20px',
+        padding: '22px',
         display: 'flex',
         flexDirection: 'column',
         gap: '12px',
       }}>
         <div>
-          <div style={{ fontSize: '11px', fontWeight: 700, color: teal, fontFamily: 'var(--font-mono)', letterSpacing: '0.1em', marginBottom: '2px' }}>
-            TICKER DEEP DIVE
+          <div style={{ fontSize: '11px', fontWeight: 700, color: '#22d3ee', fontFamily: 'var(--font-mono)', letterSpacing: '0.1em', marginBottom: '4px' }}>
+            VALIDATE A TICKER
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>
-            Already have a target? Get full OSINT — catalysts, insider filings, contracts, red flags.
+          <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.6 }}>
+            Already heard about a stock? Validate whether the signal is real, early enough, and clean of red flags before you buy.
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>EXAMPLES</div>
           {[
-            '$ASTS — satellite launch catalyst',
-            '$RKLB — insider buying signal',
-            '$IONQ — DoD contract pipeline',
-            '$LUNR — moon mission readout',
+            'MRAM — is the memory narrative real?',
+            'RKLB — insider buying signal?',
+            'ASTS — partnership priced in yet?',
+            'LUNR — early or late in the story?',
           ].map((ex, i) => (
             <div key={i} style={{
               fontSize: '11px', color: 'var(--muted)',
-              paddingLeft: '8px', borderLeft: `2px solid ${teal}44`, lineHeight: 1.5,
+              paddingLeft: '8px', borderLeft: '2px solid #22d3ee44', lineHeight: 1.5,
             }}>{ex}</div>
           ))}
         </div>
@@ -242,26 +197,34 @@ export default function InvestmentPanel({ onRunRadar, onAnalyzeTicker, loading }
             type="text"
             value={ticker}
             onChange={e => setTicker(e.target.value)}
-            placeholder="$ASTS, RKLB, LUNR..."
+            placeholder="Ticker, company, or question..."
             disabled={loading}
             style={{
-              height: '40px', padding: '0 14px',
+              height: '42px', padding: '0 14px',
               background: 'var(--surface)',
-              border: '1px solid var(--border)', borderRadius: '7px',
-              color: 'var(--text)', fontSize: '14px',
-              fontFamily: 'var(--font-mono)', outline: 'none', width: '100%',
+              border: '1px solid var(--border)',
+              borderRadius: '7px',
+              color: 'var(--text)',
+              fontSize: '13px',
+              fontFamily: 'var(--font-mono)',
+              outline: 'none',
+              width: '100%',
+              boxSizing: 'border-box',
             }}
           />
           <button type="submit" disabled={loading || !ticker.trim()} style={{
             height: '42px',
-            background: loading || !ticker.trim() ? 'var(--border)' : teal,
-            border: 'none', borderRadius: '7px',
+            background: loading || !ticker.trim() ? 'var(--border)' : '#22d3ee',
+            border: 'none',
+            borderRadius: '7px',
             color: loading || !ticker.trim() ? 'var(--muted)' : '#0a0e1a',
-            fontSize: '13px', fontWeight: 800, letterSpacing: '0.06em',
+            fontSize: '13px',
+            fontWeight: 800,
+            letterSpacing: '0.06em',
             cursor: loading || !ticker.trim() ? 'not-allowed' : 'pointer',
-            fontFamily: 'var(--font-sans)', transition: 'opacity 0.15s',
+            fontFamily: 'var(--font-sans)',
           }}>
-            ANALYZE TICKER →
+            VALIDATE SIGNAL →
           </button>
         </form>
       </div>

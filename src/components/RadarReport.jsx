@@ -2,12 +2,14 @@ import React, { useState } from 'react'
 import SourceList from './SourceList.jsx'
 
 const CATALYST_COLORS = {
+  'Partnership Play':        '#22d3ee',
+  'Tech Narrative':          '#d4a843',
+  'Short Squeeze Setup':     '#f97316',
   'FDA PDUFA':               '#10b981',
   'Clinical Trial Readout':  '#8b5cf6',
   'Government Contract':     '#22d3ee',
   'Earnings Catalyst':       '#3b82f6',
   'Insider Buying Cluster':  '#d4a843',
-  'Short Squeeze Setup':     '#f97316',
   'Regulatory Decision':     '#f59e0b',
   'Partnership Announcement':'#22d3ee',
 }
