@@ -294,7 +294,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid JSON body' });
   }
   if (!query || query.length < 2)  return res.status(400).json({ error: 'Query must be at least 2 characters' });
-  if (query.length > 2000)         return res.status(400).json({ error: 'Query too long (max 2000 characters)' });
+  if (query.length > 5000)         return res.status(400).json({ error: 'Query too long (max 5000 characters)' });
 
   try {
     const userPrompt = buildPromptForMode(mode, query, findings);
