@@ -12,8 +12,8 @@ const PALETTE = {
 const SECURITY_MAP = {
   'low': 'green', 'moderate': 'yellow', 'medium': 'orange', 'high': 'red', 'critical': 'darkRed',
 }
-const BUSINESS_MAP = {
-  'low': 'green', 'moderate': 'yellow', 'medium': 'orange', 'high': 'red', 'severe': 'darkRed',
+const INVESTMENT_MAP = {
+  'strong': 'green', 'moderate': 'yellow', 'weak': 'orange', 'red flag': 'darkRed',
 }
 const TRAVELER_MAP = {
   'safe': 'green', 'use caution': 'yellow', 'avoid area': 'orange', 'no-go': 'red',
@@ -25,17 +25,17 @@ const LEGACY_MAP = {
 
 export function getRiskLabelForMode(mode) {
   switch (mode) {
-    case 'security': return 'Threat Level'
-    case 'business': return 'Business Risk Level'
-    case 'traveler': return 'Travel Advice'
-    default:         return 'Risk Level'
+    case 'security':   return 'Threat Level'
+    case 'investment': return 'Catalyst Rating'
+    case 'traveler':   return 'Travel Advice'
+    default:           return 'Risk Level'
   }
 }
 
 export default function RiskBadge({ level, mode, size = 'md' }) {
   if (!level) return null
   const key = String(level).toLowerCase()
-  const map = mode === 'business' ? BUSINESS_MAP : mode === 'traveler' ? TRAVELER_MAP : mode === 'security' ? SECURITY_MAP : LEGACY_MAP
+  const map = mode === 'investment' ? INVESTMENT_MAP : mode === 'traveler' ? TRAVELER_MAP : mode === 'security' ? SECURITY_MAP : LEGACY_MAP
   const paletteKey = map[key] || 'yellow'
   const p = PALETTE[paletteKey]
 

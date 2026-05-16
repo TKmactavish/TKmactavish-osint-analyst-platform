@@ -15,14 +15,13 @@ const TABS_BY_MODE = {
     'Intelligence Assessment',
     'Recommended Action',
   ],
-  business: [
-    'Overview',
-    'Key Judgments',
-    'Situation',
+  investment: [
+    'Catalyst',
+    'Evidence',
+    'Red Flags',
+    'Market Gap',
     'Sources',
-    'Business Risk',
-    'Business Assessment',
-    'Decision Guidance',
+    'Verdict',
   ],
   traveler: [
     'Safety Summary',
@@ -123,42 +122,65 @@ function SecurityPanels({ report, activeTab, accent }) {
   }
 }
 
-function BusinessPanels({ report, activeTab, accent }) {
+function InvestmentPanels({ report, activeTab, accent }) {
   switch (activeTab) {
-    case 'Overview':
+    case 'Catalyst':
       return (
         <>
-          <Section title="Executive Summary" accent={accent}>
-            <Paragraph>{report.executiveSummary}</Paragraph>
+          <Section title="Catalyst Rating" accent={accent}>
+            <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.08em', marginBottom: '8px' }}>
+              {getRiskLabelForMode('investment').toUpperCase()}
+            </div>
+            <RiskBadge level={report.catalystRating} mode="investment" size="lg" />
           </Section>
-          <Section title="Situation Overview" accent={accent}>
-            <Paragraph>{report.situationOverview}</Paragraph>
+          <Section title="Catalyst Summary" accent={accent}>
+            <Paragraph>{report.catalystSummary}</Paragraph>
+          </Section>
+          <Section title="Why It Matters" accent={accent}>
+            <Callout color={accent} label="PRICE IMPACT">
+              <Paragraph>{report.whyItMatters}</Paragraph>
+            </Callout>
           </Section>
         </>
       )
-    case 'Key Judgments':
-      return (
-        <Section title="Key Business Judgments" accent={accent}>
-          <BulletList items={report.keyBusinessJudgments} accent={accent} />
-        </Section>
-      )
-    case 'Situation':
+    case 'Evidence':
       return (
         <>
-          <Section title="Business Impact" accent={accent}>
-            <Paragraph>{report.businessImpact}</Paragraph>
+          <Section title="Key Findings" accent={accent}>
+            <BulletList items={report.keyFindings} accent={accent} />
           </Section>
-          <Section title="Operational Risk" accent={accent}>
-            <Paragraph>{report.operationalRisk}</Paragraph>
+          <Section title="Insider Activity (Form 4)" accent={accent}>
+            <Paragraph>{report.insiderActivity}</Paragraph>
           </Section>
-          <Section title="Employee / Customer Exposure" accent={accent}>
-            <Paragraph>{report.employeeCustomerExposure}</Paragraph>
+          <Section title="Government Contracts" accent={accent}>
+            <Paragraph>{report.governmentContracts}</Paragraph>
           </Section>
-          <Section title="Reputation Risk" accent={accent}>
-            <Paragraph>{report.reputationRisk}</Paragraph>
+        </>
+      )
+    case 'Red Flags':
+      return (
+        <>
+          <Section title="Red Flags Detected" accent="#ef4444">
+            <BulletList items={report.redFlags} accent="#ef4444" />
           </Section>
-          <Section title="Financial / Market Exposure" accent={accent}>
-            <Paragraph>{report.financialMarketExposure}</Paragraph>
+          <Section title="Financial Health" accent={accent}>
+            <Paragraph>{report.financialHealth}</Paragraph>
+          </Section>
+          <Section title="Risk Factors" accent="#f59e0b">
+            <BulletList items={report.riskFactors} accent="#f59e0b" />
+          </Section>
+        </>
+      )
+    case 'Market Gap':
+      return (
+        <>
+          <Section title="Market Awareness Gap" accent={accent}>
+            <Callout color={accent} label="AWARENESS">
+              <Paragraph>{report.marketAwarenessGap}</Paragraph>
+            </Callout>
+          </Section>
+          <Section title="Time Window" accent={accent}>
+            <Paragraph>{report.timeWindow}</Paragraph>
           </Section>
         </>
       )
@@ -168,30 +190,13 @@ function BusinessPanels({ report, activeTab, accent }) {
           <SourceList sources={report.sourceAssessment || report.sources || []} />
         </Section>
       )
-    case 'Business Risk':
+    case 'Verdict':
       return (
         <>
-          <Section title="Business Risk Level" accent={accent}>
-            <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.08em', marginBottom: '8px' }}>
-              {getRiskLabelForMode('business').toUpperCase()}
-            </div>
-            <RiskBadge level={report.businessRiskLevel} mode="business" size="lg" />
-          </Section>
-          <Section title="Business Continuity" accent={accent}>
-            <Paragraph>{report.businessContinuity}</Paragraph>
-          </Section>
-        </>
-      )
-    case 'Business Assessment':
-      return (
-        <>
-          <Section title="Recommended Business Action" accent={accent}>
-            <Callout color={accent} label="ACTION">
-              <Paragraph>{report.recommendedBusinessAction}</Paragraph>
+          <Section title="Recommended Action" accent={accent}>
+            <Callout color={accent} label="VERDICT">
+              <Paragraph>{report.recommendedAction}</Paragraph>
             </Callout>
-          </Section>
-          <Section title="Monitoring Triggers" accent={accent}>
-            <BulletList items={report.monitoringTriggers} accent={accent} />
           </Section>
           <Section title="Confidence Level" accent={accent}>
             <Callout color={accent} label={report.confidenceLevel}>
@@ -199,14 +204,6 @@ function BusinessPanels({ report, activeTab, accent }) {
             </Callout>
           </Section>
         </>
-      )
-    case 'Decision Guidance':
-      return (
-        <Section title="Decision Guidance" accent={accent}>
-          <Callout color={accent} label="GUIDANCE">
-            <Paragraph>{report.decisionGuidance}</Paragraph>
-          </Callout>
-        </Section>
       )
     default:
       return null
@@ -298,8 +295,8 @@ export default function TabbedReport({ report, mode, accent }) {
   const activeAccent = accent || 'var(--accent)'
 
   const panels =
-    mode === 'business' ? <BusinessPanels report={report} activeTab={activeTab} accent={activeAccent} /> :
-    mode === 'traveler' ? <TravelerPanels report={report} activeTab={activeTab} accent={activeAccent} /> :
+    mode === 'investment' ? <InvestmentPanels report={report} activeTab={activeTab} accent={activeAccent} /> :
+    mode === 'traveler'   ? <TravelerPanels   report={report} activeTab={activeTab} accent={activeAccent} /> :
     <SecurityPanels report={report} activeTab={activeTab} accent={activeAccent} />
 
   return (

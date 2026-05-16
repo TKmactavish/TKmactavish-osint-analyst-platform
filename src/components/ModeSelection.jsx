@@ -7,10 +7,10 @@ const MODE_HUMAN = {
     question: 'Is this situation dangerous?',
     examples: ['What\'s happening near this area?', 'Who are the actors involved?', 'Should my team be concerned?'],
   },
-  business: {
-    label: 'Business Analyst',
-    question: 'Can I trust this company?',
-    examples: ['Is this stock worth the risk?', 'What are the red flags?', 'Should I proceed with this deal?'],
+  investment: {
+    label: 'Investment Intelligence',
+    question: 'Is this stock worth investigating?',
+    examples: ['What catalysts does $ASTS have right now?', 'Any insider buying at $RKLB recently?', 'Government contracts for $PLTR this quarter?'],
   },
   traveler: {
     label: 'Traveler',
@@ -24,7 +24,7 @@ const STORIES = [
     accent: '#22d3ee',
     who: 'Corporate security manager',
     asked: 'There\'s a protest forming near our Bangkok office. Should I evacuate the team?',
-    gap: 'News reports were vague. Athena found local police announcements, crowd estimates, and route closures — in under 30 seconds.',
+    gap: 'News reports were vague. Flux Alpha found local police announcements, crowd estimates, and route closures — in under 30 seconds.',
   },
   {
     accent: '#10b981',
@@ -95,7 +95,7 @@ export default function ModeSelection({ onSelect }) {
       {/* ── Content wrapper ── */}
       <div style={{ padding: '0 20px' }}>
 
-        {/* ── Why Athena — comparison (answers "why use us") ── */}
+        {/* ── Why Flux Alpha — comparison (answers "why use us") ── */}
         <Divider label="Why not just use..." />
         <div className="comparison-grid" style={{
           display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
@@ -104,7 +104,7 @@ export default function ModeSelection({ onSelect }) {
           {[
             { tool: 'Google', text: 'Returns links. You still have to read everything and decide yourself.' },
             { tool: 'ChatGPT', text: 'Needs the right prompt. Knowledge cutoff. No live web search.' },
-            { tool: 'Athena', text: 'Searches now. Reads for you. Returns a structured verdict.', highlight: true },
+            { tool: 'Flux Alpha', text: 'Searches now. Reads for you. Returns a structured verdict.', highlight: true },
           ].map((c, i) => (
             <div key={i} style={{
               background: c.highlight ? 'rgba(34,211,238,0.06)' : 'var(--card)',
@@ -126,9 +126,9 @@ export default function ModeSelection({ onSelect }) {
           {[
             { symbol: '?_', step: 'You ask', desc: 'Type any question in plain language' },
             null,
-            { symbol: '◎', step: 'Athena scans', desc: 'Live sources cross-referenced in seconds' },
+            { symbol: '◎', step: 'Flux Alpha scans', desc: 'Live sources cross-referenced in seconds' },
             null,
-            { symbol: '≡', step: 'Athena summarizes', desc: 'A structured verdict — role-specific brief' },
+            { symbol: '≡', step: 'Flux Alpha summarizes', desc: 'A structured verdict — role-specific brief' },
           ].map((item, i) => {
             if (item === null) {
               return (
@@ -167,7 +167,7 @@ export default function ModeSelection({ onSelect }) {
           What do you need to know <span style={{ color: '#22d3ee' }}>right now?</span>
         </p>
         <p style={{ fontSize: '13px', color: 'var(--muted)', textAlign: 'center', marginBottom: '16px' }}>
-          Choose your role — Athena adjusts the analysis to match.
+          Choose your role — Flux Alpha adjusts the analysis to match.
         </p>
 
         <div className="mode-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px' }}>
@@ -220,7 +220,7 @@ export default function ModeSelection({ onSelect }) {
                     ))}
                   </div>
                   <div style={{ fontSize: '12px', fontWeight: 700, color: m.accent, letterSpacing: '0.04em', marginTop: '4px' }}>
-                    Ask Athena →
+                    Ask Flux Alpha →
                   </div>
                 </div>
               </button>
@@ -228,8 +228,8 @@ export default function ModeSelection({ onSelect }) {
           })}
         </div>
 
-        {/* ── Who uses Athena ── */}
-        <Divider label="Who uses Athena" />
+        {/* ── Who uses Flux Alpha ── */}
+        <Divider label="Who uses Flux Alpha" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {STORIES.map((s, i) => (
             <div key={i} className="story-card" style={{
@@ -243,14 +243,14 @@ export default function ModeSelection({ onSelect }) {
           ))}
         </div>
 
-        {/* ── What Athena is not ── */}
-        <Divider label="What Athena is not" />
+        {/* ── What Flux Alpha is not ── */}
+        <Divider label="What Flux Alpha is not" />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
           {[
-            { label: 'Not a replacement for official advice', desc: 'Always follow local authority instructions. Athena supports your judgment — it does not replace it.' },
-            { label: 'Not a real-time alert system', desc: 'Athena analyzes on demand. It does not push live notifications or monitor situations continuously.' },
-            { label: 'Not a private data collector', desc: 'Athena uses only publicly available open sources. It does not access private records or personal data.' },
-            { label: 'Not a guarantee', desc: 'Intelligence is probabilistic. Athena gives you the best available picture — not a promise about what will happen.' },
+            { label: 'Not a replacement for official advice', desc: 'Always follow local authority instructions. Flux Alpha supports your judgment — it does not replace it.' },
+            { label: 'Not a real-time alert system', desc: 'Flux Alpha analyzes on demand. It does not push live notifications or monitor situations continuously.' },
+            { label: 'Not a private data collector', desc: 'Flux Alpha uses only publicly available open sources. It does not access private records or personal data.' },
+            { label: 'Not a guarantee', desc: 'Intelligence is probabilistic. Flux Alpha gives you the best available picture — not a promise about what will happen.' },
           ].map((item, i) => (
             <div key={i} style={{
               background: 'var(--surface)', border: '1px solid var(--border)',

@@ -101,7 +101,7 @@ const S = {
 }
 
 export default function App() {
-  const [theme, setTheme] = useState(() => localStorage.getItem('athena-theme') || 'dark')
+  const [theme, setTheme] = useState(() => localStorage.getItem('fluxalpha-theme') || 'dark')
   const [activeAnalysisMode, setActiveAnalysisMode] = useState(null)
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
@@ -111,13 +111,18 @@ export default function App() {
   const [pendingMode, setPendingMode] = useState(null) // mode to re-analyze with
   const stepTimerRef = useRef(null)
 
-  const loadingSteps = [
-    'Detecting region and language',
-    'Searching open sources',
-    'Cross-referencing findings',
-    'Generating mode-specific brief',
-    'Validating analytic tradecraft',
-  ]
+  const LOADING_STEPS_BY_MODE = {
+    security:   ['Detecting region and language', 'Searching open sources', 'Cross-referencing findings', 'Generating intelligence brief', 'Validating analytic tradecraft'],
+    investment: ['Scanning SEC EDGAR filings', 'Checking government contracts', 'Analyzing insider activity', 'Assessing market awareness gap', 'Generating investment intelligence'],
+    traveler:   ['Detecting region and language', 'Searching travel advisories', 'Cross-referencing safety data', 'Generating safety brief', 'Validating recommendations'],
+  }
+  const loadingSteps = LOADING_STEPS_BY_MODE[activeAnalysisMode] || LOADING_STEPS_BY_MODE.security
+
+  const PLACEHOLDERS = {
+    security:   'Example: protest near Bangkok, shooting in Pattaya, scam compound near border',
+    investment: 'Example: $ASTS catalysts, insider buying at $RKLB, government contracts for $PLTR',
+    traveler:   'Example: is Bangkok safe right now, Pattaya area safety, visa scam at Jakarta airport',
+  }
 
   const resetReportState = () => {
     setReport(null)
@@ -186,7 +191,7 @@ export default function App() {
 
   useEffect(() => {
     document.body.classList.toggle('light-theme', theme === 'light')
-    localStorage.setItem('athena-theme', theme)
+    localStorage.setItem('fluxalpha-theme', theme)
   }, [theme])
 
   useEffect(() => () => {
@@ -215,13 +220,13 @@ export default function App() {
                 fontSize: '20px', fontWeight: '900', color: '#0a0e1a',
                 flexShrink: '0',
               })
-              fallback.textContent = 'A'
+              fallback.textContent = 'F'
               parent.insertBefore(fallback, parent.firstChild)
             }}
           />
           <div>
-            <div style={S.logoName}>Athena Intel</div>
-            <div style={S.logoSub}>Open-Source Intelligence Platform</div>
+            <div style={S.logoName}>Flux Alpha</div>
+            <div style={S.logoSub}>OSINT · Investment Intelligence</div>
           </div>
         </div>
         <button
@@ -235,9 +240,8 @@ export default function App() {
 
       {/* Legal notice */}
       <div style={S.notice}>
-        Machine-assisted OSINT may contain errors. Verify all claims independently before operational use.
-        Use only lawful public sources. Do not collect private personal data or use this platform
-        for stalking, harassment, doxxing, or targeting of individuals.
+        Flux Alpha uses publicly available open-source information only. Nothing here is financial advice.
+        Verify all findings independently before acting. Never based on non-public, private, or restricted data.
       </div>
 
       {/* Mode selection landing — shown when no mode is active */}
@@ -264,13 +268,13 @@ export default function App() {
                 marginBottom: '6px',
                 fontFamily: 'var(--font-mono)',
                 letterSpacing: '0.06em',
-              }}>WHAT DO YOU WANT ATHENA TO ANALYZE?</div>
+              }}>{activeAnalysisMode === 'investment' ? 'ENTER TICKER OR INVESTMENT QUESTION' : 'WHAT DO YOU WANT FLUX ALPHA TO ANALYZE?'}</div>
               <SearchBar
                 value={query}
                 onChange={setQuery}
                 onSubmit={() => runAnalysis()}
                 loading={loading}
-                placeholder="Example: protest near Bangkok, shooting in Pattaya, scam compound near border, is Phnom Penh safe"
+                placeholder={PLACEHOLDERS[activeAnalysisMode] || PLACEHOLDERS.security}
               />
             </div>
           )}
