@@ -4,6 +4,7 @@ import LoadingState from './components/LoadingState.jsx'
 import ErrorState from './components/ErrorState.jsx'
 import ModeSelection from './components/ModeSelection.jsx'
 import ModeBadge from './components/ModeBadge.jsx'
+import InvestmentPanel from './components/InvestmentPanel.jsx'
 import TabbedReport from './components/TabbedReport.jsx'
 import RadarReport from './components/RadarReport.jsx'
 import DownloadButton from './components/DownloadButton.jsx'
@@ -149,8 +150,8 @@ export default function App() {
     setQuery('')
   }
 
-  const runAnalysis = useCallback(async (modeOverride) => {
-    const q = query.trim()
+  const runAnalysis = useCallback(async (modeOverride, queryOverride) => {
+    const q = (queryOverride || query).trim()
     const mode = modeOverride || activeAnalysisMode
     if (!q || !mode || loading) return
 
@@ -256,12 +257,29 @@ export default function App() {
           <div style={S.modeBar}>
             <ModeBadge modeId={activeAnalysisMode} onChange={handleChangeMode} />
             {report && (
-              <button style={S.btn} onClick={handleNewSearch}>+ New Search</button>
+              <button style={S.btn} onClick={handleNewSearch}>
+                {activeAnalysisMode === 'investment' ? '+ New Scan' : '+ New Search'}
+              </button>
             )}
           </div>
 
-          {/* Search input (hidden until mode is selected) */}
-          {!loading && (
+          {/* Investment mode: dual-panel (radar + ticker), no freeform search */}
+          {!loading && activeAnalysisMode === 'investment' && !report && (
+            <InvestmentPanel
+              loading={loading}
+              onRunRadar={(radarQuery) => {
+                setQuery(radarQuery)
+                runAnalysis(activeAnalysisMode, radarQuery)
+              }}
+              onAnalyzeTicker={(tickerQuery) => {
+                setQuery(tickerQuery)
+                runAnalysis(activeAnalysisMode, tickerQuery)
+              }}
+            />
+          )}
+
+          {/* Security / Traveler: standard search bar */}
+          {!loading && activeAnalysisMode !== 'investment' && (
             <div style={{ marginBottom: '24px' }}>
               <div style={{
                 fontSize: '12px',
@@ -269,7 +287,7 @@ export default function App() {
                 marginBottom: '6px',
                 fontFamily: 'var(--font-mono)',
                 letterSpacing: '0.06em',
-              }}>{activeAnalysisMode === 'investment' ? 'ENTER TICKER OR INVESTMENT QUESTION' : 'WHAT DO YOU WANT FLUX ALPHA TO ANALYZE?'}</div>
+              }}>WHAT DO YOU WANT FLUX ALPHA TO ANALYZE?</div>
               <SearchBar
                 value={query}
                 onChange={setQuery}
