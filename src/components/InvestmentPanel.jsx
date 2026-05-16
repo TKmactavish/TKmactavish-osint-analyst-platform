@@ -51,13 +51,13 @@ export default function InvestmentPanel({ onRunRadar, onAnalyzeTicker, loading }
       }}>
         <div>
           <div style={{ fontSize: '11px', fontWeight: 700, color: accent, fontFamily: 'var(--font-mono)', letterSpacing: '0.12em', marginBottom: '4px' }}>
-            HIDDEN NEWS RADAR
+            7-DAY SIGNAL RADAR
           </div>
           <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>
             Find Bloomberg news before Bloomberg covers it.
           </div>
           <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.6 }}>
-            Scans for strong, real signals — major partnerships, revenue inflections, contract wins — that exist in public sources but haven't been amplified by mainstream media yet. Any size $500M–$30B. Buy the gap, hold while FOMO builds, sell the peak.
+            Sweeps the last 7 days for strong signals — major partnerships, earnings surprises, contract wins — that are real and confirmed but not yet on Bloomberg/CNBC. $500M–$30B. Buy before FOMO, sell the peak.
           </div>
         </div>
 
@@ -130,7 +130,7 @@ export default function InvestmentPanel({ onRunRadar, onAnalyzeTicker, loading }
           fontFamily: 'var(--font-sans)',
           transition: 'background 0.2s',
         }}>
-          {loading ? 'SCANNING...' : "SCAN FOR HIDDEN NEWS →"}
+          {loading ? 'SCANNING...' : "SWEEP LAST 7 DAYS →"}
         </button>
       </div>
 

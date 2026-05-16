@@ -29,29 +29,33 @@ function modeSystem(mode, isRadar) {
   const monthName = new Date(today).toLocaleString('en-US', { month: 'long' });
 
   if (mode === 'investment' && isRadar) {
-    return `You are a real-time OSINT sweep engine. Today is ${today}. Run exactly 3 web_search calls targeting news from the LAST 30 DAYS ONLY (${monthName} ${year} or late ${parseInt(month) === 1 ? parseInt(year) - 1 : year}). Return ALL findings combined as one JSON object.
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const cutoffDate   = sevenDaysAgo.toISOString().slice(0, 10);
+    const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-SEARCH 1 — Strong recent catalyst news for mid/large companies not yet mainstream:
-Search: stock partnership contract revenue surprise announced "${monthName} ${year}" OR "April ${year}" AI defense space semiconductor biotech site:prnewswire.com OR site:businesswire.com OR site:globenewswire.com
+    return `You are a real-time OSINT sweep engine. Today is ${today}. The buy window closes fast — run exactly 3 web_search calls targeting the LAST 7 DAYS ONLY. Return ALL findings combined as one JSON object.
 
-SEARCH 2 — Recent earnings surprises, contract wins, or partnership announcements:
-Search: stock NYSE NASDAQ revenue surge OR contract win OR partnership announced "${monthName} ${year}" not yet mainstream analyst initiation
+SEARCH 1 — Announcements from the last 3 days (freshest signals):
+Search: stock partnership OR acquisition OR contract OR earnings announced "${monthName} ${year}" last 3 days NYSE NASDAQ site:prnewswire.com OR site:businesswire.com OR site:globenewswire.com
 
-SEARCH 3 — Hidden signal plays: companies in the $500M-$30B range with strong recent news:
-Search: "$500 million" OR "$1 billion" OR "$5 billion" market cap stock partnership OR contract OR revenue "${monthName} ${year}" undercovered signal
+SEARCH 2 — Recent 8-K filings and insider buying clusters this week:
+Search: 8-K filing partnership OR agreement OR acquisition "${monthName} ${year}" this week NYSE NASDAQ stock AND insider buying OR Form 4 cluster
+
+SEARCH 3 — Pre-announcement signals: conference speaking slots, upcoming catalysts:
+Search: stock conference presentation "${monthName} ${year}" upcoming catalyst AI defense semiconductor biotech space undiscovered analyst initiation
 
 STRICT RULES:
-- Discard any result dated before ${year}-${String(parseInt(month) - 1).padStart(2, '0')}-01. Only keep results from the last 30 days.
-- Only include findings that mention a specific company name with a strong, concrete signal (not vague roadmaps or generic outlooks).
-- Strong signals: revenue surges, named major partnerships, government contract awards, technology breakthroughs, earnings beats.
-- Weak signals to exclude: "strategic roadmap", "platform integration" without contracts, "exploring opportunities".
-- Return ONLY valid JSON. No markdown. No text outside JSON.
+- Discard any result dated before ${cutoffDate}. Last 7 days ONLY.
+- Strong signals only: named partnerships, acquisitions, earnings beats, government contract awards, insider buying clusters.
+- Exclude vague signals: "strategic roadmap", "exploring", "may announce", generic outlooks.
+- Only include findings with a specific company name.
+- Return ONLY valid JSON. No markdown.
 - Each snippet: 1 short sentence (max 160 chars).
 
 Schema:
 {"findings":[{"title":"...","url":"...","domain":"...","date":"YYYY-MM-DD|null","snippet":"<160 char","language":"EN"}]}
 
-Return up to 9 findings total. Always close all brackets.`;
+Return up to 9 findings. Always close all brackets.`;
   }
 
   const priority = MODE_PRIORITY[mode] || MODE_PRIORITY.security;

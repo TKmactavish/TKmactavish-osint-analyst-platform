@@ -26,7 +26,7 @@ function buildRadarAnalysisQuery(sectors) {
     : 'AI, semiconductors, defense, space, biotech, robotics, Edge AI';
 
   const today  = new Date().toISOString().slice(0, 10);
-  const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
   return `RADAR SCAN COMMAND — output RADAR SCAN schema only.
 
@@ -34,29 +34,34 @@ Today: ${today}. Sectors: ${sectorStr}.
 
 THE STRATEGY: Find news that is strong enough to eventually make Bloomberg/CNBC — but identify it BEFORE Bloomberg/CNBC covers it. The user buys the information gap, holds while FOMO builds, sells at the peak.
 
-STEP 1 — DATE FILTER: Discard every finding dated before ${cutoff}. Only work with findings from the last 30 days. If nothing remains after filtering, set candidates to [] and explain honestly in scanSummary.
+THE GOAL: Find the signal before the crowd does. The user buys, holds while FOMO builds, sells at the peak.
 
-STEP 2 — SIGNAL STRENGTH TEST: For each company in the findings, ask: "If Bloomberg published this tomorrow as a headline, would the stock move 10-40%?" Only include companies where the answer is yes. Weak signals (vague roadmaps, "exploring opportunities", generic outlooks) are automatically excluded.
+STEP 1 — DATE FILTER: Hard cutoff ${cutoff}. Discard every finding older than 7 days. If nothing remains, set candidates to [] and write "No fresh signals in last 7 days" in scanSummary. Do not pad with older news.
 
-STEP 3 — IDENTIFY CANDIDATES from the recent, strong-signal findings only. Do NOT use training knowledge — it is many months old and already priced in.
+STEP 2 — SIGNAL STRENGTH TEST: For each company in the fresh findings, ask:
+"Would Bloomberg run this as a headline and move the stock 10-40%?"
+If yes AND it has not yet appeared on Bloomberg/CNBC/WSJ front page → that is the play.
+If no → exclude it.
 
-Strong signals that qualify:
-- Named major partnership or contract with a known company (NVIDIA, AWS, SpaceX, DOD, major pharma, etc.)
-- Revenue inflection (+50% or more YoY confirmed in earnings)
-- Government contract award with a specific dollar value
-- Technology milestone or approval (FDA, regulatory) that de-risks the commercial story
-- Short squeeze setup: high short interest + strong incoming catalyst
+STEP 3 — TIMING ASSESSMENT: For each candidate, assess where it is in the discovery cycle:
+- JUST BROKE (0-2 days old): Strongest edge. Crowd has not reacted yet.
+- EARLY (3-5 days old): Still early, some movement may have started.
+- FADING (6-7 days old): Flag this — the window may be closing.
 
-Weak signals that do NOT qualify:
-- "Strategic roadmap" or "platform integration" with no contract or revenue
-- NDA submissions with 10-12 month timelines (too far away)
-- Vague "discussions" or "exploring partnerships" language
+STEP 4 — RETURN CANDIDATES from the fresh findings only. No training knowledge.
 
-Target profile:
-- NYSE or NASDAQ listed only (not OTC, not pink sheets)
-- Market cap $500M to $30B — liquid enough to trade, small enough to move
-- Not yet front-page on Bloomberg, WSJ, or CNBC (that means the crowd already knows)
-- Cite the exact finding domain + date for each candidate's signal`;
+Strong signals:
+- Named partnership/acquisition with a known company (NVIDIA, AWS, SpaceX, DOD)
+- Earnings beat + raised guidance (revenue inflection, not just a beat)
+- Government contract award with specific dollar value announced this week
+- Insider buying cluster: 2+ executives buying open-market in the last 7 days
+- Upcoming catalyst confirmed: conference slot, FDA date, contract decision known
+
+Weak signals (exclude):
+- "Strategic roadmap", "exploring", "may announce", vague integration language
+- Any news older than 7 days
+
+Target: NYSE/NASDAQ, $500M–$30B market cap. Cite source domain + date for every candidate.`;
 }
 
 export async function collectAnalysis(query, mode, onStage) {
