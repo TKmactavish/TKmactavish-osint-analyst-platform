@@ -23,7 +23,32 @@ const MODE_PRIORITY = {
   traveler:   `Prioritize: official travel advisories (US State Dept, UK FCDO, AU Smartraveller), local police bulletins, tourist-relevant safety, transport status, areas to avoid, embassy notices, recent visitor incidents.`,
 };
 
-function modeSystem(mode) {
+function modeSystem(mode, isRadar) {
+  if (mode === 'investment' && isRadar) {
+    return `You are a real-time OSINT sweep engine for a stock intelligence platform. Run exactly 3 web_search calls to find CURRENT (2025-2026) small-cap stock signals. Each search targets a different angle. Return ALL findings combined as one JSON object.
+
+SEARCH 1 — Recent SEC 8-K partnership filings from small companies:
+Search for: "8-K partnership agreement" small cap AI OR semiconductor OR defense OR space 2025 2026 site:sec.gov OR site:businesswire.com OR site:prnewswire.com
+
+SEARCH 2 — Recent press releases from micro/small-cap companies announcing deals:
+Search for: micro cap OR small cap stock partnership announced 2025 2026 AI OR Cerebras OR NVIDIA OR SpaceX OR defense NYSE NASDAQ press release
+
+SEARCH 3 — Supply chain and infrastructure hidden plays:
+Search for: small company critical supplier AI photonics OR Edge AI OR space manufacturing OR defense AI 2025 2026 undiscovered undervalued NYSE NASDAQ
+
+Rules:
+- Run all 3 searches. Combine all results.
+- Only include findings with a specific company name and ticker or company name that could be a stock.
+- Prefer results from 2025-2026. Exclude results older than 12 months if possible.
+- Return ONLY valid JSON. No markdown. No commentary outside JSON.
+- Each snippet: 1 short sentence (max 160 chars).
+
+Schema (strict):
+{"findings":[{"title":"...","url":"...","domain":"...","date":"YYYY-MM-DD|null","snippet":"<160 char","language":"EN"}]}
+
+Return up to 9 findings (3 per search). Always close all brackets.`;
+  }
+
   const priority = MODE_PRIORITY[mode] || MODE_PRIORITY.security;
   return `You are a research assistant for the Athena OSINT platform. Your only job is to use the web_search tool to find current public information about the user's query, then return the findings as a compact JSON object.
 
@@ -35,22 +60,16 @@ SEARCH STRATEGY — run up to 3 web_search calls:
 1. ALWAYS: a general search for the query as written.
 
 2. ENTITY / MODE-SPECIFIC follow-up:
-   - If the query names a COMPANY/ORGANIZATION (Co., Ltd., Inc., Group, Corp, or recognizable business name):
-       Search: "<query> CEO founder leadership headquarters"
-   - If the query names a PERSON:
-       Search: "<query> biography role employer nationality"
-   - If the query is an INCIDENT (event, attack, accident, protest, shooting):
-       Search: "<query> casualties perpetrator official response"
-   - If the query is a LOCATION/region/city/country:
-       Search: "<query> security situation latest travel advisory"
+   - If the query names a COMPANY/ORGANIZATION: Search "<query> CEO founder leadership headquarters"
+   - If the query names a PERSON: Search "<query> biography role employer nationality"
+   - If the query is an INCIDENT: Search "<query> casualties perpetrator official response"
+   - If the query is a LOCATION: Search "<query> security situation latest travel advisory"
 
-3. CORROBORATION / LOCAL-LANGUAGE search:
-   - If the query references a non-English region, search in the local language (Thai, Khmer, Burmese, Arabic, Chinese, Spanish, etc.).
-   - Otherwise, search the query with the most recent year mentioned (or "latest 2026") to surface fresh reporting.
+3. CORROBORATION search: search the query with "latest 2026" to surface fresh reporting.
 
 Rules:
 - Run up to 3 web_search calls. Be efficient.
-- Prefer authoritative sources: government, mainstream news (Reuters/AP/BBC + regional outlets), NGOs, academic, official sites.
+- Prefer authoritative sources: government, mainstream news, NGOs, official sites.
 - Return ONLY valid JSON. No markdown. No commentary outside JSON.
 - Each snippet: 1 short sentence (max 160 chars).
 - Mark each finding's language code.
@@ -105,16 +124,21 @@ export default async function handler(req) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return jsonRes({ error: 'ANTHROPIC_API_KEY not set' }, 500);
 
-  let query, mode;
+  let query, mode, isRadar;
   try {
     const body = await req.json();
-    query = (body.query || '').trim();
-    mode  = String(body.mode || 'security').toLowerCase();
+    query   = (body.query || '').trim();
+    mode    = String(body.mode || 'security').toLowerCase();
+    isRadar = Boolean(body.isRadar);
   } catch {
     return jsonRes({ error: 'Invalid JSON body' }, 400);
   }
   if (!query || query.length < 2) return jsonRes({ error: 'Query too short' }, 400);
   if (query.length > 500) return jsonRes({ error: 'Query too long' }, 400);
+
+  const userMsg = isRadar
+    ? `Run all 3 searches now to sweep for current small-cap signals. Context: ${query}. Return the combined JSON findings list.`
+    : `Find current public information about: "${query}". Apply the SEARCH STRATEGY for active mode "${mode}". Return the JSON findings list.`;
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -127,12 +151,12 @@ export default async function handler(req) {
       body: JSON.stringify({
         model:      MODEL,
         max_tokens: MAX_TOKENS,
-        system:     modeSystem(mode),
+        system:     modeSystem(mode, isRadar),
         tools: [
           { type: 'web_search_20250305', name: 'web_search', max_uses: 3 },
         ],
         messages: [
-          { role: 'user', content: `Find current public information about: "${query}". Apply the SEARCH STRATEGY for active mode "${mode}". Return the JSON findings list.` },
+          { role: 'user', content: userMsg },
         ],
       }),
       signal: AbortSignal.timeout(22000),

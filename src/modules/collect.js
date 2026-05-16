@@ -21,16 +21,6 @@ function parseRadarSectors(query) {
   return payload.split(',').map(s => s.trim()).filter(Boolean);
 }
 
-// 2 search angles — sequential, not parallel, to stay within rate limits
-function buildRadarSearchTerms(sectors) {
-  const s = sectors.length
-    ? sectors.join(' ')
-    : 'AI semiconductor photonics defense space biotech robotics';
-  return [
-    `small cap micro cap ${s} partnership supply chain announcement undiscovered 2025 NYSE NASDAQ`,
-    `micro cap ${s} critical supplier substrate material component hidden gem 2025 stock`,
-  ];
-}
 
 // Full structured analysis prompt — lives here, not in the UI
 function buildRadarAnalysisQuery(sectors) {
@@ -59,8 +49,9 @@ export async function collectAnalysis(query, mode, onStage) {
   if (!mode) throw new Error('Analysis mode is required');
 
   // ── RADAR FLOW ──────────────────────────────────────────────────────────────
-  // One real-time web search — model training data is months old and useless
-  // for finding current undiscovered signals. One search stays under rate limit.
+  // Real-time sweep: search.mjs runs 3 targeted web searches in one API call
+  // (SEC 8-K filings, press releases, supply chain plays) then analysis is
+  // grounded in those live results only — no stale training data.
   if (query.startsWith('RADAR:') && mode === 'investment') {
     const sectors = parseRadarSectors(query);
     const sectorStr = sectors.length ? sectors.join(' ') : 'AI semiconductor defense space biotech';
@@ -68,10 +59,13 @@ export async function collectAnalysis(query, mode, onStage) {
     onStage?.('search');
     let findings = [];
     try {
-      const searchQuery = `small cap micro cap stock ${sectorStr} partnership supply chain announcement undiscovered 2025 2026`;
-      const res = await postJson('/api/search', { query: searchQuery, mode });
+      const res = await postJson('/api/search', {
+        query: `sectors: ${sectorStr}`,
+        mode,
+        isRadar: true,
+      });
       findings = Array.isArray(res.findings) ? res.findings : [];
-    } catch { /* search failure is non-fatal — model will return no candidates */ }
+    } catch { /* non-fatal — model will return no candidates if no findings */ }
 
     onStage?.('analyze');
     const analysisQuery = buildRadarAnalysisQuery(sectors);
