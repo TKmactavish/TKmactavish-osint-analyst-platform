@@ -54,10 +54,10 @@ export default function InvestmentPanel({ onRunRadar, onAnalyzeTicker, loading }
             HIDDEN NEWS RADAR
           </div>
           <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>
-            What does the crowd not know yet?
+            Find Bloomberg news before Bloomberg covers it.
           </div>
           <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.6 }}>
-            Information gaps only survive where Wall Street analyst coverage is thin. Targets stocks with 0-3 analysts — where a real partnership or supply chain role can sit hidden in public filings for days before retail discovers it.
+            Scans for strong, real signals — major partnerships, revenue inflections, contract wins — that exist in public sources but haven't been amplified by mainstream media yet. Any size $500M–$30B. Buy the gap, hold while FOMO builds, sell the peak.
           </div>
         </div>
 
@@ -99,9 +99,9 @@ export default function InvestmentPanel({ onRunRadar, onAnalyzeTicker, loading }
         }}>
           <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.08em', marginBottom: '2px' }}>WHAT IT HUNTS</div>
           {[
-            { color: '#22d3ee', label: 'Hidden Partnership', desc: 'Confirmed deal with NVDA/SpaceX/AWS etc. — not yet in Bloomberg/CNBC', example: 'DGXX + Cerebras' },
-            { color: '#d4a843', label: 'Supply Chain Role',  desc: 'Key component or enabler for a major trend, undiscovered by retail', example: 'OSS → Edge AI' },
-            { color: '#a78bfa', label: 'Imminent Signal',   desc: '8-K filings, conference schedule, or executive statements point to news coming', example: 'RDW + RKLB / SpaceX' },
+            { color: '#22d3ee', label: 'Major Partnership',    desc: 'Named deal with NVIDIA, AWS, SpaceX, DOD — real, confirmed, not yet on Bloomberg', example: 'DGXX + Cerebras' },
+            { color: '#d4a843', label: 'Revenue Inflection',  desc: 'Earnings surprise +50%+ YoY — moves valuation before analysts reprice it', example: 'RCAT +2500% QoQ' },
+            { color: '#f97316', label: 'Contract / Approval', desc: 'Government award or regulatory milestone with specific dollar value', example: 'PL $260M Germany deal' },
           ].map(item => (
             <div key={item.label} style={{ display: 'flex', flexDirection: 'column', gap: '1px', paddingLeft: '8px', borderLeft: `2px solid ${item.color}55` }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -112,7 +112,7 @@ export default function InvestmentPanel({ onRunRadar, onAnalyzeTicker, loading }
             </div>
           ))}
           <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px', paddingTop: '6px', borderTop: '1px solid var(--border)', fontStyle: 'italic' }}>
-            Target: 0–3 analyst coverage, under $2B market cap. AVGO/SAIC/MSTR have 15+ analysts — nothing stays hidden there.
+            $500M–$30B market cap. Signal must be strong enough to eventually make Bloomberg — but you buy it first.
           </div>
         </div>
 

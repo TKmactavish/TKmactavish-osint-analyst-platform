@@ -32,20 +32,31 @@ function buildRadarAnalysisQuery(sectors) {
 
 Today: ${today}. Sectors: ${sectorStr}.
 
-STEP 1 — DATE FILTER: Discard every finding dated before ${cutoff}. Only work with findings from the last 30 days. If no findings remain, set candidates to [] and write "No current signals found in last 30 days — try again tomorrow" in scanSummary.
+THE STRATEGY: Find news that is strong enough to eventually make Bloomberg/CNBC — but identify it BEFORE Bloomberg/CNBC covers it. The user buys the information gap, holds while FOMO builds, sells at the peak.
 
-STEP 2 — IDENTIFY CANDIDATES from the remaining recent findings only. Do NOT use training knowledge — it is many months old and already priced in by the market. Only return companies explicitly named in the recent findings.
+STEP 1 — DATE FILTER: Discard every finding dated before ${cutoff}. Only work with findings from the last 30 days. If nothing remains after filtering, set candidates to [] and explain honestly in scanSummary.
 
-What to look for:
-1. HIDDEN PARTNERSHIP — Company just announced a deal with a major AI/Space/Defense/Cloud player. Signal is real and current but not yet front-page on Bloomberg/CNBC.
-2. SUPPLY CHAIN POSITION — Company is a confirmed key supplier or component provider for a hot sector. Documented in recent findings, under-covered by financial media.
-3. CORPORATE EVENT — Spin-off, restructuring, or rerating catalyst confirmed in recent findings.
+STEP 2 — SIGNAL STRENGTH TEST: For each company in the findings, ask: "If Bloomberg published this tomorrow as a headline, would the stock move 10-40%?" Only include companies where the answer is yes. Weak signals (vague roadmaps, "exploring opportunities", generic outlooks) are automatically excluded.
 
-Requirements per candidate:
+STEP 3 — IDENTIFY CANDIDATES from the recent, strong-signal findings only. Do NOT use training knowledge — it is many months old and already priced in.
+
+Strong signals that qualify:
+- Named major partnership or contract with a known company (NVIDIA, AWS, SpaceX, DOD, major pharma, etc.)
+- Revenue inflection (+50% or more YoY confirmed in earnings)
+- Government contract award with a specific dollar value
+- Technology milestone or approval (FDA, regulatory) that de-risks the commercial story
+- Short squeeze setup: high short interest + strong incoming catalyst
+
+Weak signals that do NOT qualify:
+- "Strategic roadmap" or "platform integration" with no contract or revenue
+- NDA submissions with 10-12 month timelines (too far away)
+- Vague "discussions" or "exploring partnerships" language
+
+Target profile:
 - NYSE or NASDAQ listed only (not OTC, not pink sheets)
-- Under $1B market cap preferred
-- Cite the exact finding domain + date that confirms the signal
-- If you cannot cite a recent finding for a candidate, do not include it`;
+- Market cap $500M to $30B — liquid enough to trade, small enough to move
+- Not yet front-page on Bloomberg, WSJ, or CNBC (that means the crowd already knows)
+- Cite the exact finding domain + date for each candidate's signal`;
 }
 
 export async function collectAnalysis(query, mode, onStage) {

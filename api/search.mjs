@@ -31,18 +31,20 @@ function modeSystem(mode, isRadar) {
   if (mode === 'investment' && isRadar) {
     return `You are a real-time OSINT sweep engine. Today is ${today}. Run exactly 3 web_search calls targeting news from the LAST 30 DAYS ONLY (${monthName} ${year} or late ${parseInt(month) === 1 ? parseInt(year) - 1 : year}). Return ALL findings combined as one JSON object.
 
-SEARCH 1 — This week's small-cap partnership press releases:
-Search: small cap micro cap stock partnership deal announced "${monthName} ${year}" OR "April ${year}" site:prnewswire.com OR site:businesswire.com OR site:globenewswire.com
+SEARCH 1 — Strong recent catalyst news for mid/large companies not yet mainstream:
+Search: stock partnership contract revenue surprise announced "${monthName} ${year}" OR "April ${year}" AI defense space semiconductor biotech site:prnewswire.com OR site:businesswire.com OR site:globenewswire.com
 
-SEARCH 2 — Recent 8-K filings and stock news from this month:
-Search: micro cap small cap 8-K partnership agreement AI defense space semiconductor "${monthName} ${year}" NYSE NASDAQ stock news
+SEARCH 2 — Recent earnings surprises, contract wins, or partnership announcements:
+Search: stock NYSE NASDAQ revenue surge OR contract win OR partnership announced "${monthName} ${year}" not yet mainstream analyst initiation
 
-SEARCH 3 — Current hidden supply chain plays getting attention now:
-Search: small cap stock AI supply chain partnership undiscovered "${monthName} ${year}" OR "May ${year}" edge AI defense drone space contract
+SEARCH 3 — Hidden signal plays: companies in the $500M-$30B range with strong recent news:
+Search: "$500 million" OR "$1 billion" OR "$5 billion" market cap stock partnership OR contract OR revenue "${monthName} ${year}" undercovered signal
 
 STRICT RULES:
 - Discard any result dated before ${year}-${String(parseInt(month) - 1).padStart(2, '0')}-01. Only keep results from the last 30 days.
-- Only include findings that mention a specific company name (ideally with a ticker symbol).
+- Only include findings that mention a specific company name with a strong, concrete signal (not vague roadmaps or generic outlooks).
+- Strong signals: revenue surges, named major partnerships, government contract awards, technology breakthroughs, earnings beats.
+- Weak signals to exclude: "strategic roadmap", "platform integration" without contracts, "exploring opportunities".
 - Return ONLY valid JSON. No markdown. No text outside JSON.
 - Each snippet: 1 short sentence (max 160 chars).
 
