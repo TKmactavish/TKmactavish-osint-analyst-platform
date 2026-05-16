@@ -103,33 +103,26 @@ Return EXACTLY this JSON schema (top-to-bottom field order). ALL text fields FIR
 function investmentPrompt(query, findings) {
   return `Query: "${query}"
 Active mode: Investment Intelligence.
-Source priority: SEC EDGAR 8-K filings (material contracts, FDA letters, regulatory decisions), Form 4 insider open-market purchases, USASpending.gov government contract awards, ClinicalTrials.gov, company press releases, mainstream financial media coverage gaps, analyst coverage, short interest data.
+
+QUERY TYPE DETECTION — classify before writing:
+- TYPE A (Single Ticker): query contains a stock ticker symbol (e.g. $ASTS, PLTR, RKLB) or asks about one specific company → use TICKER ANALYSIS schema
+- TYPE B (Radar Scan): query asks for stock candidates, upcoming opportunities, stocks to watch, rerating setups, "radar", "what stocks", "which stocks", "next week", "scan" → use RADAR SCAN schema
+
+Source priority: SEC EDGAR 8-K filings, Form 4 insider open-market purchases, USASpending.gov government contract awards, FDA.gov PDUFA calendar, ClinicalTrials.gov, SAM.gov solicitations, company press releases, financial media coverage gaps, FINRA short interest data.
 ${findingsBlock(findings)}
-${brevityLine()}
+BREVITY: 1-2 sentences per text field. Arrays capped at 5 items. Radar candidates capped at 4. Write critical fields first.
 
-You are an OSINT-powered investment analyst helping detect early public catalysts in U.S.-listed stocks before they are widely priced in. Your job is to find information asymmetry — public signals that exist but are not yet reflected in the stock price.
+RED FLAG SIGNALS (check for all queries):
+- Equity offerings, ATM programs, warrant exercises, shelf registrations
+- Reverse split history (strong negative for small caps)
+- Insider selling (Form 4) vs insider buying — distinguish clearly
+- No revenue + high cash burn rate
+- Paid promotion PR patterns
 
-CATALYST RATING DEFINITIONS:
-- Strong: Material verifiable event, clear positive revenue/valuation impact, low mainstream awareness — high conviction signal.
-- Moderate: Positive signal with some uncertainty or partial market awareness — worth tracking.
-- Weak: Minor or ambiguous signal, limited near-term price impact expected.
-- Red Flag: Negative signal — dilution risk, reverse split, paid promotion pattern, insider selling, balance sheet deterioration.
+MARKET AWARENESS: label as Unnoticed / Emerging / Widely Known based on mainstream financial media and analyst coverage.
 
-RED FLAG DETECTION — always scan for:
-- Recent equity offerings, ATM (at-the-market) programs, warrant exercises, or shelf registrations
-- Any reverse split history (strong negative signal for small caps)
-- PR distributed through paid promotion channels or patterns (repeated low-quality press releases)
-- No revenue / negative operating cash flow + high cash burn rate
-- Insider selling via Form 4 (distinguish clearly from insider buying)
-- High short interest (note context: can also signal squeeze if combined with strong catalyst)
-
-MARKET AWARENESS GAP — assess whether this is already priced in:
-- Has this catalyst appeared in Bloomberg, Reuters, WSJ, CNBC, or major financial outlets?
-- Have analysts issued upgrades or initiated coverage since this event?
-- Has the stock price already moved significantly on this information?
-- Label awareness as: Unnoticed / Emerging / Widely Known
-
-Return EXACTLY this JSON schema (top-to-bottom field order). ALL text fields FIRST, ALL arrays LAST. Use empty string "" for unknown text, empty array [] for unknown arrays:
+━━━ TYPE A — TICKER ANALYSIS SCHEMA ━━━
+Return this exact JSON when query is about a specific ticker or company:
 
 {
   "reportType": "investment",
@@ -138,19 +131,51 @@ Return EXACTLY this JSON schema (top-to-bottom field order). ALL text fields FIR
   "reportTitle": "Investment Intelligence Report",
   "catalystRating": "Strong|Moderate|Weak|Red Flag",
   "confidenceLevel": "HIGH|MEDIUM|LOW",
-  "catalystSummary": "WRITE THIS — name the specific catalyst, filing, contract, or development explicitly. Date it. Never generic.",
-  "whyItMatters": "WRITE THIS — why this specific event could reprice the stock. Name the revenue impact, narrative shift, or institutional attention trigger. Be specific.",
-  "marketAwarenessGap": "WRITE THIS — awareness level: Unnoticed / Emerging / Widely Known. Explain what mainstream outlets have or have not covered.",
-  "insiderActivity": "Form 4 open-market purchases in last 90 days — name, role, shares bought, date, dollar value. State clearly if none found.",
-  "governmentContracts": "USASpending.gov awards in last 90 days — agency, contract value, date, description. State clearly if none found.",
-  "financialHealth": "Cash position, burn rate, dilution history, debt. Flag anything concerning.",
-  "recommendedAction": "WRITE THIS — Watch | Research Further | High Conviction | Avoid — followed by one specific rationale sentence.",
-  "timeWindow": "How time-sensitive — days, weeks, months, or specific upcoming catalyst date if known.",
+  "catalystSummary": "WRITE THIS — name the specific catalyst, filing, or development explicitly with date. Never generic.",
+  "whyItMatters": "WRITE THIS — specific revenue impact, narrative shift, or institutional attention trigger.",
+  "marketAwarenessGap": "WRITE THIS — Unnoticed/Emerging/Widely Known + what mainstream outlets have or have not covered.",
+  "insiderActivity": "Form 4 open-market purchases last 90 days — name, role, shares, date, value. State if none found.",
+  "governmentContracts": "USASpending.gov awards last 90 days — agency, value, date. State if none found.",
+  "financialHealth": "Cash position, burn rate, dilution history, debt. Flag concerns.",
+  "recommendedAction": "WRITE THIS — Watch | Research Further | High Conviction | Avoid + one specific rationale sentence.",
+  "timeWindow": "Days, weeks, months, or specific upcoming event date.",
   "confidenceJustification": "One sentence naming the dominant evidence basis.",
-  "keyFindings": ["3-5 specific findings — each must name a source, date, or specific data point. No vague statements."],
-  "redFlags": ["specific red flags detected — dilution events, reverse splits, insider selling, paid PR, weak balance sheet. Empty array if none found."],
-  "riskFactors": ["3-5 investment risks — competition, regulatory, execution, macro, liquidity"],
-  "sourceAssessment": [{ "title": "...", "url": "...", "domain": "...", "date": "YYYY-MM-DD|null", "type": "official|established media|sec-filing|government-contract|corporate|social media|unverified", "language": "EN", "reliability": "HIGH|MEDIUM|LOW|UNVERIFIED", "note": "one-line relevance" }]
+  "keyFindings": ["3-5 findings — each must name a source, date, or specific data point"],
+  "redFlags": ["specific red flags detected. Empty array if none."],
+  "riskFactors": ["3-5 investment risks"],
+  "sourceAssessment": [{ "title": "...", "url": "...", "domain": "...", "date": "YYYY-MM-DD|null", "type": "official|established media|sec-filing|government-contract|corporate|unverified", "language": "EN", "reliability": "HIGH|MEDIUM|LOW|UNVERIFIED", "note": "one-line relevance" }]
+}
+
+━━━ TYPE B — RADAR SCAN SCHEMA ━━━
+Return this exact JSON when query asks for candidates, upcoming rerates, or a market scan:
+
+{
+  "reportType": "radar",
+  "mode": "investment",
+  "query": "${query}",
+  "reportTitle": "Stock Catalyst Radar",
+  "scanSummary": "2-3 sentences: what was scanned, sector focus, key finding from this radar run.",
+  "candidates": [
+    {
+      "ticker": "XXXX",
+      "company": "Full Company Name",
+      "sector": "Biotech|Defense|AI|Energy|Semiconductor|Other",
+      "catalystType": "FDA PDUFA|Government Contract|Clinical Trial Readout|Earnings Catalyst|Insider Buying Cluster|Short Squeeze Setup|Regulatory Decision|Partnership Announcement",
+      "catalystSummary": "Specific upcoming catalyst — what it is, source, known date if available.",
+      "catalystDate": "YYYY-MM-DD or approximate (e.g. 'Expected Q2 2025') or 'Unknown'",
+      "whyItMightRerate": "Why this specific event could move the stock price. Be specific.",
+      "marketAwareness": "Unnoticed|Emerging|Widely Known",
+      "shortInterestNote": "Short interest % and squeeze potential, or 'Not elevated' if low",
+      "insiderActivityNote": "Recent Form 4 open-market buys or 'None found'",
+      "redFlags": "Key risk or concern. Empty string if none.",
+      "confidence": "High|Moderate|Low",
+      "timeWindow": "This week|1-2 weeks|2-4 weeks|1 month+"
+    }
+  ],
+  "watchList": ["TICKER — one-line reason to monitor"],
+  "avoidList": ["TICKER — specific reason to avoid"],
+  "confidenceJustification": "One sentence on evidence basis for this radar scan.",
+  "sourceAssessment": [{ "title": "...", "url": "...", "domain": "...", "date": "YYYY-MM-DD|null", "type": "official|established media|sec-filing|government-contract|corporate|unverified", "language": "EN", "reliability": "HIGH|MEDIUM|LOW|UNVERIFIED", "note": "one-line relevance" }]
 }`;
 }
 
@@ -312,12 +337,19 @@ export default async function handler(req, res) {
         result.modusOperandi = ['Insufficient information available to characterize methods at this time.'];
     }
     if (mode === 'investment') {
-      if (!result.catalystSummary)
-        result.catalystSummary = 'No specific catalyst identified from available open-source data. Insufficient public filings or announcements found for a definitive assessment.';
-      if (!result.recommendedAction)
-        result.recommendedAction = 'Watch — insufficient data for high-conviction assessment. Verify through SEC EDGAR directly and monitor for new 8-K filings.';
-      if (!result.marketAwarenessGap)
-        result.marketAwarenessGap = 'Market awareness could not be estimated from available data. Check recent price and volume action against any catalyst dates independently.';
+      if (result.reportType === 'radar') {
+        if (!Array.isArray(result.candidates) || !result.candidates.length)
+          result.candidates = [{ ticker: 'N/A', company: 'No candidates identified', sector: '', catalystType: '', catalystSummary: 'Insufficient open-source data found for this scan. Try narrowing the sector or specifying a timeframe.', catalystDate: '', whyItMightRerate: '', marketAwareness: 'Unknown', shortInterestNote: '', insiderActivityNote: '', redFlags: '', confidence: 'Low', timeWindow: 'Unknown' }];
+        if (!result.scanSummary)
+          result.scanSummary = 'Radar scan completed. Results are based on available open-source data and model knowledge. Verify all candidates independently before acting.';
+      } else {
+        if (!result.catalystSummary)
+          result.catalystSummary = 'No specific catalyst identified from available open-source data. Verify through SEC EDGAR directly.';
+        if (!result.recommendedAction)
+          result.recommendedAction = 'Watch — insufficient data for high-conviction assessment. Monitor for new 8-K filings and Form 4 insider activity.';
+        if (!result.marketAwarenessGap)
+          result.marketAwarenessGap = 'Market awareness could not be estimated. Check recent price and volume action against catalyst dates independently.';
+      }
     }
 
     return res.status(200).json(result);

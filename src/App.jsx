@@ -5,6 +5,7 @@ import ErrorState from './components/ErrorState.jsx'
 import ModeSelection from './components/ModeSelection.jsx'
 import ModeBadge from './components/ModeBadge.jsx'
 import TabbedReport from './components/TabbedReport.jsx'
+import RadarReport from './components/RadarReport.jsx'
 import DownloadButton from './components/DownloadButton.jsx'
 import { collectAnalysis } from './modules/collect.js'
 import { modeById } from './modules/modes.js'
@@ -120,7 +121,7 @@ export default function App() {
 
   const PLACEHOLDERS = {
     security:   'Example: protest near Bangkok, shooting in Pattaya, scam compound near border',
-    investment: 'Example: $ASTS catalysts, insider buying at $RKLB, government contracts for $PLTR',
+    investment: 'Example: $ASTS catalysts · insider buying at $RKLB · "radar scan small-cap defense AI stocks next week"',
     traveler:   'Example: is Bangkok safe right now, Pattaya area safety, visa scam at Jakarta airport',
   }
 
@@ -361,7 +362,10 @@ function ReportView({ report, activeMode }) {
         <DownloadButton report={report} />
       </div>
 
-      <TabbedReport report={report} mode={activeMode} accent={m.accent} />
+      {report.reportType === 'radar'
+        ? <RadarReport report={report} accent={m.accent} />
+        : <TabbedReport report={report} mode={activeMode} accent={m.accent} />
+      }
 
       {/* Disclaimer */}
       <div style={{

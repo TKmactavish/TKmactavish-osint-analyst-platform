@@ -10,7 +10,7 @@ const MODE_HUMAN = {
   investment: {
     label: 'Investment Intelligence',
     question: 'Is this stock worth investigating?',
-    examples: ['What catalysts does $ASTS have right now?', 'Any insider buying at $RKLB recently?', 'Government contracts for $PLTR this quarter?'],
+    examples: ['What catalysts does $ASTS have right now?', 'Radar scan: small-cap defense AI stocks next week', 'Government contracts for $PLTR this quarter?'],
   },
   traveler: {
     label: 'Traveler',
