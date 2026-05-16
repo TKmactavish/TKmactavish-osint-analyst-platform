@@ -168,7 +168,7 @@ RADAR HARD RULES — enforce before writing a single candidate:
       "ticker": "XXXX",
       "company": "Full Company Name",
       "sector": "Biotech|Defense|AI|Energy|Semiconductor|Other",
-      "catalystType": "FDA PDUFA|Government Contract|Clinical Trial Readout|Earnings Catalyst|Insider Buying Cluster|Short Squeeze Setup|Regulatory Decision|Partnership Announcement",
+      "catalystType": "Partnership Play|Tech Narrative|Short Squeeze Setup|FDA PDUFA|Government Contract|Clinical Trial Readout|Earnings Catalyst|Insider Buying Cluster|Regulatory Decision|Partnership Announcement",
       "catalystSummary": "Specific upcoming catalyst — what it is, source, known date if available.",
       "catalystDate": "YYYY-MM-DD or approximate (e.g. 'Expected Q2 2025') or 'Unknown'",
       "whyItMightRerate": "Why this specific event could move the stock price. Be specific.",
@@ -295,7 +295,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid JSON body' });
   }
   if (!query || query.length < 2)  return res.status(400).json({ error: 'Query must be at least 2 characters' });
-  if (query.length > 500)          return res.status(400).json({ error: 'Query too long (max 500 characters)' });
+  if (query.length > 2000)         return res.status(400).json({ error: 'Query too long (max 2000 characters)' });
 
   try {
     const userPrompt = buildPromptForMode(mode, query, findings);
