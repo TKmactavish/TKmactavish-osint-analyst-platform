@@ -374,7 +374,9 @@ function ReportView({ report, activeMode }) {
             {report.reportTitle || m.reportTitle}
           </div>
           <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text)' }}>
-            {report._query || report.query}
+            {report.reportType === 'radar'
+              ? 'Hidden News Radar Scan'
+              : (report._query || report.query)}
           </div>
         </div>
         <DownloadButton report={report} />

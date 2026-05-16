@@ -17,9 +17,10 @@ function jsonRes(data, status) {
 }
 
 const MODE_PRIORITY = {
-  security: `Prioritize: threat actors, suspects, criminal groups, official statements, police reports, incident history, escalation indicators, modus operandi, security patterns, local-language reporting. Search follow-ups should target leadership/identities/perpetrators by name when the query points to a person, group, or company.`,
-  business: `Prioritize: business impact, operational disruption, transport disruption, road closures, supply chain, staff/customer exposure, market impact, reputation risk, regulatory action, executive decision impact. Search follow-ups should target named operators, affected industries, and continuity impact.`,
-  traveler: `Prioritize: official travel advisories (US State Dept, UK FCDO, AU Smartraveller), local police bulletins, tourist-relevant safety, transport status, areas to avoid, embassy notices, recent visitor incidents.`,
+  security:   `Prioritize: threat actors, suspects, criminal groups, official statements, police reports, incident history, escalation indicators, modus operandi, security patterns, local-language reporting. Search follow-ups should target leadership/identities/perpetrators by name when the query points to a person, group, or company.`,
+  investment: `Prioritize: SEC 8-K filings, partnership announcements, supply chain roles, contract awards, company press releases, earnings calls, Form 4 insider filings. Focus on small/micro-cap companies (under $500M market cap). Search follow-ups should dig into specific company names, their partners, and any recent public announcements.`,
+  business:   `Prioritize: business impact, operational disruption, transport disruption, road closures, supply chain, staff/customer exposure, market impact, reputation risk, regulatory action, executive decision impact. Search follow-ups should target named operators, affected industries, and continuity impact.`,
+  traveler:   `Prioritize: official travel advisories (US State Dept, UK FCDO, AU Smartraveller), local police bulletins, tourist-relevant safety, transport status, areas to avoid, embassy notices, recent visitor incidents.`,
 };
 
 function modeSystem(mode) {

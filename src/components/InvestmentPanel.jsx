@@ -12,43 +12,7 @@ const THEMES = [
 ]
 
 function buildRadarQuery(themes) {
-  const themeClause = themes.length
-    ? `Focus the scan on sectors: ${themes.join(', ')}.`
-    : 'Scan broadly — AI infrastructure, Edge AI, space tech, defense tech, semiconductors, quantum, robotics, biotech.'
-
-  return `RADAR SCAN COMMAND — output RADAR SCAN schema only.
-
-Objective: Find 3 stocks where a real, confirmed signal (partnership, supply chain role, contract) exists in public sources — but the crowd has NOT discovered it yet because the company has almost no Wall Street analyst coverage. The information gap only survives where coverage is thin. Buy the gap, hold 2-5 days while awareness spreads to retail, sell at peak FOMO.
-
-REAL EXAMPLES OF EXACTLY WHAT TO FIND:
-- DGXX: tiny company, confirmed Cerebras partnership in public filings — zero analyst coverage meant it sat hidden for days before retail found it
-- RDW: small company, documented RKLB and SpaceX partnerships — no mainstream analyst coverage, gap lasted a week
-- OSS: micro-cap, confirmed key hardware role for Edge AI deployments — undiscovered because nobody was covering the stock
-
-${themeClause}
-
-THE CORE RULE — WHY THE GAP EXISTS:
-An information gap can ONLY survive where Wall Street analyst coverage is thin or absent.
-- 15+ analysts covering the stock → AVGO, SAIC, MSTR territory → nothing stays hidden, institutions price it in within hours → EXCLUDE
-- 0-3 analysts covering the stock → DGXX, RDW, OSS territory → gap can survive 3-7 days → THIS IS THE TARGET
-
-ANALYST COVERAGE IS THE PRIMARY FILTER:
-Target companies with fewer than 5 sell-side analysts. Strongly prefer 0-2 analysts.
-Do NOT return: any S&P 500 company, any company with market cap above $2B, any heavily covered defense prime, semiconductor giant, or established software company.
-
-SIGNAL TYPES TO SCAN:
-1. HIDDEN PARTNERSHIP — Confirmed deal (8-K, press release, customer reference page) with a major AI/Space/Defense/Cloud player — but because the company has no analyst coverage, no Wall Street report has flagged it yet. Examples of major partners: Cerebras, NVIDIA, SpaceX, RKLB, AWS, Azure, Lockheed, L3Harris.
-2. SUPPLY CHAIN / INFRASTRUCTURE ROLE — Confirmed as key component supplier or hardware enabler for a major emerging trend (Edge AI hardware, space manufacturing, defense AI) — documented on company website or in filings but retail hasn't discovered it yet due to zero coverage.
-3. IMMINENT SIGNAL — OSINT evidence (conference schedule, 8-K filing pattern, executive interviews, patent filings) strongly points to a major announcement in the next few days — stock has not moved yet.
-
-THE KEY TEST: Would Bloomberg covering this tomorrow cause a 20-100% move? AND does the company have fewer than 5 analysts? If both yes — that is the play.
-
-HARD RULES:
-1. FEWER THAN 5 ANALYSTS — This is non-negotiable. No AVGO, SAIC, MSTR, RTX, LMT, NVDA or any large/mid cap with heavy coverage. The information gap cannot exist there.
-2. REAL SIGNAL — Traceable to a specific public source (name the filing, press release, or conference). No speculation.
-3. AWARENESS — "Unnoticed" or "Emerging" only. If it is already on Bloomberg, CNBC, or Seeking Alpha front page — excluded.
-4. MARKET CAP — Strongly prefer under $500M. Maximum $2B. Information gaps do not survive at large-cap scale.
-5. RANK BY EDGE — How thin is the coverage? How specific is the signal? How imminent is discovery by the crowd? Best edge first.`
+  return themes.length ? `RADAR:${themes.join(',')}` : 'RADAR:ALL';
 }
 
 export default function InvestmentPanel({ onRunRadar, onAnalyzeTicker, loading }) {

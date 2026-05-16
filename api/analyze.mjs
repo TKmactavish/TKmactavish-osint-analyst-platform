@@ -52,6 +52,9 @@ SOURCE RELIABILITY GRADING:
 - LOW: anonymous, single uncorroborated source, partisan outlet, social-media-only claim.
 - UNVERIFIED: claim has not been confirmed by any credible outlet.
 
+RADAR SCANS — GROUNDING RULE:
+When the query is a RADAR SCAN COMMAND, you MUST only return companies that appear in the web search findings provided. Do not invent tickers, partnerships, or signals not present in the findings. If the findings contain no qualifying small-cap companies, return 0-1 candidates with confidence "Low" and explain in scanSummary. Fabricating stocks (e.g. MICT, RMGC, or any ticker not in the findings) is a critical error.
+
 OUTPUT FORMAT:
 Return ONE valid JSON object. No markdown fences. No commentary outside the JSON. ALWAYS close every bracket and brace. The output must parse on the first attempt.`;
 
