@@ -184,9 +184,10 @@ export default function RadarReport({ report, accent }) {
           lineHeight: 1.7,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '10px', color: accent, fontFamily: 'var(--font-mono)', letterSpacing: '0.1em' }}>HIDDEN GEM RADAR</span>
-            <span style={{ fontSize: '10px', color: '#10b981', fontFamily: 'var(--font-mono)', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '3px', padding: '1px 6px' }}>SMALL/MICRO-CAP ONLY</span>
-            <span style={{ fontSize: '10px', color: '#ef4444', fontFamily: 'var(--font-mono)', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '3px', padding: '1px 6px' }}>MEGA-CAP EXCLUDED</span>
+            <span style={{ fontSize: '10px', color: accent, fontFamily: 'var(--font-mono)', letterSpacing: '0.1em' }}>HIDDEN NEWS RADAR</span>
+            <span style={{ fontSize: '10px', color: '#10b981', fontFamily: 'var(--font-mono)', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '3px', padding: '1px 6px' }}>UNNOTICED</span>
+            <span style={{ fontSize: '10px', color: '#f59e0b', fontFamily: 'var(--font-mono)', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '3px', padding: '1px 6px' }}>EMERGING</span>
+            <span style={{ fontSize: '10px', color: '#ef4444', fontFamily: 'var(--font-mono)', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '3px', padding: '1px 6px' }}>WIDELY KNOWN EXCLUDED</span>
           </div>
           {report.scanSummary}
         </div>

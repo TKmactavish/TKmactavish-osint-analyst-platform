@@ -14,28 +14,33 @@ const THEMES = [
 function buildRadarQuery(themes) {
   const themeClause = themes.length
     ? `Focus the scan on sectors: ${themes.join(', ')}.`
-    : 'Scan across all sectors — AI, defense, semiconductors, space, biotech, energy, quantum, robotics.'
+    : 'Scan across all sectors — AI, defense, semiconductors, space, biotech, energy, quantum, robotics, finance, consumer tech.'
 
   return `RADAR SCAN COMMAND — output RADAR SCAN schema only.
 
-Objective: Find 3-4 micro-cap or small-cap U.S.-listed stocks (strictly under $2B market cap) with the highest probability of moving 5-20%+ in the next 3-7 days. The user's strategy: buy the signal today → hold 3-7 days as FOMO builds → sell at the peak. Scan for genuine early-mover opportunities only.
+Objective: Find 3-4 stocks of ANY market cap size where there is specific incoming news or a developing catalyst that is NOT yet widely known by the majority of the market. The edge is the information gap — the news is real but the crowd hasn't priced it in yet.
+
+The user's strategy: buy before the news becomes widely known → hold 3-7 days while FOMO builds as more people discover it → sell when it reaches peak mainstream awareness.
 
 ${themeClause}
 
-Scan for candidates from ALL three signal categories and return the strongest regardless of category:
+THE ONLY FILTER THAT MATTERS: Is the market aware of this yet?
+- "Unnoticed" = almost nobody knows → strongest edge, buy immediately
+- "Emerging" = starting to get attention → still early, good entry
+- "Widely Known" = already in headlines, already priced in → EXCLUDE, no edge left
 
-1. PARTNERSHIP PLAY — Small company just announced a contract, licensing deal, or partnership with a tech giant (NVIDIA, Microsoft, Amazon AWS, Google, Meta, Qualcomm) or defense prime (Lockheed, Raytheon, Northrop, Boeing). The giant's validation hasn't been fully priced in yet by the market.
+Scan for candidates from ALL signal types:
+1. PARTNERSHIP PLAY — A company just announced or is about to announce a major contract, deal, or partnership that the market has not fully priced in. The partner could be any tech giant or institution.
+2. TECH NARRATIVE — A disruptive technology story that is real and building momentum, but mainstream retail has not discovered it yet. Could be any company — large or small — at the center of an emerging narrative.
+3. SHORT SQUEEZE SETUP — High short interest + specific incoming positive catalyst. When shorts are forced to cover, it amplifies any move regardless of company size.
+4. UPCOMING CATALYST — Any specific event: earnings surprise setup, regulatory approval, contract award, product launch, index inclusion — where the outcome is likely positive and not yet priced in.
 
-2. TECH NARRATIVE — Early-to-mid stage disruptive technology story gaining momentum before mainstream retail discovers it. Real technology, early adoption, catalyst incoming. Example: MRAM replacing NAND memory before it was widely covered.
-
-3. SHORT SQUEEZE SETUP — Short interest above 15% of float AND a specific positive catalyst incoming (partnership, contract win, trial result, approval). Forced covering + FOMO = violent move up.
-
-HARD RULES — no exceptions:
-1. Market cap: micro-cap (<$300M) or small-cap ($300M–$2B) ONLY. Hard exclude any company above $2B. NEVER return NVDA, MSFT, GOOGL, AMZN, RTX, LMT, NOC, GD, AVGO, AMAT or any mega/large-cap. These cannot move 20% in a week.
-2. Market awareness must be "Unnoticed" or "Emerging". Exclude "Widely Known" — already priced in, edge is gone.
-3. Every candidate needs a specific, identifiable catalyst — not "may announce" or "possible upcoming" vague language.
-4. Rank candidates by conviction — highest conviction first.
-5. Return 3 strong picks rather than 5 padded ones. Quality over quantity.`
+HARD RULES:
+1. AWARENESS: Only return "Unnoticed" or "Emerging" candidates. NEVER return "Widely Known" — the edge is already gone.
+2. SPECIFIC CATALYST REQUIRED: Every candidate must have a real, identifiable upcoming event or news development. No vague "may announce something."
+3. ANY SIZE: Do not filter by market cap. A large-cap with hidden news is as valid as a micro-cap. What matters is the information gap, not the size.
+4. Rank by conviction — highest information edge and clearest upcoming catalyst first.
+5. Return 3 strong picks with clear reasoning. Quality over quantity.`
 }
 
 export default function InvestmentPanel({ onRunRadar, onAnalyzeTicker, loading }) {
@@ -72,16 +77,15 @@ export default function InvestmentPanel({ onRunRadar, onAnalyzeTicker, loading }
         flexDirection: 'column',
         gap: '16px',
       }}>
-        {/* Title */}
         <div>
           <div style={{ fontSize: '11px', fontWeight: 700, color: accent, fontFamily: 'var(--font-mono)', letterSpacing: '0.12em', marginBottom: '4px' }}>
-            WEEKLY OPPORTUNITY RADAR
+            HIDDEN NEWS RADAR
           </div>
           <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>
-            What should I buy this week?
+            What does the crowd not know yet?
           </div>
           <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.6 }}>
-            Flux Intel scans for micro &amp; small-cap stocks with a real signal — partnership validations, tech narrative momentum, squeeze setups — that the crowd hasn't priced in yet. Buy the signal, hold 3-7 days, sell the FOMO peak.
+            Flux Intel scans for stocks with incoming news the majority hasn't priced in — any size, any sector. Buy the information gap, hold while awareness spreads, sell when it reaches the crowd.
           </div>
         </div>
 
@@ -111,7 +115,7 @@ export default function InvestmentPanel({ onRunRadar, onAnalyzeTicker, loading }
           </div>
         </div>
 
-        {/* What the scan covers */}
+        {/* What the scan hunts */}
         <div style={{
           background: 'var(--surface)',
           border: '1px solid var(--border)',
@@ -121,21 +125,24 @@ export default function InvestmentPanel({ onRunRadar, onAnalyzeTicker, loading }
           flexDirection: 'column',
           gap: '6px',
         }}>
+          <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.08em', marginBottom: '2px' }}>THE AWARENESS FILTER</div>
           {[
-            { icon: '◈', color: '#22d3ee', label: 'Partnership Play', desc: 'Tech giant or defense prime just validated a small company' },
-            { icon: '◈', color: '#d4a843', label: 'Tech Narrative',   desc: 'Disruptive story gaining momentum before mainstream discovers it' },
-            { icon: '◈', color: '#f97316', label: 'Squeeze Setup',    desc: 'High short interest + specific catalyst = forced buying wave' },
+            { color: '#10b981', label: 'Unnoticed',    desc: 'Almost nobody knows yet — strongest edge' },
+            { color: '#f59e0b', label: 'Emerging',     desc: 'Starting to get attention — still early' },
+            { color: '#ef4444', label: 'Widely Known', desc: 'Already in headlines — excluded, no edge left' },
           ].map(item => (
-            <div key={item.label} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-              <span style={{ color: item.color, fontSize: '12px', marginTop: '1px', flexShrink: 0 }}>{item.icon}</span>
-              <div>
-                <span style={{ fontSize: '11px', fontWeight: 700, color: item.color, fontFamily: 'var(--font-mono)', marginRight: '6px' }}>{item.label}</span>
-                <span style={{ fontSize: '11px', color: 'var(--muted)' }}>{item.desc}</span>
-              </div>
+            <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{
+                fontSize: '9px', fontWeight: 700, fontFamily: 'var(--font-mono)',
+                color: item.color, background: `${item.color}18`,
+                border: `1px solid ${item.color}44`, borderRadius: '3px',
+                padding: '2px 6px', whiteSpace: 'nowrap', flexShrink: 0,
+              }}>{item.label.toUpperCase()}</span>
+              <span style={{ fontSize: '11px', color: 'var(--muted)' }}>{item.desc}</span>
             </div>
           ))}
-          <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px', fontStyle: 'italic' }}>
-            Micro &amp; small-cap only (&lt;$2B). Mega-cap excluded — they cannot rerate 20% in a week.
+          <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '4px', fontStyle: 'italic' }}>
+            Any market cap. The filter is the information gap — not the company size.
           </div>
         </div>
 
@@ -153,11 +160,11 @@ export default function InvestmentPanel({ onRunRadar, onAnalyzeTicker, loading }
           fontFamily: 'var(--font-sans)',
           transition: 'background 0.2s',
         }}>
-          {loading ? 'SCANNING...' : 'SCAN THIS WEEK\'S OPPORTUNITIES →'}
+          {loading ? 'SCANNING...' : "SCAN FOR HIDDEN NEWS →"}
         </button>
       </div>
 
-      {/* ── TICKER DEEP DIVE ── */}
+      {/* ── VALIDATE A TICKER ── */}
       <div style={{
         background: 'var(--card)',
         border: '1px solid var(--border)',
@@ -173,7 +180,7 @@ export default function InvestmentPanel({ onRunRadar, onAnalyzeTicker, loading }
             VALIDATE A TICKER
           </div>
           <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.6 }}>
-            Already heard about a stock? Validate whether the signal is real, early enough, and clean of red flags before you buy.
+            Already heard about a stock? Validate whether the news is real, still early, and clean of red flags before you buy.
           </div>
         </div>
 

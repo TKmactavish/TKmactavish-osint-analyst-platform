@@ -150,19 +150,18 @@ Return this exact JSON when query is about a specific ticker or company:
 Return this exact JSON when query is a RADAR SCAN COMMAND or asks for candidates, upcoming rerates, or a market scan.
 
 RADAR HARD RULES — enforce before writing a single candidate:
-1. MARKET CAP: Exclude any company with market cap above the range specified in the query. Default: exclude anything above $2B. NEVER return NVDA, AMAT, AVGO, RTX, LMT, NOC, GD, MSFT, GOOGL, or any mega/large-cap. These cannot rerate 20%+ in 1-2 weeks.
-2. AWARENESS: Exclude any candidate where market awareness is "Widely Known". Only "Unnoticed" or "Emerging" has edge — widely known means already priced in.
-3. MOVE POTENTIAL: Only include stocks where the catalyst could realistically move the price 20-100%+ in 1-2 weeks based on market cap and float.
-4. FLOAT PREFERENCE: Low float stocks (under 50M shares) amplify moves. Prefer these.
-5. QUALITY OVER QUANTITY: Return 2-3 genuinely strong small/micro-cap candidates rather than 4 padded with large-caps or unknowns. If real candidates are scarce, say so in scanSummary.
-6. CATALYST MUST BE SPECIFIC: "routine contract flow" or "unknown catalyst date" is not a valid entry. Each candidate needs a real, identifiable upcoming event.
+1. AWARENESS IS THE ONLY SIZE FILTER: Any market cap is valid — micro, small, mid, large. The filter is whether the news/catalyst is already priced in. NEVER return candidates where market awareness is "Widely Known" — that means the crowd already knows and it's already priced in. Only "Unnoticed" or "Emerging" stocks have edge.
+2. SPECIFIC CATALYST REQUIRED: Every candidate must have a real, identifiable upcoming event or developing news story. "May announce something" or "routine operations" is not valid.
+3. INFORMATION EDGE: For each candidate, explain precisely why the majority of the market does NOT know about this yet — what makes this information gap real.
+4. QUALITY OVER QUANTITY: Return 3 strong candidates with clear information edge rather than 5 padded ones. Rank by conviction — clearest information gap + strongest catalyst first.
+5. THE STRATEGY: Users buy when awareness is "Unnoticed"/"Emerging", hold 3-7 days as news spreads and FOMO builds, sell when it reaches "Widely Known" peak.
 
 {
   "reportType": "radar",
   "mode": "investment",
   "query": "${query}",
-  "reportTitle": "Stock Catalyst Radar",
-  "scanSummary": "2-3 sentences: what was scanned, sector focus, key finding from this radar run.",
+  "reportTitle": "Hidden News Radar",
+  "scanSummary": "2-3 sentences: what was scanned, what information gaps were found, and why these candidates have edge over the crowd right now.",
   "candidates": [
     {
       "ticker": "XXXX",
