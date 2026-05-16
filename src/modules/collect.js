@@ -42,39 +42,40 @@ function buildRadarAnalysisQuery(sectors) {
 
 Sectors in scope: ${sectorStr}
 
-Using your training knowledge of publicly documented information, identify up to 3 U.S.-listed stocks (NYSE or NASDAQ only — not OTC, not pink sheets) that fit this profile:
+IMPORTANT: Your training data is months old. Do NOT use your training knowledge to pick stocks — those signals are already priced in and it is too late to act on them. Instead, work ONLY from the web search findings provided below. If the findings contain no qualifying small-cap companies with a specific hidden signal, return zero candidates and explain in scanSummary.
 
-WHAT TO FIND — any of these signal types:
-1. HIDDEN PARTNERSHIP: Small company with a confirmed deal with a major AI/Space/Defense/Cloud player (NVIDIA, Cerebras, SpaceX, RKLB, AWS, L3Harris etc.) that was documented in public filings or press releases but not widely covered by Bloomberg/CNBC/WSJ. Like DGXX+Cerebras or RDW+SpaceX before they became well known.
-2. CRITICAL SUPPLY CHAIN POSITION: Company that makes a key material, substrate, or component essential for a hot technology sector — but retail investors haven't discovered this role yet. Like AXTI (AXT Inc.) making InP/GaAs substrates critical for AI photonics and 5G, or OSS as Edge AI hardware enabler.
-3. CORPORATE EVENT: Spin-off, restructuring, or merger creating a new narrative the market hasn't priced yet. Like SNDK spin-off from Western Digital that was dramatically undervalued before the market understood it.
+From the web search findings, identify U.S.-listed stocks (NYSE or NASDAQ only — not OTC) where a real current signal exists that most retail investors have not yet discovered:
 
-TARGET PROFILE — all must be true:
-- NYSE or NASDAQ listed (not OTC, not pink sheets)
-- Market cap under $1B strongly preferred
-- Fewer than 5 sell-side analysts covering it
-- The signal was documented in public sources (name the source in catalystSummary)
-- Awareness: Unnoticed or Emerging
+1. HIDDEN PARTNERSHIP: Small company just announced a deal with a major AI/Space/Defense player — confirmed in the search findings but not yet on Bloomberg/CNBC
+2. SUPPLY CHAIN POSITION: Company supplies a critical material or component for a hot sector — role confirmed in findings but under-covered by financial media
+3. CORPORATE EVENT: Spin-off, restructuring, or rerating event confirmed in findings
 
-QUALITY RULES:
-- Only include companies you are highly confident are real, NYSE/NASDAQ listed, and had the specific signal you describe documented publicly
-- If you are not confident about a ticker or its signal, do not include it
-- Return 2-3 strong picks rather than 4 uncertain ones
-- It is better to return 1 genuine candidate than 3 fabricated ones`;
+Target: under $1B market cap, fewer than 5 analysts, signal traceable to a named source in the findings.
+
+If the search findings do not contain specific small-cap companies with a clear current signal — say so in scanSummary and return no candidates. Do not fill the gap with old knowledge.`;
 }
 
 export async function collectAnalysis(query, mode, onStage) {
   if (!mode) throw new Error('Analysis mode is required');
 
   // ── RADAR FLOW ──────────────────────────────────────────────────────────────
-  // No web search for radar — web searches consume 15-25k tokens each and
-  // return generic news, not specific small-cap tickers. The model's training
-  // knowledge is better suited for this; anti-hallucination rules enforce quality.
+  // One real-time web search — model training data is months old and useless
+  // for finding current undiscovered signals. One search stays under rate limit.
   if (query.startsWith('RADAR:') && mode === 'investment') {
     const sectors = parseRadarSectors(query);
+    const sectorStr = sectors.length ? sectors.join(' ') : 'AI semiconductor defense space biotech';
+
+    onStage?.('search');
+    let findings = [];
+    try {
+      const searchQuery = `small cap micro cap stock ${sectorStr} partnership supply chain announcement undiscovered 2025 2026`;
+      const res = await postJson('/api/search', { query: searchQuery, mode });
+      findings = Array.isArray(res.findings) ? res.findings : [];
+    } catch { /* search failure is non-fatal — model will return no candidates */ }
+
     onStage?.('analyze');
     const analysisQuery = buildRadarAnalysisQuery(sectors);
-    const analysis = await postJson('/api/analyze', { query: analysisQuery, mode, findings: [] });
+    const analysis = await postJson('/api/analyze', { query: analysisQuery, mode, findings });
     return analysis;
   }
 

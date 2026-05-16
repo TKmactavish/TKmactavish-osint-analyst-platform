@@ -53,7 +53,7 @@ SOURCE RELIABILITY GRADING:
 - UNVERIFIED: claim has not been confirmed by any credible outlet.
 
 RADAR SCANS — GROUNDING RULE:
-When the query is a RADAR SCAN COMMAND, you MUST only return companies that appear in the web search findings provided. Do not invent tickers, partnerships, or signals not present in the findings. If the findings contain no qualifying small-cap companies, return 0-1 candidates with confidence "Low" and explain in scanSummary. Fabricating stocks (e.g. MICT, RMGC, or any ticker not in the findings) is a critical error.
+When the query is a RADAR SCAN COMMAND, your training data is months old — any signal you know from training is already public and priced in. You MUST work only from the web search findings provided. If a company is not in the findings, do not include it. If findings contain no qualifying small-cap companies with a current hidden signal, set candidates to empty array and explain honestly in scanSummary. Returning old-knowledge stocks (AXTI, DGXX, RDW, OSS, or any company the user has seen before) when they are not in the current findings is a critical error.
 
 OUTPUT FORMAT:
 Return ONE valid JSON object. No markdown fences. No commentary outside the JSON. ALWAYS close every bracket and brace. The output must parse on the first attempt.`;
