@@ -18,31 +18,37 @@ function buildRadarQuery(themes) {
 
   return `RADAR SCAN COMMAND — output RADAR SCAN schema only.
 
-Objective: Find 3 stocks where a REAL, CONFIRMED connection to a major trend or player exists in public sources — but mainstream financial media has NOT covered it yet and the stock price has NOT moved to reflect it. The user buys the information gap, holds 2-5 days while awareness spreads to the crowd, and sells at peak FOMO.
+Objective: Find 3 stocks where a real, confirmed signal (partnership, supply chain role, contract) exists in public sources — but the crowd has NOT discovered it yet because the company has almost no Wall Street analyst coverage. The information gap only survives where coverage is thin. Buy the gap, hold 2-5 days while awareness spreads to retail, sell at peak FOMO.
 
 REAL EXAMPLES OF EXACTLY WHAT TO FIND:
-- DGXX had a confirmed partnership with Cerebras (AI chip company) before Bloomberg/CNBC covered it — early buyers got 2-5 days before the crowd
-- RDW had documented partnerships with RKLB and SpaceX before it became well-known as a space play — undiscovered in plain sight
-- OSS was a key hardware supplier for Edge AI deployments before mainstream investors discovered their role — supply chain hidden in plain sight
+- DGXX: tiny company, confirmed Cerebras partnership in public filings — zero analyst coverage meant it sat hidden for days before retail found it
+- RDW: small company, documented RKLB and SpaceX partnerships — no mainstream analyst coverage, gap lasted a week
+- OSS: micro-cap, confirmed key hardware role for Edge AI deployments — undiscovered because nobody was covering the stock
 
 ${themeClause}
 
-SIGNAL TYPES TO SCAN — return the strongest regardless of type:
+THE CORE RULE — WHY THE GAP EXISTS:
+An information gap can ONLY survive where Wall Street analyst coverage is thin or absent.
+- 15+ analysts covering the stock → AVGO, SAIC, MSTR territory → nothing stays hidden, institutions price it in within hours → EXCLUDE
+- 0-3 analysts covering the stock → DGXX, RDW, OSS territory → gap can survive 3-7 days → THIS IS THE TARGET
 
-1. HIDDEN PARTNERSHIP — Company has a confirmed (press release, 8-K filing, customer reference, conference mention) partnership or contract with a major AI/Space/Defense/Cloud player — but it has NOT appeared in Bloomberg, CNBC, WSJ, or Seeking Alpha front page yet. The signal is real and public, just not yet amplified by financial media. Major partners to scan for: AI (Cerebras, NVIDIA, AMD, Groq, Anthropic, OpenAI), Space (SpaceX, Rocket Lab/RKLB, Blue Origin, ULA), Defense (L3Harris, Raytheon, Northrop, Lockheed), Cloud (AWS, Azure, Google Cloud).
+ANALYST COVERAGE IS THE PRIMARY FILTER:
+Target companies with fewer than 5 sell-side analysts. Strongly prefer 0-2 analysts.
+Do NOT return: any S&P 500 company, any company with market cap above $2B, any heavily covered defense prime, semiconductor giant, or established software company.
 
-2. SUPPLY CHAIN / INFRASTRUCTURE ROLE — Company is a confirmed key enabler, component supplier, or infrastructure provider for a high-growth emerging sector (Edge AI hardware, space manufacturing, defense AI, autonomous systems, quantum computing infrastructure) but their role is not yet known by most retail investors. Like OSS for Edge AI — the role is real, documented, just not yet famous.
+SIGNAL TYPES TO SCAN:
+1. HIDDEN PARTNERSHIP — Confirmed deal (8-K, press release, customer reference page) with a major AI/Space/Defense/Cloud player — but because the company has no analyst coverage, no Wall Street report has flagged it yet. Examples of major partners: Cerebras, NVIDIA, SpaceX, RKLB, AWS, Azure, Lockheed, L3Harris.
+2. SUPPLY CHAIN / INFRASTRUCTURE ROLE — Confirmed as key component supplier or hardware enabler for a major emerging trend (Edge AI hardware, space manufacturing, defense AI) — documented on company website or in filings but retail hasn't discovered it yet due to zero coverage.
+3. IMMINENT SIGNAL — OSINT evidence (conference schedule, 8-K filing pattern, executive interviews, patent filings) strongly points to a major announcement in the next few days — stock has not moved yet.
 
-3. IMMINENT ANNOUNCEMENT — Clear public signals (SEC filings, conference schedule, patent filings, executive public statements, customer references already live on company website) strongly indicate a major partnership or contract announcement is coming within days — and the stock price has not moved yet.
-
-THE KEY TEST FOR EVERY CANDIDATE: If this information were published as a headline on Bloomberg tomorrow — would the stock move 10-50%? If yes, and the stock has NOT moved yet to reflect it, that is the play.
+THE KEY TEST: Would Bloomberg covering this tomorrow cause a 20-100% move? AND does the company have fewer than 5 analysts? If both yes — that is the play.
 
 HARD RULES:
-1. REAL SIGNAL ONLY — The partnership, role, or announcement must be traceable to a public source (8-K, press release, company website, conference recording, patent filing). No speculation, no "may announce."
-2. NOT YET PRICED IN — Market awareness must be "Unnoticed" or "Emerging". If it is already on financial media front pages, it is "Widely Known" — exclude it, the edge is gone.
-3. ANY MARKET CAP — Do not filter by size. DGXX, RDW, OSS were all small — but the filter is information gap, not company size.
-4. RANK BY CLARITY OF EDGE — How specific is the signal? How certain is it that the crowd doesn't know yet? Put the clearest information gap first.
-5. For each candidate: state exactly WHERE the signal comes from (which filing, which press release, which conference) and WHY the market hasn't priced it in yet.`
+1. FEWER THAN 5 ANALYSTS — This is non-negotiable. No AVGO, SAIC, MSTR, RTX, LMT, NVDA or any large/mid cap with heavy coverage. The information gap cannot exist there.
+2. REAL SIGNAL — Traceable to a specific public source (name the filing, press release, or conference). No speculation.
+3. AWARENESS — "Unnoticed" or "Emerging" only. If it is already on Bloomberg, CNBC, or Seeking Alpha front page — excluded.
+4. MARKET CAP — Strongly prefer under $500M. Maximum $2B. Information gaps do not survive at large-cap scale.
+5. RANK BY EDGE — How thin is the coverage? How specific is the signal? How imminent is discovery by the crowd? Best edge first.`
 }
 
 export default function InvestmentPanel({ onRunRadar, onAnalyzeTicker, loading }) {
@@ -87,7 +93,7 @@ export default function InvestmentPanel({ onRunRadar, onAnalyzeTicker, loading }
             What does the crowd not know yet?
           </div>
           <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.6 }}>
-            Scans for stocks where a real partnership, supply chain role, or contract exists in public sources — but mainstream financial media hasn't amplified it yet. Buy the gap, hold 2-5 days, sell the FOMO peak.
+            Information gaps only survive where Wall Street analyst coverage is thin. Targets stocks with 0-3 analysts — where a real partnership or supply chain role can sit hidden in public filings for days before retail discovers it.
           </div>
         </div>
 
@@ -142,7 +148,7 @@ export default function InvestmentPanel({ onRunRadar, onAnalyzeTicker, loading }
             </div>
           ))}
           <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px', paddingTop: '6px', borderTop: '1px solid var(--border)', fontStyle: 'italic' }}>
-            Any market cap. Filter = information gap, not company size. Widely Known = excluded.
+            Target: 0–3 analyst coverage, under $2B market cap. AVGO/SAIC/MSTR have 15+ analysts — nothing stays hidden there.
           </div>
         </div>
 
