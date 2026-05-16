@@ -14,33 +14,35 @@ const THEMES = [
 function buildRadarQuery(themes) {
   const themeClause = themes.length
     ? `Focus the scan on sectors: ${themes.join(', ')}.`
-    : 'Scan across all sectors — AI, defense, semiconductors, space, biotech, energy, quantum, robotics, finance, consumer tech.'
+    : 'Scan broadly — AI infrastructure, Edge AI, space tech, defense tech, semiconductors, quantum, robotics, biotech.'
 
   return `RADAR SCAN COMMAND — output RADAR SCAN schema only.
 
-Objective: Find 3-4 stocks of ANY market cap size where there is specific incoming news or a developing catalyst that is NOT yet widely known by the majority of the market. The edge is the information gap — the news is real but the crowd hasn't priced it in yet.
+Objective: Find 3 stocks where a REAL, CONFIRMED connection to a major trend or player exists in public sources — but mainstream financial media has NOT covered it yet and the stock price has NOT moved to reflect it. The user buys the information gap, holds 2-5 days while awareness spreads to the crowd, and sells at peak FOMO.
 
-The user's strategy: buy before the news becomes widely known → hold 3-7 days while FOMO builds as more people discover it → sell when it reaches peak mainstream awareness.
+REAL EXAMPLES OF EXACTLY WHAT TO FIND:
+- DGXX had a confirmed partnership with Cerebras (AI chip company) before Bloomberg/CNBC covered it — early buyers got 2-5 days before the crowd
+- RDW had documented partnerships with RKLB and SpaceX before it became well-known as a space play — undiscovered in plain sight
+- OSS was a key hardware supplier for Edge AI deployments before mainstream investors discovered their role — supply chain hidden in plain sight
 
 ${themeClause}
 
-THE ONLY FILTER THAT MATTERS: Is the market aware of this yet?
-- "Unnoticed" = almost nobody knows → strongest edge, buy immediately
-- "Emerging" = starting to get attention → still early, good entry
-- "Widely Known" = already in headlines, already priced in → EXCLUDE, no edge left
+SIGNAL TYPES TO SCAN — return the strongest regardless of type:
 
-Scan for candidates from ALL signal types:
-1. PARTNERSHIP PLAY — A company just announced or is about to announce a major contract, deal, or partnership that the market has not fully priced in. The partner could be any tech giant or institution.
-2. TECH NARRATIVE — A disruptive technology story that is real and building momentum, but mainstream retail has not discovered it yet. Could be any company — large or small — at the center of an emerging narrative.
-3. SHORT SQUEEZE SETUP — High short interest + specific incoming positive catalyst. When shorts are forced to cover, it amplifies any move regardless of company size.
-4. UPCOMING CATALYST — Any specific event: earnings surprise setup, regulatory approval, contract award, product launch, index inclusion — where the outcome is likely positive and not yet priced in.
+1. HIDDEN PARTNERSHIP — Company has a confirmed (press release, 8-K filing, customer reference, conference mention) partnership or contract with a major AI/Space/Defense/Cloud player — but it has NOT appeared in Bloomberg, CNBC, WSJ, or Seeking Alpha front page yet. The signal is real and public, just not yet amplified by financial media. Major partners to scan for: AI (Cerebras, NVIDIA, AMD, Groq, Anthropic, OpenAI), Space (SpaceX, Rocket Lab/RKLB, Blue Origin, ULA), Defense (L3Harris, Raytheon, Northrop, Lockheed), Cloud (AWS, Azure, Google Cloud).
+
+2. SUPPLY CHAIN / INFRASTRUCTURE ROLE — Company is a confirmed key enabler, component supplier, or infrastructure provider for a high-growth emerging sector (Edge AI hardware, space manufacturing, defense AI, autonomous systems, quantum computing infrastructure) but their role is not yet known by most retail investors. Like OSS for Edge AI — the role is real, documented, just not yet famous.
+
+3. IMMINENT ANNOUNCEMENT — Clear public signals (SEC filings, conference schedule, patent filings, executive public statements, customer references already live on company website) strongly indicate a major partnership or contract announcement is coming within days — and the stock price has not moved yet.
+
+THE KEY TEST FOR EVERY CANDIDATE: If this information were published as a headline on Bloomberg tomorrow — would the stock move 10-50%? If yes, and the stock has NOT moved yet to reflect it, that is the play.
 
 HARD RULES:
-1. AWARENESS: Only return "Unnoticed" or "Emerging" candidates. NEVER return "Widely Known" — the edge is already gone.
-2. SPECIFIC CATALYST REQUIRED: Every candidate must have a real, identifiable upcoming event or news development. No vague "may announce something."
-3. ANY SIZE: Do not filter by market cap. A large-cap with hidden news is as valid as a micro-cap. What matters is the information gap, not the size.
-4. Rank by conviction — highest information edge and clearest upcoming catalyst first.
-5. Return 3 strong picks with clear reasoning. Quality over quantity.`
+1. REAL SIGNAL ONLY — The partnership, role, or announcement must be traceable to a public source (8-K, press release, company website, conference recording, patent filing). No speculation, no "may announce."
+2. NOT YET PRICED IN — Market awareness must be "Unnoticed" or "Emerging". If it is already on financial media front pages, it is "Widely Known" — exclude it, the edge is gone.
+3. ANY MARKET CAP — Do not filter by size. DGXX, RDW, OSS were all small — but the filter is information gap, not company size.
+4. RANK BY CLARITY OF EDGE — How specific is the signal? How certain is it that the crowd doesn't know yet? Put the clearest information gap first.
+5. For each candidate: state exactly WHERE the signal comes from (which filing, which press release, which conference) and WHY the market hasn't priced it in yet.`
 }
 
 export default function InvestmentPanel({ onRunRadar, onAnalyzeTicker, loading }) {
@@ -85,7 +87,7 @@ export default function InvestmentPanel({ onRunRadar, onAnalyzeTicker, loading }
             What does the crowd not know yet?
           </div>
           <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.6 }}>
-            Flux Intel scans for stocks with incoming news the majority hasn't priced in — any size, any sector. Buy the information gap, hold while awareness spreads, sell when it reaches the crowd.
+            Scans for stocks where a real partnership, supply chain role, or contract exists in public sources — but mainstream financial media hasn't amplified it yet. Buy the gap, hold 2-5 days, sell the FOMO peak.
           </div>
         </div>
 
@@ -115,7 +117,7 @@ export default function InvestmentPanel({ onRunRadar, onAnalyzeTicker, loading }
           </div>
         </div>
 
-        {/* What the scan hunts */}
+        {/* Signal types + real examples */}
         <div style={{
           background: 'var(--surface)',
           border: '1px solid var(--border)',
@@ -123,26 +125,24 @@ export default function InvestmentPanel({ onRunRadar, onAnalyzeTicker, loading }
           padding: '12px 14px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '6px',
+          gap: '8px',
         }}>
-          <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.08em', marginBottom: '2px' }}>THE AWARENESS FILTER</div>
+          <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.08em', marginBottom: '2px' }}>WHAT IT HUNTS</div>
           {[
-            { color: '#10b981', label: 'Unnoticed',    desc: 'Almost nobody knows yet — strongest edge' },
-            { color: '#f59e0b', label: 'Emerging',     desc: 'Starting to get attention — still early' },
-            { color: '#ef4444', label: 'Widely Known', desc: 'Already in headlines — excluded, no edge left' },
+            { color: '#22d3ee', label: 'Hidden Partnership', desc: 'Confirmed deal with NVDA/SpaceX/AWS etc. — not yet in Bloomberg/CNBC', example: 'DGXX + Cerebras' },
+            { color: '#d4a843', label: 'Supply Chain Role',  desc: 'Key component or enabler for a major trend, undiscovered by retail', example: 'OSS → Edge AI' },
+            { color: '#a78bfa', label: 'Imminent Signal',   desc: '8-K filings, conference schedule, or executive statements point to news coming', example: 'RDW + RKLB / SpaceX' },
           ].map(item => (
-            <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{
-                fontSize: '9px', fontWeight: 700, fontFamily: 'var(--font-mono)',
-                color: item.color, background: `${item.color}18`,
-                border: `1px solid ${item.color}44`, borderRadius: '3px',
-                padding: '2px 6px', whiteSpace: 'nowrap', flexShrink: 0,
-              }}>{item.label.toUpperCase()}</span>
-              <span style={{ fontSize: '11px', color: 'var(--muted)' }}>{item.desc}</span>
+            <div key={item.label} style={{ display: 'flex', flexDirection: 'column', gap: '1px', paddingLeft: '8px', borderLeft: `2px solid ${item.color}55` }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: item.color, fontFamily: 'var(--font-mono)' }}>{item.label}</span>
+                <span style={{ fontSize: '10px', color: item.color, background: `${item.color}18`, border: `1px solid ${item.color}33`, borderRadius: '3px', padding: '1px 5px', fontFamily: 'var(--font-mono)' }}>{item.example}</span>
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{item.desc}</div>
             </div>
           ))}
-          <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '4px', fontStyle: 'italic' }}>
-            Any market cap. The filter is the information gap — not the company size.
+          <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px', paddingTop: '6px', borderTop: '1px solid var(--border)', fontStyle: 'italic' }}>
+            Any market cap. Filter = information gap, not company size. Widely Known = excluded.
           </div>
         </div>
 
@@ -187,10 +187,10 @@ export default function InvestmentPanel({ onRunRadar, onAnalyzeTicker, loading }
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
           <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>EXAMPLES</div>
           {[
-            'MRAM — is the memory narrative real?',
-            'RKLB — insider buying signal?',
-            'ASTS — partnership priced in yet?',
-            'LUNR — early or late in the story?',
+            'DGXX — is the Cerebras partnership priced in?',
+            'RDW — how early is the SpaceX/RKLB story?',
+            'OSS — is Edge AI role still undiscovered?',
+            'ASTS — is the satellite narrative still early?',
           ].map((ex, i) => (
             <div key={i} style={{
               fontSize: '11px', color: 'var(--muted)',

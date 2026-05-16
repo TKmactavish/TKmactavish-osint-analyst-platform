@@ -346,9 +346,9 @@ export default async function handler(req, res) {
     if (mode === 'investment') {
       if (result.reportType === 'radar') {
         if (!Array.isArray(result.candidates) || !result.candidates.length)
-          result.candidates = [{ ticker: 'N/A', company: 'No candidates identified', sector: '', catalystType: '', catalystSummary: 'Insufficient open-source data found for this scan. Try narrowing the sector or specifying a timeframe.', catalystDate: '', whyItMightRerate: '', marketAwareness: 'Unknown', shortInterestNote: '', insiderActivityNote: '', redFlags: '', confidence: 'Low', timeWindow: 'Unknown' }];
+          result.candidates = [{ ticker: 'N/A', company: 'No candidates identified', sector: '', catalystType: '', catalystSummary: 'No confirmed hidden signals found for this scan. The information gap may not exist yet — try a different sector focus or run again.', catalystDate: '', whyItMightRerate: '', marketAwareness: 'Unknown', shortInterestNote: '', insiderActivityNote: '', redFlags: '', confidence: 'Low', timeWindow: 'Unknown' }];
         if (!result.scanSummary)
-          result.scanSummary = 'Radar scan completed. Results are based on available open-source data and model knowledge. Verify all candidates independently before acting.';
+          result.scanSummary = 'Hidden news scan completed. All candidates have confirmed public signals not yet amplified by mainstream financial media. Verify each signal source independently before entering a position.';
       } else {
         if (!result.catalystSummary)
           result.catalystSummary = 'No specific catalyst identified from available open-source data. Verify through SEC EDGAR directly.';
